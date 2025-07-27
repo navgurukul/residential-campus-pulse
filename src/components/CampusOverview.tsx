@@ -168,9 +168,16 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelec
                     {campus.totalResolvers}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRankingColor(campus.ranking)}`}>
-                      {campus.ranking}
-                    </span>
+                    <div className="flex items-center">
+                      <div className={`w-3 h-3 rounded-full mr-2 ${
+                        campus.ranking === 'High' ? 'bg-green-500 animate-pulse-fast' :
+                        campus.ranking === 'Medium' ? 'bg-yellow-500 animate-pulse-medium' :
+                        'bg-red-500 animate-pulse-slow'
+                      }`}></div>
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRankingColor(campus.ranking)}`}>
+                        {campus.ranking}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(campus.lastEvaluated).toLocaleDateString()}
