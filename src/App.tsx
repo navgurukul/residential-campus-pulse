@@ -172,8 +172,8 @@ function App() {
             filters={filters}
             onFilterChange={setFilters}
             onExport={handleExport}
-            campuses={mockCampuses.map(c => ({ id: c.id, name: c.name }))}
-            resolvers={mockResolvers.map(r => ({ id: r.id, name: r.name }))}
+            campuses={campuses.map(c => ({ id: c.id, name: c.name }))}
+            resolvers={resolvers.map(r => ({ id: r.id, name: r.name }))}
           />
         )}
 
