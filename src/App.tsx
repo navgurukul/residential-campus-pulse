@@ -1,12 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Building2, Users, BarChart3, Settings } from 'lucide-react';
 import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
 import ResolverOverview from './components/ResolverOverview';
 import FilterPanel from './components/FilterPanel';
-import { mockCampuses, mockResolvers, mockEvaluations } from './data/mockData';
-import { FilterState } from './types';
+import { mockEvaluations } from './data/mockData';
+import { FilterState, Campus, Resolver } from './types';
 import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
+import { processApiData } from './utils/apiUtils';
 
 type View = 'campus-overview' | 'campus-detail' | 'resolver-overview';
 
@@ -19,25 +20,43 @@ function App() {
     dateRange: { start: '', end: '' },
     competencyCategory: ''
   });
+  const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [resolvers, setResolvers] = useState<Resolver[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://script.googleusercontent.com/a/macros/navgurukul.org/echo?user_content_key=AehSKLgQzj0ZDJkfCeFR1k2Ize5Cx6-lVWhJHdbcBqQd1UfcdUjtuC8ylC7VAmDnHMctsxtc3pIszApXcGm9JC-oov93G-UbW8YpHauDYRszWb3nWAamimC9ujdjKO5WqTKPAusk5qnleM9KDpLXJjmhFBANdCsqq55HRAt6oqMCflHd7Qs9Bs4_nnrRAFuTpCmrTOKzrnGWmUQQ5Je7LTWtnZ2Kei1s2ft_TksT7xZM__u3GCj92F1mmDOWyyPE_qmX7lZtEz2fPO9cWIATJWRwhXbxFH-ba__iDEtKkUeg0VJmJT9KQ0eAvW0UbPPVHw&lib=MNQ4Z5ed4HHZAzVnl2yR3tjPbXNLbe1dR');
+        const data = await response.json();
+        const { campuses, resolvers } = processApiData(data);
+        setCampuses(campuses);
+        setResolvers(resolvers);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Filter data based on current filters
   const filteredCampuses = useMemo(() => {
-    return mockCampuses.filter(campus => {
+    return campuses.filter(campus => {
       if (filters.campus && campus.id !== filters.campus) return false;
       if (filters.dateRange.start && campus.lastEvaluated < filters.dateRange.start) return false;
       if (filters.dateRange.end && campus.lastEvaluated > filters.dateRange.end) return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, campuses]);
 
   const filteredResolvers = useMemo(() => {
-    return mockResolvers.filter(resolver => {
+    return resolvers.filter(resolver => {
       if (filters.resolver && resolver.id !== filters.resolver) return false;
       if (filters.dateRange.start && resolver.lastActivity < filters.dateRange.start) return false;
       if (filters.dateRange.end && resolver.lastActivity > filters.dateRange.end) return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, resolvers]);
 
   const filteredEvaluations = useMemo(() => {
     return mockEvaluations.filter(evaluation => {
@@ -77,7 +96,7 @@ function App() {
     }
   };
 
-  const selectedCampus = mockCampuses.find(campus => campus.id === selectedCampusId);
+  const selectedCampus = campuses.find(campus => campus.id === selectedCampusId);
 
   const navigation = [
     { id: 'campus-overview', name: 'Campus Overview', icon: Building2 },
