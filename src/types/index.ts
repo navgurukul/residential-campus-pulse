@@ -16,6 +16,8 @@ export interface Resolver {
   averageScoreGiven: number;
   totalEvaluations: number;
   lastActivity: string;
+  level: string;
+  framework: string;
 }
 
 export interface Competency {
@@ -45,4 +47,5 @@ export interface FilterState {
     end: string;
   };
   competencyCategory: string;
+  competency: string;
 }
