@@ -9,14 +9,15 @@ interface ResolverOverviewProps {
 
 const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
   const chartData = resolvers.map(resolver => ({
-    name: resolver.name.split(' ')[1], // First name
+    name: resolver.name.split(' ')[0],
     campuses: resolver.campusesEvaluated,
     avgScore: resolver.averageScoreGiven
   }));
 
   const totalEvaluations = resolvers.reduce((sum, resolver) => sum + resolver.totalEvaluations, 0);
   const totalCampusesEvaluated = resolvers.reduce((sum, resolver) => sum + resolver.campusesEvaluated, 0);
-  const overallAvgScore = resolvers.reduce((sum, resolver) => sum + resolver.averageScoreGiven, 0) / resolvers.length;
+  const overallAvgScore = resolvers.length > 0 ? resolvers.reduce((sum, resolver) => sum + resolver.averageScoreGiven, 0) / resolvers.length : 0;
+  const maxCampusesEvaluated = resolvers.length > 0 ? Math.max(...resolvers.map(r => r.campusesEvaluated)) : 0;
 
   return (
     <div className="space-y-6">
@@ -50,7 +51,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Campuses Covered</p>
-              <p className="text-3xl font-bold text-gray-900">{Math.max(...resolvers.map(r => r.campusesEvaluated))}</p>
+              <p className="text-3xl font-bold text-gray-900">{maxCampusesEvaluated}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
               <MapPin className="w-6 h-6 text-orange-600" />
