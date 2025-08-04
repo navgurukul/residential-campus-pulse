@@ -1,5 +1,6 @@
 // src/utils/apiUtils.ts
-import { Campus, Resolver } from '../types';
+import { Campus, Resolver, Evaluation } from '../types';
+import { mockEvaluations } from '../data/mockData';
 
 interface ApiResponse {
   status: string;
@@ -26,9 +27,9 @@ const getRanking = (score: number): 'High' | 'Medium' | 'Low' => {
   return 'Low';
 };
 
-export const processApiData = (apiData: ApiResponse): { campuses: Campus[], resolvers: Resolver[] } => {
+export const processApiData = (apiData: ApiResponse): { campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] } => {
   if (!apiData || !apiData.responses) {
-    return { campuses: [], resolvers: [] };
+    return { campuses: [], resolvers: [], evaluations: [] };
   }
 
   const validResponses = apiData.responses.filter(r => r.name && r.timestamp && r.campus);
@@ -87,5 +88,12 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
     ranking: getRanking(c.averageScore),
   }));
 
-  return { campuses, resolvers };
+  const campusNameToIdMap = new Map(campuses.map(c => [c.name, c.id]));
+
+  const evaluations: Evaluation[] = mockEvaluations.map(e => ({
+    ...e,
+    campusId: campusNameToIdMap.get(e.campusName) || e.campusId,
+  }));
+
+  return { campuses, resolvers, evaluations };
 };
