@@ -18,7 +18,8 @@ function App() {
     campus: '',
     resolver: '',
     dateRange: { start: '', end: '' },
-    competencyCategory: ''
+    competencyCategory: '',
+    competency: 'vipasana', // Default to 'vipasana'
   });
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [resolvers, setResolvers] = useState<Resolver[]>([]);
@@ -27,8 +28,17 @@ function App() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      let url = 'https://script.googleusercontent.com/a/macros/navgurukul.org/echo?user_content_key=AehSKLgQzj0ZDJkfCeFR1k2Ize5Cx6-lVWhJHdbcBqQd1UfcdUjtuC8ylC7VAmDnHMctsxtc3pIszApXcGm9JC-oov93G-UbW8YpHauDYRszWb3nWAamimC9ujdjKO5WqTKPAusk5qnleM9KDpLXJjmhFBANdCsqq55HRAt6oqMCflHd7Qs9Bs4_nnrRAFuTpCmrTOKzrnGWmUQQ5Je7LTWtnZ2Kei1s2ft_TksT7xZM__u3GCj92F1mmDOWyyPE_qmX7lZtEz2fPO9cWIATJWRwhXbxFH-ba__iDEtKkUeg0VJmJT9KQ0eAvW0UbPPVHw&lib=MNQ4Z5ed4HHZAzVnl2yR3tjPbXNLbe1dR';
+      if (filters.competency) {
+        if (filters.competency === 'all') {
+          url += '&action=competencies';
+        } else {
+          url += `&competency=${filters.competency}`;
+        }
+      }
       try {
-        const response = await fetch('https://script.googleusercontent.com/a/macros/navgurukul.org/echo?user_content_key=AehSKLgQzj0ZDJkfCeFR1k2Ize5Cx6-lVWhJHdbcBqQd1UfcdUjtuC8ylC7VAmDnHMctsxtc3pIszApXcGm9JC-oov93G-UbW8YpHauDYRszWb3nWAamimC9ujdjKO5WqTKPAusk5qnleM9KDpLXJjmhFBANdCsqq55HRAt6oqMCflHd7Qs9Bs4_nnrRAFuTpCmrTOKzrnGWmUQQ5Je7LTWtnZ2Kei1s2ft_TksT7xZM__u3GCj92F1mmDOWyyPE_qmX7lZtEz2fPO9cWIATJWRwhXbxFH-ba__iDEtKkUeg0VJmJT9KQ0eAvW0UbPPVHw&lib=MNQ4Z5ed4HHZAzVnl2yR3tjPbXNLbe1dR');
+        const response = await fetch(url);
         const data = await response.json();
         const { campuses, resolvers, evaluations } = processApiData(data);
         setCampuses(campuses);
@@ -42,7 +52,7 @@ function App() {
     };
 
     fetchData();
-  }, []);
+  }, [filters.competency]);
 
   // Filter data based on current filters
   const filteredCampuses = useMemo(() => {

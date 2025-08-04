@@ -6,16 +6,13 @@ interface ApiResponse {
   status: string;
   responses: {
     name: string;
+    email: string;
     timestamp: string;
     campus: string;
+    level: string;
+    framework: string;
   }[];
 }
-
-// Helper to generate a simple slug for email
-const createEmailFromName = (name: string) => {
-  if (!name) return 'anonymous@example.com';
-  return `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
-};
 
 // Helper for random score
 const getRandomScore = () => Math.random() * 4 + 5; // 5.0 to 9.0
@@ -38,18 +35,20 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
   const campusMap = new Map<string, any>();
 
   validResponses.forEach((response, index) => {
-    const { name, timestamp, campus } = response;
+    const { name, email, timestamp, campus, level, framework } = response;
 
     // Process resolvers
     if (!resolverMap.has(name)) {
       resolverMap.set(name, {
         id: `${name}-${index}`, // simple unique id
         name,
-        email: createEmailFromName(name),
+        email: email || 'N/A',
         totalEvaluations: 0,
         lastActivity: '1970-01-01T00:00:00.000Z',
         campuses: new Set<string>(),
         averageScoreGiven: getRandomScore(),
+        level,
+        framework,
       });
     }
     const resolver = resolverMap.get(name);

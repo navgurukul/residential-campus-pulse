@@ -27,7 +27,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       campus: '',
       resolver: '',
       dateRange: { start: '', end: '' },
-      competencyCategory: ''
+      competencyCategory: '',
+      competency: 'all'
     });
   };
 
@@ -99,20 +100,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </select>
         </div>
 
-        {/* Competency Category Filter */}
+        {/* Competency Framework Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Competency</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Competency Framework</label>
           <select
-            value={filters.competencyCategory}
-            onChange={(e) => handleFilterChange('competencyCategory', e.target.value)}
+            value={filters.competency}
+            onChange={(e) => handleFilterChange('competency', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">All Categories</option>
-            {competencyCategories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
+            <option value="all">All Competencies</option>
+            <option value="vipassana">Vipassana</option>
+            <option value="communication">Communication</option>
+            <option value="leadership">Leadership</option>
           </select>
         </div>
 
