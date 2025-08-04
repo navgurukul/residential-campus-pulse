@@ -4,6 +4,7 @@ import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
 import ResolverOverview from './components/ResolverOverview';
 import FilterPanel from './components/FilterPanel';
+import LoadingSpinner from './components/LoadingSpinner';
 import { FilterState, Campus, Resolver, Evaluation } from './types';
 import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
 import { processApiData } from './utils/apiUtils';
@@ -22,6 +23,7 @@ function App() {
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [resolvers, setResolvers] = useState<Resolver[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +36,8 @@ function App() {
         setEvaluations(evaluations);
       } catch (error) {
         console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -103,6 +107,10 @@ function App() {
     { id: 'campus-overview', name: 'Campus Overview', icon: Building2 },
     { id: 'resolver-overview', name: 'Resolver Overview', icon: Users }
   ];
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
