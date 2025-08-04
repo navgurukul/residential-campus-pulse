@@ -4,8 +4,7 @@ import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
 import ResolverOverview from './components/ResolverOverview';
 import FilterPanel from './components/FilterPanel';
-import { mockEvaluations } from './data/mockData';
-import { FilterState, Campus, Resolver } from './types';
+import { FilterState, Campus, Resolver, Evaluation } from './types';
 import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
 import { processApiData } from './utils/apiUtils';
 
@@ -22,15 +21,17 @@ function App() {
   });
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [resolvers, setResolvers] = useState<Resolver[]>([]);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch('https://script.googleusercontent.com/a/macros/navgurukul.org/echo?user_content_key=AehSKLgQzj0ZDJkfCeFR1k2Ize5Cx6-lVWhJHdbcBqQd1UfcdUjtuC8ylC7VAmDnHMctsxtc3pIszApXcGm9JC-oov93G-UbW8YpHauDYRszWb3nWAamimC9ujdjKO5WqTKPAusk5qnleM9KDpLXJjmhFBANdCsqq55HRAt6oqMCflHd7Qs9Bs4_nnrRAFuTpCmrTOKzrnGWmUQQ5Je7LTWtnZ2Kei1s2ft_TksT7xZM__u3GCj92F1mmDOWyyPE_qmX7lZtEz2fPO9cWIATJWRwhXbxFH-ba__iDEtKkUeg0VJmJT9KQ0eAvW0UbPPVHw&lib=MNQ4Z5ed4HHZAzVnl2yR3tjPbXNLbe1dR');
         const data = await response.json();
-        const { campuses, resolvers } = processApiData(data);
+        const { campuses, resolvers, evaluations } = processApiData(data);
         setCampuses(campuses);
         setResolvers(resolvers);
+        setEvaluations(evaluations);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -59,7 +60,7 @@ function App() {
   }, [filters, resolvers]);
 
   const filteredEvaluations = useMemo(() => {
-    return mockEvaluations.filter(evaluation => {
+    return evaluations.filter(evaluation => {
       if (filters.campus && evaluation.campusId !== filters.campus) return false;
       if (filters.resolver && evaluation.resolverId !== filters.resolver) return false;
       if (filters.dateRange.start && evaluation.dateEvaluated < filters.dateRange.start) return false;
