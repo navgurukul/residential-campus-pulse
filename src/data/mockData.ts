@@ -58,12 +58,15 @@ export const mockEvaluations: Evaluation[] = [
 ];
 
 export const competencyCategories = [
-  'Infrastructure',
-  'Faculty Quality',
-  'Curriculum',
-  'Student Services',
-  'Technology',
-  'Research Facilities',
-  'Student Support',
-  'Administration'
+  'Vipassana',
+  'Nutrition Supplementation + Yoga/Weight Training',
+  'Houses and Reward Systems',
+  'Etiocracy, Co-Creation & Ownership',
+  'Campus interactions',
+  'Gratitude',
+  'Hackathons',
+  'English Communication & Comprehension',
+  'Learning Environment & Peer Support',
+  'Process Principles Understanding & Implementation',
+  'Life Skills Implementation'
 ];
