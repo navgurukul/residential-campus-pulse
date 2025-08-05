@@ -26,6 +26,7 @@ function App() {
   const [resolvers, setResolvers] = useState<Resolver[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Campus; direction: 'ascending' | 'descending' } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,15 +56,28 @@ function App() {
     fetchData();
   }, [filters.competency]);
 
-  // Filter data based on current filters
+  // Filter and sort data based on current filters and sort configuration
   const filteredCampuses = useMemo(() => {
-    return campuses.filter(campus => {
+    let sortableCampuses = [...campuses];
+    if (sortConfig !== null) {
+      sortableCampuses.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return sortableCampuses.filter(campus => {
       if (filters.campus && campus.id !== filters.campus) return false;
       if (filters.dateRange.start && campus.lastEvaluated < filters.dateRange.start) return false;
       if (filters.dateRange.end && campus.lastEvaluated > filters.dateRange.end) return false;
       return true;
     });
-  }, [filters, campuses]);
+  }, [filters, campuses, sortConfig]);
 
   const filteredResolvers = useMemo(() => {
     return resolvers.filter(resolver => {
@@ -96,6 +110,14 @@ function App() {
   const handleBackToCampusOverview = () => {
     setCurrentView('campus-overview');
     setSelectedCampusId('');
+  };
+
+  const handleSort = (key: keyof Campus) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
   };
 
   const handleExport = (format: 'csv' | 'pdf') => {
@@ -201,6 +223,8 @@ function App() {
           <CampusOverview 
             campuses={filteredCampuses} 
             onCampusSelect={handleCampusSelect}
+            onSort={handleSort}
+            sortConfig={sortConfig}
           />
         )}
 

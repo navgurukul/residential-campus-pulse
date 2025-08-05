@@ -1,14 +1,16 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Users, Award, MapPin } from 'lucide-react';
+import { TrendingUp, Users, Award, MapPin, ArrowUpDown } from 'lucide-react';
 import { Campus } from '../types';
 
 interface CampusOverviewProps {
   campuses: Campus[];
   onCampusSelect: (campusId: string) => void;
+  onSort: (key: keyof Campus) => void;
+  sortConfig: { key: keyof Campus; direction: 'ascending' | 'descending' } | null;
 }
 
-const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelect }) => {
+const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelect, onSort, sortConfig }) => {
   const getRankingColor = (ranking: string) => {
     switch (ranking) {
       case 'High': return 'text-green-600 bg-green-100';
@@ -134,9 +136,17 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelec
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campus</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => onSort('averageScore')}>
+                  <div className="flex items-center">
+                    Score <ArrowUpDown className="ml-1 h-4 w-4" />
+                  </div>
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolvers</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ranking</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => onSort('ranking')}>
+                  <div className="flex items-center">
+                    Ranking <ArrowUpDown className="ml-1 h-4 w-4" />
+                  </div>
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Evaluated</th>
               </tr>
             </thead>
