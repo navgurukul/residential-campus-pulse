@@ -6,9 +6,8 @@ import ResolverOverview from './components/ResolverOverview';
 import FilterPanel from './components/FilterPanel';
 import LoadingSpinner from './components/LoadingSpinner';
 import { FilterState, Campus, Resolver, Evaluation } from './types';
-import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
+import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport } from './utils/exportUtils';
 import { processApiData } from './utils/apiUtils';
-import { mockEvaluations } from './data/mockData';
 
 type View = 'campus-overview' | 'campus-detail' | 'resolver-overview';
 
@@ -30,14 +29,9 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      let url = 'https://script.googleusercontent.com/a/macros/navgurukul.org/echo?user_content_key=AehSKLgQzj0ZDJkfCeFR1k2Ize5Cx6-lVWhJHdbcBqQd1UfcdUjtuC8ylC7VAmDnHMctsxtc3pIszApXcGm9JC-oov93G-UbW8YpHauDYRszWb3nWAamimC9ujdjKO5WqTKPAusk5qnleM9KDpLXJjmhFBANdCsqq55HRAt6oqMCflHd7Qs9Bs4_nnrRAFuTpCmrTOKzrnGWmUQQ5Je7LTWtnZ2Kei1s2ft_TksT7xZM__u3GCj92F1mmDOWyyPE_qmX7lZtEz2fPO9cWIATJWRwhXbxFH-ba__iDEtKkUeg0VJmJT9KQ0eAvW0UbPPVHw&lib=MNQ4Z5ed4HHZAzVnl2yR3tjPbXNLbe1dR';
-      if (filters.competency) {
-        if (filters.competency === 'all') {
-          url += '&action=competencies';
-        } else {
-          url += `&competency=${filters.competency}`;
-        }
-      }
+      // Construct the URL without competency filter
+      const url = 'https://script.googleusercontent.com/a/macros/navgurukul.org/echo?user_content_key=AehSKLgQzj0ZDJkfCeFR1k2Ize5Cx6-lVWhJHdbcBqQd1UfcdUjtuC8ylC7VAmDnHMctsxtc3pIszApXcGm9JC-oov93G-UbW8YpHauDYRszWb3nWAamimC9ujdjKO5WqTKPAusk5qnleM9KDpLXJjmhFBANdCsqq55HRAt6oqMCflHd7Qs9Bs4_nnrRAFuTpCmrTOKzrnGWmUQQ5Je7LTWtnZ2Kei1s2ft_TksT7xZM__u3GCj92F1mmDOWyyPE_qmX7lZtEz2fPO9cWIATJWRwhXbxFH-ba__iDEtKkUeg0VJmJT9KQ0eAvW0UbPPVHw&lib=MNQ4Z5ed4HHZAzVnl2yR3tjPbXNLbe1dR&action=competencies';
+
       try {
         const response = await fetch(url);
         const data = await response.json();
@@ -53,7 +47,7 @@ function App() {
     };
 
     fetchData();
-  }, [filters.competency]);
+  }, []);
 
   // Filter data based on current filters
   const filteredCampuses = useMemo(() => {
@@ -70,6 +64,7 @@ function App() {
       if (filters.resolver && resolver.id !== filters.resolver) return false;
       if (filters.dateRange.start && resolver.lastActivity < filters.dateRange.start) return false;
       if (filters.dateRange.end && resolver.lastActivity > filters.dateRange.end) return false;
+      if (filters.competency && filters.competency !== 'all' && resolver.framework.toLowerCase() !== filters.competency.toLowerCase()) return false;
       return true;
     });
   }, [filters, resolvers]);
@@ -80,13 +75,17 @@ function App() {
       if (filters.resolver && evaluation.resolverId !== filters.resolver) return false;
       if (filters.dateRange.start && evaluation.dateEvaluated < filters.dateRange.start) return false;
       if (filters.dateRange.end && evaluation.dateEvaluated > filters.dateRange.end) return false;
+      if (filters.competency && filters.competency !== 'all') {
+        const hasCompetency = evaluation.competencies.some(comp => comp.category.toLowerCase() === filters.competency.toLowerCase());
+        if (!hasCompetency) return false;
+      }
       if (filters.competencyCategory) {
         const hasCategory = evaluation.competencies.some(comp => comp.category === filters.competencyCategory);
         if (!hasCategory) return false;
       }
       return true;
     });
-  }, [filters]);
+  }, [filters, evaluations]);
 
   const handleCampusSelect = (campusId: string) => {
     setSelectedCampusId(campusId);
@@ -207,7 +206,7 @@ function App() {
         {currentView === 'campus-detail' && selectedCampus && (
           <CampusDetail
             campus={selectedCampus}
-            evaluations={mockEvaluations}
+            evaluations={filteredEvaluations}
             onBack={handleBackToCampusOverview}
           />
         )}
