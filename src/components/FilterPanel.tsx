@@ -1,7 +1,6 @@
 import React from 'react';
-import { Search, Filter, Download, Calendar } from 'lucide-react';
+import { Filter, Download } from 'lucide-react';
 import { FilterState } from '../types';
-import { competencyCategories } from '../data/mockData';
 
 interface FilterPanelProps {
   filters: FilterState;
