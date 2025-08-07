@@ -10,6 +10,14 @@ interface FilterPanelProps {
   resolvers: Array<{ id: string; name: string }>;
 }
 
+// Utility function for Title Case
+const toTitleCase = (str: string) =>
+  str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
 const FilterPanel: React.FC<FilterPanelProps> = ({ 
   filters, 
   onFilterChange, 
@@ -93,7 +101,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             <option value="">All Resolvers</option>
             {resolvers.map((resolver) => (
               <option key={resolver.id} value={resolver.id}>
-                {resolver.name}
+                {toTitleCase(resolver.name)}
               </option>
             ))}
           </select>
