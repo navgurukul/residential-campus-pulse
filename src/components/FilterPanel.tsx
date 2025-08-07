@@ -109,8 +109,16 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           >
             <option value="all">All Competencies</option>
             <option value="vipassana">Vipassana</option>
-            <option value="communication">Communication</option>
-            <option value="leadership">Leadership</option>
+            <option value="nutrition">Nutrition Supplementation + Yoga/Weight Training</option>
+            <option value="houses">Houses and Reward Systems</option>
+            <option value="etiocracy">Etiocracy, Co-Creation & Ownership</option>
+            <option value="campus-interactions">Campus interactions</option>
+            <option value="gratitude">Gratitude</option>
+            <option value="hackathons">Hackathons</option>
+            <option value="english-communication">English Communication & Comprehension</option>
+            <option value="learning-environment">Learning Environment & Peer Support</option>
+            <option value="process-principles">Process Principles Understanding & Implementation</option>
+            <option value="life-skills">Life Skills Implementation</option>
           </select>
         </div>
 
