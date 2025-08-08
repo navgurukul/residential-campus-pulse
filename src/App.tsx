@@ -211,10 +211,25 @@ function App() {
                 <p className="text-sm text-gray-500">Track and analyze campus performance evaluations</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-500">
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <div className="text-xs md:text-sm text-gray-500 whitespace-nowrap">
                 {lastUpdated ? (
-                  <>Backend data: {new Date(lastUpdated).toLocaleString()}</>
+                  <div className="flex flex-col md:flex-row md:items-center">
+                    <span className="hidden md:inline">Backend data: </span>
+                    <span className="md:hidden">Data: </span>
+                    <span className="font-mono">
+                      {new Date(lastUpdated).toLocaleString('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                      })}
+                    </span>
+                  </div>
                 ) : (
                   <>Using mock data</>
                 )}
@@ -222,12 +237,12 @@ function App() {
               <button
                 onClick={handleRefreshData}
                 disabled={loading}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 disabled:opacity-50"
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 disabled:opacity-50 flex-shrink-0"
                 title="Refresh data from backend"
               >
-                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 md:w-5 md:h-5 ${loading ? 'animate-spin' : ''}`} />
               </button>
-              <Settings className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors duration-200" />
+              <Settings className="w-4 h-4 md:w-5 md:h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors duration-200 flex-shrink-0" />
             </div>
           </div>
         </div>
