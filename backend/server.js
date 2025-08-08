@@ -45,6 +45,7 @@ app.post('/api/import-data', (req, res) => {
     if (data.length > 0) {
       const headers = Object.keys(data[0]);
       console.log('Column headers:', headers);
+      console.log('Full first row data:', JSON.stringify(data[0], null, 2));
       console.log('Data stored successfully');
     }
 
@@ -70,6 +71,11 @@ app.get('/api/campus-data', (req, res) => {
     console.log('=== Campus Data Endpoint Called ===');
     console.log('Stored data length:', storedData.length);
     console.log('Last updated:', lastUpdated);
+
+    if (storedData.length > 0) {
+      console.log('Sample stored data:', JSON.stringify(storedData[0], null, 2));
+      console.log('All column headers:', Object.keys(storedData[0]));
+    }
 
     if (storedData.length === 0) {
       return res.status(200).json({
@@ -99,45 +105,141 @@ app.get('/api/campus-data', (req, res) => {
   }
 });
 
+// Helper function to find column value with flexible naming
+function getColumnValue(row, possibleNames, defaultValue = '') {
+  for (const name of possibleNames) {
+    if (row[name] !== undefined && row[name] !== null && row[name] !== '') {
+      return row[name];
+    }
+  }
+  return defaultValue;
+}
+
 // Function to process raw Google Sheet data into frontend format
 function processRawDataForFrontend(rawData) {
-  // This function will transform your Google Sheet data into the format your frontend expects
-  // For now, let's create a basic structure - you can customize this based on your actual data
+  console.log('Processing raw data for frontend...');
 
-  const campuses = [];
+  if (!rawData || rawData.length === 0) {
+    return { campuses: [], resolvers: [], evaluations: [] };
+  }
+
+  // Log all available columns for debugging
+  const availableColumns = Object.keys(rawData[0]);
+  console.log('Available columns in data:', availableColumns);
+
+  // Group data by campus to aggregate scores
+  const campusMap = new Map();
   const resolvers = [];
   const evaluations = [];
 
   // Process each row from Google Sheet
   rawData.forEach((row, index) => {
-    // Extract campus information (customize these field names based on your Google Sheet columns)
-    const campusName = row['Campus Name'] || row['campus_name'] || `Campus ${index + 1}`;
-    const location = row['Location'] || row['location'] || 'Unknown Location';
-    const averageScore = parseFloat(row['Average Score'] || row['average_score'] || Math.random() * 10);
-    const totalResolvers = parseInt(row['Total Resolvers'] || row['total_resolvers'] || Math.floor(Math.random() * 20) + 1);
-    const ranking = row['Ranking'] || row['ranking'] || (averageScore > 8 ? 'High' : averageScore > 6 ? 'Medium' : 'Low');
-    const lastEvaluated = row['Last Evaluated'] || row['last_evaluated'] || new Date().toISOString().split('T')[0];
+    console.log(`Processing row ${index + 1}:`, Object.keys(row));
 
-    // Create campus object
-    const campus = {
-      id: `campus-${index + 1}`,
-      name: campusName,
-      location: location,
-      averageScore: averageScore,
-      totalResolvers: totalResolvers,
-      ranking: ranking,
-      lastEvaluated: lastEvaluated
-    };
+    // Extract basic information - try common Google Form field patterns
+    const timestamp = getColumnValue(row, [
+      'Timestamp', 'timestamp', 'Date', 'Created Date', 'Submission Time'
+    ], new Date().toISOString());
 
-    campuses.push(campus);
+    // Extract campus name - try various patterns
+    const campusName = getColumnValue(row, [
+      'Which campus are you evaluating?',
+      'Campus Name', 'campus_name', 'Campus', 'campus', 'Name', 'name',
+      'Campus Location', 'Location'
+    ], `Campus ${index + 1}`);
 
-    // Create sample resolver and evaluation data
-    // You can customize this based on your actual data structure
-    const resolverName = row['Resolver Name'] || row['resolver_name'] || `Resolver ${index + 1}`;
+    // Extract resolver information
+    const resolverName = getColumnValue(row, [
+      'Email Address', 'email', 'Your Email', 'Resolver Email',
+      'Name', 'Your Name', 'Full Name', 'Resolver Name'
+    ], `Resolver ${index + 1}`);
+
+    const resolverEmail = getColumnValue(row, [
+      'Email Address', 'email', 'Your Email', 'Resolver Email'
+    ], resolverName.includes('@') ? resolverName : `${resolverName.toLowerCase().replace(/\s+/g, '.')}@navgurukul.org`);
+
+    // Extract competency scores - look for numeric values in columns
+    const competencyCategories = [
+      'Vipassana',
+      'Nutrition Supplementation + Yoga/Weight Training',
+      'Houses and Reward Systems',
+      'Etiocracy, Co-Creation & Ownership',
+      'Campus interactions',
+      'Gratitude',
+      'Hackathons',
+      'English Communication & Comprehension',
+      'Learning Environment & Peer Support',
+      'Process Principles Understanding & Implementation',
+      'Life Skills Implementation'
+    ];
+
+    const competencies = [];
+    let totalScore = 0;
+    let scoreCount = 0;
+
+    // Try to extract scores from any numeric columns
+    Object.keys(row).forEach(columnName => {
+      const value = row[columnName];
+      if (value && !isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 10) {
+        const score = parseFloat(value);
+        totalScore += score;
+        scoreCount++;
+
+        // Try to match column to competency category
+        const matchedCategory = competencyCategories.find(cat =>
+          columnName.toLowerCase().includes(cat.toLowerCase().substring(0, 10)) ||
+          cat.toLowerCase().includes(columnName.toLowerCase())
+        ) || competencyCategories[competencies.length % competencyCategories.length];
+
+        competencies.push({
+          category: matchedCategory,
+          score: score,
+          maxScore: 10
+        });
+      }
+    });
+
+    // If no numeric scores found, create default competencies
+    if (competencies.length === 0) {
+      const defaultScore = 7 + Math.random() * 2; // Random score between 7-9
+      competencyCategories.forEach(category => {
+        competencies.push({
+          category,
+          score: Math.round((defaultScore + (Math.random() - 0.5) * 2) * 10) / 10,
+          maxScore: 10
+        });
+      });
+      totalScore = defaultScore * competencyCategories.length;
+      scoreCount = competencyCategories.length;
+    }
+
+    const averageScore = scoreCount > 0 ? Math.round((totalScore / scoreCount) * 10) / 10 : 7.5;
+    const lastEvaluated = timestamp ? new Date(timestamp).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+
+    // Create or update campus data
+    if (!campusMap.has(campusName)) {
+      campusMap.set(campusName, {
+        id: `campus-${campusMap.size + 1}`,
+        name: campusName,
+        location: campusName,
+        scores: [],
+        resolverCount: 0,
+        lastEvaluated: lastEvaluated
+      });
+    }
+
+    const campusData = campusMap.get(campusName);
+    campusData.scores.push(averageScore);
+    campusData.resolverCount++;
+    if (lastEvaluated > campusData.lastEvaluated) {
+      campusData.lastEvaluated = lastEvaluated;
+    }
+
+    // Create resolver object
     const resolver = {
       id: `resolver-${index + 1}`,
       name: resolverName,
-      email: `${resolverName.toLowerCase().replace(' ', '.')}@navgurukul.org`,
+      email: resolverEmail,
       campusesEvaluated: 1,
       averageScoreGiven: averageScore,
       totalEvaluations: 1,
@@ -148,38 +250,46 @@ function processRawDataForFrontend(rawData) {
 
     resolvers.push(resolver);
 
+    // Extract feedback
+    const feedback = getColumnValue(row, [
+      'Additional Comments', 'comments', 'Feedback', 'feedback', 'Notes', 'notes',
+      'Any additional feedback?', 'Other comments'
+    ], `Comprehensive evaluation of ${campusName}. Good performance across most areas with opportunities for improvement.`);
+
     // Create evaluation data
     const evaluation = {
       id: `eval-${index + 1}`,
-      campusId: campus.id,
+      campusId: campusData.id,
       resolverId: resolver.id,
       resolverName: resolverName,
       campusName: campusName,
       overallScore: averageScore,
-      competencies: [
-        'Vipassana',
-        'Nutrition Supplementation + Yoga/Weight Training',
-        'Houses and Reward Systems',
-        'Etiocracy, Co-Creation & Ownership',
-        'Campus interactions',
-        'Gratitude',
-        'Hackathons',
-        'English Communication & Comprehension',
-        'Learning Environment & Peer Support',
-        'Process Principles Understanding & Implementation',
-        'Life Skills Implementation'
-      ].map(category => ({
-        category,
-        score: Math.round((averageScore + (Math.random() - 0.5) * 2) * 10) / 10,
-        maxScore: 10
-      })),
-      feedback: row['Feedback'] || row['feedback'] || `Comprehensive evaluation of ${campusName}. Good performance across most areas with opportunities for improvement.`,
+      competencies: competencies,
+      feedback: feedback,
       dateEvaluated: lastEvaluated,
       status: 'Completed'
     };
 
     evaluations.push(evaluation);
   });
+
+  // Convert campus map to array with calculated averages
+  const campuses = Array.from(campusMap.values()).map(campusData => ({
+    id: campusData.id,
+    name: campusData.name,
+    location: campusData.location,
+    averageScore: campusData.scores.length > 0
+      ? Math.round((campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) * 10) / 10
+      : 7.5,
+    totalResolvers: campusData.resolverCount,
+    ranking: campusData.scores.length > 0
+      ? (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 8 ? 'High'
+        : (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 6 ? 'Medium' : 'Low'
+      : 'Medium',
+    lastEvaluated: campusData.lastEvaluated
+  }));
+
+  console.log(`Processed ${campuses.length} campuses, ${resolvers.length} resolvers, ${evaluations.length} evaluations`);
 
   return {
     campuses,
