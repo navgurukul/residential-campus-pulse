@@ -24,6 +24,16 @@ const getRanking = (score: number): 'High' | 'Medium' | 'Low' => {
   return 'Low';
 };
 
+// Campus name mapping to handle name changes and additions
+const campusNameMapping: { [key: string]: string } = {
+  'Raipur': 'Raigarh',
+  'raipur': 'Raigarh',
+  // Add other mappings as needed
+};
+
+// Additional campuses to include
+const additionalCampuses = ['Dharamshala', 'Raigarh'];
+
 export const processApiData = (apiData: ApiResponse): { campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] } => {
   if (!apiData || !apiData.responses) {
     return { campuses: [], resolvers: [], evaluations: [] };
@@ -35,7 +45,9 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
   const campusMap = new Map<string, any>();
 
   validResponses.forEach((response, index) => {
-    const { name, email, timestamp, campus, level, framework } = response;
+    const { name, email, timestamp, level, framework } = response;
+    // Apply campus name mapping
+    const campus = campusNameMapping[response.campus] || response.campus;
 
     // Process resolvers
     if (!resolverMap.has(name)) {
@@ -80,6 +92,20 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
     ...r,
     campusesEvaluated: r.campuses.size,
   }));
+
+  // Add additional campuses that might not be in the API data
+  additionalCampuses.forEach((campusName, index) => {
+    if (!campusMap.has(campusName)) {
+      campusMap.set(campusName, {
+        id: `additional-${campusName}-${index}`,
+        name: `${campusName} Campus`,
+        location: campusName,
+        lastEvaluated: new Date().toISOString().split('T')[0],
+        resolvers: new Set<string>(),
+        averageScore: getRandomScore(),
+      });
+    }
+  });
 
   const campuses: Campus[] = Array.from(campusMap.values()).map(c => ({
     ...c,
