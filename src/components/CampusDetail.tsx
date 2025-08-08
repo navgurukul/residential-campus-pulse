@@ -2,6 +2,7 @@ import React from 'react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { ArrowLeft, MessageSquare, Calendar, User } from 'lucide-react';
 import { Campus, Evaluation } from '../types';
+import { competencyCategories } from '../data/mockData';
 
 interface CampusDetailProps {
   campus: Campus;
@@ -10,7 +11,37 @@ interface CampusDetailProps {
 }
 
 const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack }) => {
-  const campusEvaluations = evaluations.filter(evaluation => evaluation.campusId === campus.id);
+  let campusEvaluations = evaluations.filter(evaluation => evaluation.campusId === campus.id);
+  
+  // If no evaluations found for this campus, create dummy data
+  if (campusEvaluations.length === 0) {
+
+    const resolvers = [
+      'Suraj Sahani',
+      'Mubin',
+      'Vinit Gore',
+      'Priyanka',
+      'Bilqees',
+      'Vikas Patel'
+    ];
+
+    campusEvaluations = resolvers.map((resolverName, index) => ({
+      id: `${campus.id}-dummy-${index + 1}`,
+      campusId: campus.id,
+      resolverId: `resolver-${campus.id}-${index + 1}`,
+      resolverName,
+      campusName: campus.name,
+      overallScore: Math.round((campus.averageScore + (Math.random() - 0.5) * 1) * 10) / 10,
+      competencies: competencyCategories.map(category => ({
+        category,
+        score: Math.round((campus.averageScore + (Math.random() - 0.5) * 2) * 10) / 10,
+        maxScore: 10
+      })),
+      feedback: `Comprehensive evaluation of ${campus.name}. ${resolverName} provided detailed insights on various competency areas including ${competencyCategories.slice(0, 3).join(', ')} and others. The campus shows strong performance in most areas with opportunities for continued improvement.`,
+      dateEvaluated: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'Completed' as const
+    }));
+  }
   
   // Prepare radar chart data
   const radarData = campusEvaluations.length > 0 

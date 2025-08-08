@@ -231,7 +231,7 @@ function App() {
         {currentView === 'campus-detail' && selectedCampus && (
           <CampusDetail
             campus={selectedCampus}
-            evaluations={mockEvaluations}
+            evaluations={evaluations.length > 0 ? evaluations : mockEvaluations}
             onBack={handleBackToCampusOverview}
           />
         )}
