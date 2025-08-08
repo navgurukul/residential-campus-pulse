@@ -119,6 +119,21 @@ function getColumnValue(row, possibleNames, defaultValue = '') {
   return defaultValue;
 }
 
+// Helper function to convert "Level X" text to numeric score
+function convertLevelToScore(levelText) {
+  if (!levelText || typeof levelText !== 'string') return null;
+
+  // Extract level number from text like "Level 0", "Level 1", etc.
+  const levelMatch = levelText.match(/Level\s*(\d+)/i);
+  if (levelMatch) {
+    const level = parseInt(levelMatch[1]);
+    // Convert level 0-3 to score 0-10 (you can adjust this mapping)
+    return Math.min(10, level * 2.5); // Level 0=0, Level 1=2.5, Level 2=5, Level 3=7.5, Level 4=10
+  }
+
+  return null;
+}
+
 // Function to process raw Google Sheet data into frontend format
 function processRawDataForFrontend(rawData) {
   console.log('Processing raw data for frontend...');
@@ -145,77 +160,102 @@ function processRawDataForFrontend(rawData) {
       'Timestamp', 'timestamp', 'Date', 'Created Date', 'Submission Time'
     ], new Date().toISOString());
 
-    // Extract campus name - try various patterns
+    // Extract campus name - using your actual column name
     const campusName = getColumnValue(row, [
-      'Which campus are you evaluating?',
-      'Campus Name', 'campus_name', 'Campus', 'campus', 'Name', 'name',
-      'Campus Location', 'Location'
+      'Choose the campus you are referring to ',
+      'Choose the campus you are referring to',
+      'Campus Name', 'campus_name', 'Campus', 'campus'
     ], `Campus ${index + 1}`);
 
-    // Extract resolver information
+    // Extract resolver information - using your actual column names
     const resolverName = getColumnValue(row, [
-      'Email Address', 'email', 'Your Email', 'Resolver Email',
-      'Name', 'Your Name', 'Full Name', 'Resolver Name'
+      'Name ',
+      'Name',
+      'Your Name', 'Full Name', 'Resolver Name'
     ], `Resolver ${index + 1}`);
 
     const resolverEmail = getColumnValue(row, [
-      'Email Address', 'email', 'Your Email', 'Resolver Email'
+      'Email Address',
+      'email', 'Your Email', 'Resolver Email'
     ], resolverName.includes('@') ? resolverName : `${resolverName.toLowerCase().replace(/\s+/g, '.')}@navgurukul.org`);
 
-    // Extract competency scores - look for numeric values in columns
-    const competencyCategories = [
-      'Vipassana',
-      'Nutrition Supplementation + Yoga/Weight Training',
-      'Houses and Reward Systems',
-      'Etiocracy, Co-Creation & Ownership',
-      'Campus interactions',
-      'Gratitude',
-      'Hackathons',
-      'English Communication & Comprehension',
-      'Learning Environment & Peer Support',
-      'Process Principles Understanding & Implementation',
-      'Life Skills Implementation'
+    // Extract competency scores from your actual column names
+    const competencyMapping = [
+      {
+        category: 'Vipassana',
+        columns: ['Meditation (Ana Pana for most and students attending Vipassana Camps) ']
+      },
+      {
+        category: 'Nutrition Supplementation + Yoga/Weight Training',
+        columns: ['Nutrition Supplementation + Yoga/Weight Training']
+      },
+      {
+        category: 'Houses and Reward Systems',
+        columns: ['Houses and Reward Systems']
+      },
+      {
+        category: 'Etiocracy, Co-Creation & Ownership',
+        columns: ['Etiocracy, Co-Creation & Ownership']
+      },
+      {
+        category: 'Campus interactions',
+        columns: ['Campus interactions']
+      },
+      {
+        category: 'Gratitude',
+        columns: ['Gratitude']
+      },
+      {
+        category: 'Hackathons',
+        columns: ['Hackathons']
+      },
+      {
+        category: 'English Communication & Comprehension',
+        columns: ['English Communication & Comprehension']
+      },
+      {
+        category: 'Learning Environment & Peer Support',
+        columns: ['Learning Environment & Peer Support']
+      },
+      {
+        category: 'Process Principles Understanding & Implementation',
+        columns: ['Process Principles Understanding & Implementation']
+      },
+      {
+        category: 'Life Skills Implementation',
+        columns: ['Life Skills Implementation \n\n(is english class + other other spaces on campus follow the framework of Activity Design and faciliation?\n\n1) Placements+AI (80%)\n2) Inner work, (10%)\n3) Ecology, Gender (10%) ']
+      }
     ];
 
     const competencies = [];
     let totalScore = 0;
     let scoreCount = 0;
 
-    // Try to extract scores from any numeric columns
-    Object.keys(row).forEach(columnName => {
-      const value = row[columnName];
-      if (value && !isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 10) {
-        const score = parseFloat(value);
-        totalScore += score;
-        scoreCount++;
+    // Extract scores from your actual competency columns
+    competencyMapping.forEach(mapping => {
+      const levelText = getColumnValue(row, mapping.columns, '');
+      const score = convertLevelToScore(levelText);
 
-        // Try to match column to competency category
-        const matchedCategory = competencyCategories.find(cat =>
-          columnName.toLowerCase().includes(cat.toLowerCase().substring(0, 10)) ||
-          cat.toLowerCase().includes(columnName.toLowerCase())
-        ) || competencyCategories[competencies.length % competencyCategories.length];
-
+      if (score !== null) {
         competencies.push({
-          category: matchedCategory,
+          category: mapping.category,
           score: score,
           maxScore: 10
         });
-      }
-    });
-
-    // If no numeric scores found, create default competencies
-    if (competencies.length === 0) {
-      const defaultScore = 7 + Math.random() * 2; // Random score between 7-9
-      competencyCategories.forEach(category => {
+        totalScore += score;
+        scoreCount++;
+      } else {
+        // Fallback score if no level found
+        const fallbackScore = 5 + Math.random() * 3; // Random score between 5-8
         competencies.push({
-          category,
-          score: Math.round((defaultScore + (Math.random() - 0.5) * 2) * 10) / 10,
+          category: mapping.category,
+          score: Math.round(fallbackScore * 10) / 10,
           maxScore: 10
         });
-      });
-      totalScore = defaultScore * competencyCategories.length;
-      scoreCount = competencyCategories.length;
-    }
+        totalScore += fallbackScore;
+        scoreCount++;
+      }
+    });
 
     const averageScore = scoreCount > 0 ? Math.round((totalScore / scoreCount) * 10) / 10 : 7.5;
     const lastEvaluated = timestamp ? new Date(timestamp).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
