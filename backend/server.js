@@ -298,6 +298,16 @@ function processRawDataForFrontend(rawData) {
   };
 }
 
+// Debug endpoint to see raw stored data
+app.get('/api/debug-data', (req, res) => {
+  res.json({
+    storedDataLength: storedData.length,
+    lastUpdated: lastUpdated,
+    sampleData: storedData.length > 0 ? storedData[0] : null,
+    allColumns: storedData.length > 0 ? Object.keys(storedData[0]) : []
+  });
+});
+
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
