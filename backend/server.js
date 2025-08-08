@@ -267,14 +267,14 @@ function processRawDataForFrontend(rawData) {
         name: campusName,
         location: campusName,
         scores: [],
-        resolverCount: 0,
+        resolverEmails: new Set(), // Track unique resolver emails per campus
         lastEvaluated: lastEvaluated
       });
     }
 
     const campusData = campusMap.get(campusName);
     campusData.scores.push(averageScore);
-    campusData.resolverCount++;
+    campusData.resolverEmails.add(resolverEmail); // Add resolver email to set (automatically deduplicates)
     if (lastEvaluated > campusData.lastEvaluated) {
       campusData.lastEvaluated = lastEvaluated;
     }
@@ -284,7 +284,9 @@ function processRawDataForFrontend(rawData) {
     if (resolverMap.has(resolverEmail)) {
       // Update existing resolver
       resolver = resolverMap.get(resolverEmail);
-      resolver.campusesEvaluated = new Set([...resolver.campusesEvaluatedSet, campusName]).size;
+      // Add campus to the set of evaluated campuses (automatically handles duplicates)
+      resolver.campusesEvaluatedSet.add(campusName);
+      resolver.campusesEvaluated = resolver.campusesEvaluatedSet.size;
       resolver.totalEvaluations++;
       resolver.totalScoreSum += averageScore;
       resolver.averageScoreGiven = Math.round((resolver.totalScoreSum / resolver.totalEvaluations) * 10) / 10;
@@ -344,7 +346,7 @@ function processRawDataForFrontend(rawData) {
     averageScore: campusData.scores.length > 0
       ? Math.round((campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) * 10) / 10
       : 7.5,
-    totalResolvers: campusData.resolverCount,
+    totalResolvers: campusData.resolverEmails.size, // Use deduplicated count
     ranking: campusData.scores.length > 0
       ? (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 8 ? 'High'
         : (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 6 ? 'Medium' : 'Low'

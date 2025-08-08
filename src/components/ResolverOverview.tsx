@@ -9,13 +9,16 @@ interface ResolverOverviewProps {
 
 const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
   const chartData = resolvers.map(resolver => ({
-    name: resolver.name.split(' ')[0],
+    name: resolver.name,
     campuses: resolver.campusesEvaluated,
     avgScore: resolver.averageScoreGiven
   }));
 
   const totalEvaluations = resolvers.reduce((sum, resolver) => sum + resolver.totalEvaluations, 0);
-  const totalCampusesEvaluated = resolvers.reduce((sum, resolver) => sum + resolver.campusesEvaluated, 0);
+  const uniqueCampusesEvaluated = new Set(resolvers.flatMap(resolver => 
+    // This is an approximation since we don't have campus names per resolver in the current data structure
+    Array(resolver.campusesEvaluated).fill(0).map((_, i) => `campus-${resolver.id}-${i}`)
+  )).size;
   const overallAvgScore = resolvers.length > 0 ? resolvers.reduce((sum, resolver) => sum + resolver.averageScoreGiven, 0) / resolvers.length : 0;
   const maxCampusesEvaluated = resolvers.length > 0 ? Math.max(...resolvers.map(r => r.campusesEvaluated)) : 0;
 
@@ -50,7 +53,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Campuses Covered</p>
+              <p className="text-sm font-medium text-gray-600">Max Campuses by Resolver</p>
               <p className="text-3xl font-bold text-gray-900">{maxCampusesEvaluated}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
@@ -76,10 +79,18 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Campuses Evaluated by Resolver</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis 
+                dataKey="name" 
+                angle={-45}
+                textAnchor="end"
+                height={120}
+                interval={0}
+                fontSize={11}
+                tick={{ fontSize: 11 }}
+              />
               <YAxis />
               <Tooltip />
               <Bar dataKey="campuses" fill="#3B82F6" radius={[4, 4, 0, 0]} />
@@ -89,10 +100,18 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Average Scores Given</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis 
+                dataKey="name" 
+                angle={-45}
+                textAnchor="end"
+                height={120}
+                interval={0}
+                fontSize={11}
+                tick={{ fontSize: 11 }}
+              />
               <YAxis domain={[0, 10]} />
               <Tooltip />
               <Bar dataKey="avgScore" fill="#10B981" radius={[4, 4, 0, 0]} />
@@ -105,6 +124,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="p-6 border-b border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900">Resolver Performance</h3>
+          <p className="text-sm text-gray-500 mt-1">Each resolver appears once, with aggregated data from all their evaluations</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">

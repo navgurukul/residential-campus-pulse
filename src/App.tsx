@@ -290,6 +290,7 @@ function App() {
         {currentView === 'campus-overview' && (
           <CampusOverview
             campuses={filteredCampuses}
+            evaluations={evaluations.length > 0 ? evaluations : mockEvaluations}
             onCampusSelect={handleCampusSelect}
             onSort={handleSort}
             sortConfig={sortConfig}

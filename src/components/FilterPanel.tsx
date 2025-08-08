@@ -35,7 +35,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       resolver: '',
       dateRange: { start: '', end: '' },
       competencyCategory: '',
-      competency: 'all'
+      competency: ''
     });
   };
 
@@ -72,7 +72,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Campus Filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Campus</label>
@@ -104,29 +104,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 {toTitleCase(resolver.name)}
               </option>
             ))}
-          </select>
-        </div>
-
-        {/* Competency Framework Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Competency Framework</label>
-          <select
-            value={filters.competency}
-            onChange={(e) => handleFilterChange('competency', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All Competencies</option>
-            <option value="vipassana">Vipassana</option>
-            <option value="nutrition">Nutrition Supplementation + Yoga/Weight Training</option>
-            <option value="houses">Houses and Reward Systems</option>
-            <option value="etiocracy">Etiocracy, Co-Creation & Ownership</option>
-            <option value="campus-interactions">Campus interactions</option>
-            <option value="gratitude">Gratitude</option>
-            <option value="hackathons">Hackathons</option>
-            <option value="english-communication">English Communication & Comprehension</option>
-            <option value="learning-environment">Learning Environment & Peer Support</option>
-            <option value="process-principles">Process Principles Understanding & Implementation</option>
-            <option value="life-skills">Life Skills Implementation</option>
           </select>
         </div>
 

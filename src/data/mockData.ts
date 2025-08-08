@@ -18,29 +18,58 @@ export const competencyCategories = [
 const generateEvaluationsForCampus = (campusId: string, campusName: string, baseScore: number): Evaluation[] => {
   const resolvers = [
     'Suraj Sahani',
-    'Mubin',
+    'Mubin', 
     'Vinit Gore',
     'Priyanka',
     'Bilqees',
     'Vikas Patel'
   ];
 
-  return resolvers.map((resolverName, index) => ({
-    id: `${campusId}-${index + 1}`,
-    campusId,
-    resolverId: `resolver-${campusId}-${index + 1}`,
-    resolverName,
-    campusName,
-    overallScore: Math.round((baseScore + (Math.random() - 0.5) * 2) * 10) / 10,
-    competencies: competencyCategories.map(category => ({
-      category,
-      score: Math.round((baseScore + (Math.random() - 0.5) * 3) * 10) / 10,
-      maxScore: 10
-    })),
-    feedback: `Comprehensive evaluation of ${campusName}. ${resolverName} provided detailed insights on various competency areas including ${competencyCategories.slice(0, 3).join(', ')} and others.`,
-    dateEvaluated: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    status: 'Completed' as const
-  }));
+  const evaluations: Evaluation[] = [];
+  
+  // Generate initial evaluations
+  resolvers.forEach((resolverName, index) => {
+    evaluations.push({
+      id: `${campusId}-${index + 1}`,
+      campusId,
+      resolverId: `resolver-${resolverName.toLowerCase().replace(/\s+/g, '-')}`,
+      resolverName,
+      campusName,
+      overallScore: Math.round((baseScore + (Math.random() - 0.5) * 2) * 10) / 10,
+      competencies: competencyCategories.map(category => ({
+        category,
+        score: Math.round((baseScore + (Math.random() - 0.5) * 3) * 10) / 10,
+        maxScore: 10
+      })),
+      feedback: `Comprehensive evaluation of ${campusName}. ${resolverName} provided detailed insights on various competency areas including ${competencyCategories.slice(0, 3).join(', ')} and others.`,
+      dateEvaluated: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'Completed' as const
+    });
+  });
+
+  // Add some duplicate evaluations from same resolvers (simulating multiple evaluations over time)
+  // This demonstrates the deduplication scenario you mentioned
+  const duplicateResolvers = resolvers.slice(0, 3); // First 3 resolvers evaluate again
+  duplicateResolvers.forEach((resolverName, index) => {
+    evaluations.push({
+      id: `${campusId}-duplicate-${index + 1}`,
+      campusId,
+      resolverId: `resolver-${resolverName.toLowerCase().replace(/\s+/g, '-')}`, // Same resolver ID
+      resolverName,
+      campusName,
+      overallScore: Math.round((baseScore + (Math.random() - 0.5) * 2) * 10) / 10,
+      competencies: competencyCategories.map(category => ({
+        category,
+        score: Math.round((baseScore + (Math.random() - 0.5) * 3) * 10) / 10,
+        maxScore: 10
+      })),
+      feedback: `Follow-up evaluation of ${campusName} by ${resolverName}. Noted improvements in several areas since last evaluation.`,
+      dateEvaluated: new Date(Date.now() - Math.random() * 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // More recent
+      status: 'Completed' as const
+    });
+  });
+
+  return evaluations;
 };
 
 export const mockEvaluations: Evaluation[] = [

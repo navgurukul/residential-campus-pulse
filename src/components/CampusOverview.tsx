@@ -1,16 +1,20 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Users, Award, MapPin, ArrowUpDown } from 'lucide-react';
-import { Campus } from '../types';
+import { TrendingUp, Users, Award, MapPin, ArrowUpDown, Filter } from 'lucide-react';
+import { Campus, Evaluation } from '../types';
+import { competencyCategories } from '../data/mockData';
 
 interface CampusOverviewProps {
   campuses: Campus[];
+  evaluations: Evaluation[];
   onCampusSelect: (campusId: string) => void;
   onSort: (key: keyof Campus) => void;
   sortConfig: { key: keyof Campus; direction: 'ascending' | 'descending' } | null;
 }
 
-const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelect, onSort, sortConfig }) => {
+const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, onCampusSelect, onSort, sortConfig }) => {
+  const [selectedCompetency, setSelectedCompetency] = useState<string>('');
+
   const getRankingColor = (ranking: string) => {
     switch (ranking) {
       case 'High': return 'text-green-600 bg-green-100';
@@ -20,11 +24,29 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelec
     }
   };
 
-  const chartData = campuses.map(campus => ({
-    name: campus.name,
-    score: campus.averageScore,
-    resolvers: campus.totalResolvers
-  }));
+  // Calculate competency-specific scores for each campus
+  const getCompetencyScoreForCampus = (campusId: string, competency: string): number => {
+    const campusEvaluations = evaluations.filter(evaluation => evaluation.campusId === campusId);
+    if (campusEvaluations.length === 0) return 0;
+
+    const competencyScores = campusEvaluations
+      .flatMap(evaluation => evaluation.competencies)
+      .filter(comp => comp.category === competency)
+      .map(comp => comp.score);
+
+    if (competencyScores.length === 0) return 0;
+    return competencyScores.reduce((sum, score) => sum + score, 0) / competencyScores.length;
+  };
+
+  const chartData = useMemo(() => {
+    return campuses.map(campus => ({
+      name: campus.name,
+      score: selectedCompetency 
+        ? getCompetencyScoreForCampus(campus.id, selectedCompetency)
+        : campus.averageScore,
+      resolvers: campus.totalResolvers
+    }));
+  }, [campuses, selectedCompetency, evaluations]);
 
   const rankingData = [
     { name: 'High', value: campuses.filter(c => c.ranking === 'High').length, color: '#10B981' },
@@ -91,7 +113,24 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelec
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Campus Performance</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Campus Performance</h3>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <select
+                value={selectedCompetency}
+                onChange={(e) => setSelectedCompetency(e.target.value)}
+                className="text-sm border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Overall Score</option>
+                {competencyCategories.map(category => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -103,8 +142,14 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelec
                 interval={0}
                 tick={{ fontSize: 12 }}
               />
-              <YAxis />
-              <Tooltip />
+              <YAxis domain={[0, 10]} />
+              <Tooltip 
+                formatter={(value: number) => [
+                  value.toFixed(1), 
+                  selectedCompetency || 'Overall Score'
+                ]}
+                labelFormatter={(label) => `Campus: ${label}`}
+              />
               <Bar dataKey="score" fill="#3B82F6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
