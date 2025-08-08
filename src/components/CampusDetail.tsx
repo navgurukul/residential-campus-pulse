@@ -1,8 +1,9 @@
 import React from 'react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import { ArrowLeft, MessageSquare, Calendar, User } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Calendar, User, Download, FileText } from 'lucide-react';
 import { Campus, Evaluation } from '../types';
 import { competencyCategories } from '../data/mockData';
+import { exportToPDF, exportToCSV, prepareCampusDetailDataForExport } from '../utils/exportUtils';
 
 interface CampusDetailProps {
   campus: Campus;
@@ -58,6 +59,15 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
     score: evaluation.overallScore
   }));
 
+  const handleExportPDF = () => {
+    exportToPDF('campus-detail-content', `${campus.name}-campus-report`);
+  };
+
+  const handleExportCSV = () => {
+    const data = prepareCampusDetailDataForExport(campus, campusEvaluations);
+    exportToCSV(data.evaluations, `${campus.name}-evaluations`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -74,14 +84,34 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
             <p className="text-gray-600">{campus.location}</p>
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-3xl font-bold text-blue-600">{campus.averageScore.toFixed(1)}</div>
-          <div className="text-sm text-gray-500">Overall Score</div>
+        <div className="flex items-center space-x-4">
+          <div className="flex space-x-2">
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Export CSV</span>
+            </button>
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export PDF</span>
+            </button>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold text-blue-600">{campus.averageScore.toFixed(1)}</div>
+            <div className="text-sm text-gray-500">Overall Score</div>
+          </div>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Main Content for PDF Export */}
+      <div id="campus-detail-content" className="space-y-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -222,6 +252,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
             <p>No evaluations available for this campus</p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

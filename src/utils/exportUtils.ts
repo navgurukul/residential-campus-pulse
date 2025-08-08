@@ -26,10 +26,51 @@ export const exportToCSV = (data: any[], filename: string) => {
   document.body.removeChild(link);
 };
 
-export const exportToPDF = (elementId: string, filename: string) => {
-  // This is a placeholder for PDF export functionality
-  // In a real application, you would use a library like jsPDF or html2canvas
-  alert('PDF export functionality would be implemented using libraries like jsPDF or html2canvas');
+export const exportToPDF = async (elementId: string, filename: string) => {
+  try {
+    const { default: html2canvas } = await import('html2canvas');
+    const { default: jsPDF } = await import('jspdf');
+    
+    const element = document.getElementById(elementId);
+    if (!element) {
+      console.error('Element not found for PDF export');
+      return;
+    }
+
+    // Create canvas from the element
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff'
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    const imgWidth = 210; // A4 width in mm
+    const pageHeight = 295; // A4 height in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    // Add first page
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    // Add additional pages if needed
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(`${filename}.pdf`);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    alert('Error generating PDF. Please try again.');
+  }
 };
 
 export const prepareCampusDataForExport = (campuses: any[]) => {
@@ -63,4 +104,28 @@ export const prepareEvaluationDataForExport = (evaluations: any[]) => {
     'Status': evaluation.status,
     'Feedback': evaluation.feedback
   }));
+};
+
+export const prepareCampusDetailDataForExport = (campus: any, evaluations: any[]) => {
+  const campusEvaluations = evaluations.filter(evaluation => evaluation.campusId === campus.id);
+  
+  return {
+    campusInfo: {
+      'Campus Name': campus.name,
+      'Location': campus.location,
+      'Overall Score': campus.averageScore,
+      'Total Resolvers': campus.totalResolvers,
+      'Ranking': campus.ranking,
+      'Last Evaluated': new Date(campus.lastEvaluated).toLocaleDateString()
+    },
+    evaluations: campusEvaluations.map(evaluation => ({
+      'Resolver': evaluation.resolverName,
+      'Overall Score': evaluation.overallScore,
+      'Date Evaluated': new Date(evaluation.dateEvaluated).toLocaleDateString(),
+      'Competencies': evaluation.competencies.map(comp => 
+        `${comp.category}: ${comp.score}/${comp.maxScore}`
+      ).join('; '),
+      'Feedback': evaluation.feedback
+    }))
+  };
 };
