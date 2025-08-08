@@ -41,6 +41,10 @@ app.post('/api/import-data', (req, res) => {
     storedData = data;
     lastUpdated = new Date().toISOString();
 
+    console.log('=== STORING DATA ===');
+    console.log('Data stored in memory, length:', storedData.length);
+    console.log('Last updated set to:', lastUpdated);
+
     // Log column headers if data exists
     if (data.length > 0) {
       const headers = Object.keys(data[0]);
@@ -300,11 +304,17 @@ function processRawDataForFrontend(rawData) {
 
 // Debug endpoint to see raw stored data
 app.get('/api/debug-data', (req, res) => {
+  console.log('=== DEBUG ENDPOINT CALLED ===');
+  console.log('Current storedData length:', storedData.length);
+  console.log('Current lastUpdated:', lastUpdated);
+
   res.json({
     storedDataLength: storedData.length,
     lastUpdated: lastUpdated,
     sampleData: storedData.length > 0 ? storedData[0] : null,
-    allColumns: storedData.length > 0 ? Object.keys(storedData[0]) : []
+    allColumns: storedData.length > 0 ? Object.keys(storedData[0]) : [],
+    serverTime: new Date().toISOString(),
+    message: storedData.length === 0 ? 'No data stored yet. Run Google Apps Script to send data.' : 'Data found'
   });
 });
 
