@@ -165,14 +165,31 @@ function processRawDataForFrontend(rawData) {
       'Choose the campus you are referring to ',
       'Choose the campus you are referring to',
       'Campus Name', 'campus_name', 'Campus', 'campus'
-    ], `Campus ${index + 1}`);
+    ], '');
+
+    // Skip rows without campus name
+    if (!campusName || campusName.trim() === '') {
+      console.log(`Skipping row ${index + 1}: No campus name found`);
+      console.log('Available columns:', Object.keys(row));
+      console.log('Campus column values:', {
+        'Choose the campus you are referring to ': row['Choose the campus you are referring to '],
+        'Choose the campus you are referring to': row['Choose the campus you are referring to']
+      });
+      return; // Skip this row
+    }
 
     // Extract resolver information - using your actual column names
     const resolverName = getColumnValue(row, [
       'Name ',
       'Name',
       'Your Name', 'Full Name', 'Resolver Name'
-    ], `Resolver ${index + 1}`);
+    ], '');
+
+    // Skip rows without resolver name
+    if (!resolverName || resolverName.trim() === '') {
+      console.log(`Skipping row ${index + 1}: No resolver name found`);
+      return; // Skip this row
+    }
 
     const resolverEmail = getColumnValue(row, [
       'Email Address',
