@@ -10,8 +10,8 @@
  */
 
 // Update this URL to your deployed backend URL
-const BACKEND_URL = 'http://localhost:3001/api/import-data'; // For local testing
-// const BACKEND_URL = 'https://your-deployed-backend.com/api/import-data'; // For production
+// const BACKEND_URL = 'http://localhost:3001/api/import-data'; // For local testing
+const BACKEND_URL = 'https://ng-campus-pulse.onrender.com/api/import-data'; // For production
 
 function pushDataToBackend() {
   try {
