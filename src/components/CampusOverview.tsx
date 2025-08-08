@@ -21,7 +21,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelec
   };
 
   const chartData = campuses.map(campus => ({
-    name: campus.name.split(' ')[0],
+    name: campus.name,
     score: campus.averageScore,
     resolvers: campus.totalResolvers
   }));
@@ -93,9 +93,16 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, onCampusSelec
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Campus Performance</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis 
+                dataKey="name" 
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                interval={0}
+                tick={{ fontSize: 12 }}
+              />
               <YAxis />
               <Tooltip />
               <Bar dataKey="score" fill="#3B82F6" radius={[4, 4, 0, 0]} />

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Building2, Users, BarChart3, Settings } from 'lucide-react';
+import { Building2, Users, BarChart3, Settings, RefreshCw } from 'lucide-react';
 import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
 import ResolverOverview from './components/ResolverOverview';
@@ -26,28 +26,46 @@ function App() {
   const [resolvers, setResolvers] = useState<Resolver[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Campus; direction: 'ascending' | 'descending' } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      let url = 'https://script.googleusercontent.com/a/macros/navgurukul.org/echo?user_content_key=AehSKLgQzj0ZDJkfCeFR1k2Ize5Cx6-lVWhJHdbcBqQd1UfcdUjtuC8ylC7VAmDnHMctsxtc3pIszApXcGm9JC-oov93G-UbW8YpHauDYRszWb3nWAamimC9ujdjKO5WqTKPAusk5qnleM9KDpLXJjmhFBANdCsqq55HRAt6oqMCflHd7Qs9Bs4_nnrRAFuTpCmrTOKzrnGWmUQQ5Je7LTWtnZ2Kei1s2ft_TksT7xZM__u3GCj92F1mmDOWyyPE_qmX7lZtEz2fPO9cWIATJWRwhXbxFH-ba__iDEtKkUeg0VJmJT9KQ0eAvW0UbPPVHw&lib=MNQ4Z5ed4HHZAzVnl2yR3tjPbXNLbe1dR';
-      if (filters.competency) {
-        if (filters.competency === 'all') {
-          url += '&action=competencies';
-        } else {
-          url += `&competency=${filters.competency}`;
-        }
-      }
+      
       try {
-        const response = await fetch(url);
+        // Fetch data from your deployed backend
+        const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data');
         const data = await response.json();
-        const { campuses, resolvers, evaluations } = processApiData(data);
+        
+        if (data.campuses && data.resolvers && data.evaluations) {
+          // Use data directly from backend (already processed)
+          setCampuses(data.campuses);
+          setResolvers(data.resolvers);
+          setEvaluations(data.evaluations);
+          setLastUpdated(data.lastUpdated);
+          console.log('Data loaded from backend:', {
+            campuses: data.campuses.length,
+            resolvers: data.resolvers.length,
+            evaluations: data.evaluations.length,
+            lastUpdated: data.lastUpdated
+          });
+        } else {
+          // Fallback to mock data if backend has no data yet
+          console.log('No data from backend, using mock data');
+          const { campuses, resolvers, evaluations } = processApiData([]);
+          setCampuses(campuses);
+          setResolvers(resolvers);
+          setEvaluations(mockEvaluations);
+        }
+      } catch (error) {
+        console.error('Error fetching data from backend:', error);
+        // Fallback to mock data on error
+        console.log('Backend error, using mock data');
+        const { campuses, resolvers, evaluations } = processApiData([]);
         setCampuses(campuses);
         setResolvers(resolvers);
-        setEvaluations(evaluations);
-      } catch (error) {
-        console.error('Error fetching data:', error);
+        setEvaluations(mockEvaluations);
       } finally {
         setLoading(false);
       }
@@ -55,6 +73,30 @@ function App() {
 
     fetchData();
   }, [filters.competency]);
+
+  const handleRefreshData = () => {
+    setLoading(true);
+    // Re-run the fetch data effect
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data');
+        const data = await response.json();
+        
+        if (data.campuses && data.resolvers && data.evaluations) {
+          setCampuses(data.campuses);
+          setResolvers(data.resolvers);
+          setEvaluations(data.evaluations);
+          setLastUpdated(data.lastUpdated);
+          console.log('Data refreshed from backend');
+        }
+      } catch (error) {
+        console.error('Error refreshing data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  };
 
   // Filter and sort data based on current filters and sort configuration
   const filteredCampuses = useMemo(() => {
@@ -171,8 +213,20 @@ function App() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-500">
-                Last updated: {new Date().toLocaleDateString()}
+                {lastUpdated ? (
+                  <>Backend data: {new Date(lastUpdated).toLocaleString()}</>
+                ) : (
+                  <>Using mock data</>
+                )}
               </div>
+              <button
+                onClick={handleRefreshData}
+                disabled={loading}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 disabled:opacity-50"
+                title="Refresh data from backend"
+              >
+                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
               <Settings className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors duration-200" />
             </div>
           </div>
@@ -191,11 +245,10 @@ function App() {
                   <button
                     key={item.id}
                     onClick={() => setCurrentView(item.id as View)}
-                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                      isActive
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${isActive
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.name}</span>
@@ -220,8 +273,8 @@ function App() {
         )}
 
         {currentView === 'campus-overview' && (
-          <CampusOverview 
-            campuses={filteredCampuses} 
+          <CampusOverview
+            campuses={filteredCampuses}
             onCampusSelect={handleCampusSelect}
             onSort={handleSort}
             sortConfig={sortConfig}

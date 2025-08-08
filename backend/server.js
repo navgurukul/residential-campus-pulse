@@ -146,9 +146,9 @@ function processRawDataForFrontend(rawData) {
   const availableColumns = Object.keys(rawData[0]);
   console.log('Available columns in data:', availableColumns);
 
-  // Group data by campus to aggregate scores
+  // Group data by campus to aggregate scores and deduplicate resolvers by email
   const campusMap = new Map();
-  const resolvers = [];
+  const resolverMap = new Map(); // Use email as key to deduplicate resolvers
   const evaluations = [];
 
   // Process each row from Google Sheet
@@ -279,20 +279,39 @@ function processRawDataForFrontend(rawData) {
       campusData.lastEvaluated = lastEvaluated;
     }
 
-    // Create resolver object
-    const resolver = {
-      id: `resolver-${index + 1}`,
-      name: resolverName,
-      email: resolverEmail,
-      campusesEvaluated: 1,
-      averageScoreGiven: averageScore,
-      totalEvaluations: 1,
-      lastActivity: lastEvaluated,
-      level: 'Senior',
-      framework: 'Standard'
-    };
-
-    resolvers.push(resolver);
+    // Create or update resolver object (deduplicate by email)
+    let resolver;
+    if (resolverMap.has(resolverEmail)) {
+      // Update existing resolver
+      resolver = resolverMap.get(resolverEmail);
+      resolver.campusesEvaluated = new Set([...resolver.campusesEvaluatedSet, campusName]).size;
+      resolver.totalEvaluations++;
+      resolver.totalScoreSum += averageScore;
+      resolver.averageScoreGiven = Math.round((resolver.totalScoreSum / resolver.totalEvaluations) * 10) / 10;
+      if (lastEvaluated > resolver.lastActivity) {
+        resolver.lastActivity = lastEvaluated;
+      }
+      // Update name to the most recent/complete version
+      if (resolverName.length > resolver.name.length) {
+        resolver.name = resolverName;
+      }
+    } else {
+      // Create new resolver
+      resolver = {
+        id: `resolver-${resolverMap.size + 1}`,
+        name: resolverName,
+        email: resolverEmail,
+        campusesEvaluated: 1,
+        campusesEvaluatedSet: new Set([campusName]),
+        averageScoreGiven: averageScore,
+        totalEvaluations: 1,
+        totalScoreSum: averageScore,
+        lastActivity: lastEvaluated,
+        level: 'Senior',
+        framework: 'Standard'
+      };
+      resolverMap.set(resolverEmail, resolver);
+    }
 
     // Extract feedback
     const feedback = getColumnValue(row, [
@@ -333,7 +352,14 @@ function processRawDataForFrontend(rawData) {
     lastEvaluated: campusData.lastEvaluated
   }));
 
-  console.log(`Processed ${campuses.length} campuses, ${resolvers.length} resolvers, ${evaluations.length} evaluations`);
+  // Convert resolver map to array and clean up temporary fields
+  const resolvers = Array.from(resolverMap.values()).map(resolver => {
+    // Remove temporary fields used for deduplication
+    const { campusesEvaluatedSet, totalScoreSum, ...cleanResolver } = resolver;
+    return cleanResolver;
+  });
+
+  console.log(`Processed ${campuses.length} campuses, ${resolvers.length} unique resolvers, ${evaluations.length} evaluations`);
 
   return {
     campuses,
