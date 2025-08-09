@@ -356,16 +356,16 @@ function processRawDataForFrontend(rawData) {
     // Map competency names to their exact form field patterns
     const competencyMappings = [
       {
-        name: 'Vipassana',
-        patterns: ['vipassana', 'meditation', 'ana pana']
+        name: 'Meditation (Ana Pana for most and students attending Vipassana Camps)',
+        patterns: ['meditation', 'vipassana', 'ana pana']
       },
       {
         name: 'Nutrition Supplementation + Yoga/Weight Training',
-        patterns: ['nutrition', 'yoga', 'weight training', 'supplementation']
+        patterns: ['nutrition supplementation', 'yoga/weight training', 'nutrition', 'yoga']
       },
       {
         name: 'Houses and Reward Systems',
-        patterns: ['houses', 'reward systems', 'house']
+        patterns: ['houses and reward systems', 'houses', 'reward systems']
       },
       {
         name: 'Etiocracy, Co-Creation & Ownership',
@@ -385,19 +385,19 @@ function processRawDataForFrontend(rawData) {
       },
       {
         name: 'English Communication & Comprehension',
-        patterns: ['english', 'communication', 'comprehension']
+        patterns: ['english communication', 'communication', 'comprehension']
       },
       {
         name: 'Learning Environment & Peer Support',
-        patterns: ['learning environment', 'peer support', 'learning']
+        patterns: ['learning environment', 'peer support']
       },
       {
         name: 'Process Principles Understanding & Implementation',
-        patterns: ['process principles', 'process', 'principles']
+        patterns: ['process principles', 'understanding & implementation']
       },
       {
         name: 'Life Skills Implementation',
-        patterns: ['life skills', 'life skill']
+        patterns: ['life skills implementation', 'life skills']
       }
     ];
     
@@ -405,21 +405,25 @@ function processRawDataForFrontend(rawData) {
     
     // Process each competency mapping
     competencyMappings.forEach(competency => {
-      // Look for "Why you have selected" questions (compulsory) - more flexible patterns
+      // Look for "Why have you marked" questions (compulsory)
       const whyColumns = allColumns.filter(col => {
         const colLower = col.toLowerCase();
-        return (colLower.includes('why') && 
-                (colLower.includes('selected') || colLower.includes('select') || colLower.includes('marked'))) &&
+        return colLower.includes('why') && 
+               colLower.includes('marked') &&
+               colLower.includes('level') &&
+               colLower.includes('bracket') &&
                competency.patterns.some(pattern => 
                  colLower.includes(pattern.toLowerCase())
                );
       });
       
-      // Look for "Is there anything you would like to share" questions (optional) - more flexible patterns
+      // Look for "Is there anything else you would like to share" questions (optional)
       const shareColumns = allColumns.filter(col => {
         const colLower = col.toLowerCase();
-        return (colLower.includes('anything') || colLower.includes('share') || colLower.includes('additional')) && 
-               (colLower.includes('share') || colLower.includes('like to') || colLower.includes('would you')) &&
+        return colLower.includes('is there anything') && 
+               colLower.includes('share') &&
+               colLower.includes('competency levels') &&
+               colLower.includes('bracket') &&
                competency.patterns.some(pattern => 
                  colLower.includes(pattern.toLowerCase())
                );
