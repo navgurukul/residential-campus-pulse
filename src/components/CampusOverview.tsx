@@ -55,7 +55,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
 
   const chartData = useMemo(() => {
     return campuses.map(campus => ({
-      name: campus.name,
+      name: campus.status === 'Relocated' ? `${campus.name} (→${campus.relocatedTo})` : campus.name,
       score: selectedCompetency 
         ? getCompetencyScoreForCampus(campus.id, selectedCompetency)
         : campus.averageScore,
@@ -258,7 +258,23 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                   onClick={() => onCampusSelect(campus.id)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{campus.name}</div>
+                    <div className="flex items-center">
+                      <div className="font-medium text-gray-900">{campus.name}</div>
+                      {campus.status === 'Relocated' && (
+                        <div className="ml-2 flex items-center">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            Relocated to {campus.relocatedTo}
+                          </span>
+                        </div>
+                      )}
+                      {campus.status === 'Active' && campus.name === 'Raigarh' && (
+                        <div className="ml-2">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            New Campus
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {campus.location}

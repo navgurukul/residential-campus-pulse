@@ -6,6 +6,8 @@ export interface Campus {
   totalResolvers: number;
   ranking: 'High' | 'Medium' | 'Low';
   lastEvaluated: string;
+  status?: 'Active' | 'Closed' | 'Relocated';
+  relocatedTo?: string;
 }
 
 export interface Resolver {

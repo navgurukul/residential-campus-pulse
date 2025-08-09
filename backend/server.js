@@ -394,20 +394,53 @@ function processRawDataForFrontend(rawData) {
   });
 
   // Convert campus map to array with calculated averages
-  const campuses = Array.from(campusMap.values()).map(campusData => ({
-    id: campusData.id,
-    name: campusData.name,
-    location: campusData.location,
-    averageScore: campusData.scores.length > 0
+  const campuses = Array.from(campusMap.values()).map(campusData => {
+    const averageScore = campusData.scores.length > 0
       ? Math.round((campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) * 10) / 10
-      : 7.5,
-    totalResolvers: campusData.resolverEmails.size, // Use deduplicated count
-    ranking: campusData.scores.length > 0
-      ? (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 4.67 ? 'High'
-        : (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 2.33 ? 'Medium' : 'Low'
-      : 'Medium',
-    lastEvaluated: campusData.lastEvaluated
-  }));
+      : 7.5;
+    
+    const ranking = campusData.scores.length > 0
+      ? averageScore > 4.67 ? 'High'
+        : averageScore > 2.33 ? 'Medium' : 'Low'
+      : 'Medium';
+
+    // Handle Raipur → Raigarh transition
+    let status = 'Active';
+    let relocatedTo = undefined;
+    
+    if (campusData.name === 'Raipur') {
+      status = 'Relocated';
+      relocatedTo = 'Raigarh';
+    }
+
+    return {
+      id: campusData.id,
+      name: campusData.name,
+      location: campusData.location,
+      averageScore,
+      totalResolvers: campusData.resolverEmails.size,
+      ranking,
+      lastEvaluated: campusData.lastEvaluated,
+      status,
+      relocatedTo
+    };
+  });
+
+  // Add Raigarh as a new active campus if it doesn't exist
+  const hasRaigarh = campuses.some(campus => campus.name === 'Raigarh');
+  if (!hasRaigarh) {
+    campuses.push({
+      id: 'campus-raigarh',
+      name: 'Raigarh',
+      location: 'Raigarh',
+      averageScore: 0,
+      totalResolvers: 0,
+      ranking: 'Medium',
+      lastEvaluated: new Date().toISOString().split('T')[0],
+      status: 'Active',
+      relocatedTo: undefined
+    });
+  }
 
   // Convert resolver map to array and clean up temporary fields
   const resolvers = Array.from(resolverMap.values()).map(resolver => {

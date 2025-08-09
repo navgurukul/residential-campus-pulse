@@ -80,8 +80,20 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{campus.name}</h1>
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-gray-900">{campus.name}</h1>
+              {campus.status === 'Relocated' && (
+                <span className="ml-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                  Campus Relocated to {campus.relocatedTo}
+                </span>
+              )}
+            </div>
             <p className="text-gray-600">{campus.location}</p>
+            {campus.status === 'Relocated' && (
+              <p className="text-sm text-orange-600 mt-1">
+                This campus has been relocated. Historical evaluation data is preserved below.
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center space-x-4">
