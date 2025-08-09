@@ -145,6 +145,14 @@ function processRawDataForFrontend(rawData) {
   // Log all available columns for debugging
   const availableColumns = Object.keys(rawData[0]);
   console.log('Available columns in data:', availableColumns);
+  
+  // Log feedback-related columns specifically
+  const feedbackColumns = availableColumns.filter(col => 
+    col.toLowerCase().includes('why') || 
+    col.toLowerCase().includes('share') ||
+    col.toLowerCase().includes('selected')
+  );
+  console.log('Feedback-related columns found:', feedbackColumns);
 
   // Group data by campus to aggregate scores and deduplicate resolvers by email
   const campusMap = new Map();
@@ -342,82 +350,122 @@ function processRawDataForFrontend(rawData) {
       'Any additional feedback?', 'Other comments'
     ], `Comprehensive evaluation of ${campusName}. Good performance across most areas with opportunities for improvement.`);
 
-    // Extract competency-specific feedback/comments
-    // Since the same feedback question appears for all competencies, we need to get all feedback columns
+    // Extract competency-specific feedback/comments with new form structure
     const allColumns = Object.keys(row);
-    const feedbackColumns = allColumns.filter(col => 
-      col.includes('Is there anything else you would like to share') ||
-      col.includes('Why have you marked this level for this bracket')
-    );
     
-    console.log('Found feedback columns:', feedbackColumns.length);
-    console.log('Feedback columns:', feedbackColumns);
+    // Map competency names to their exact form field patterns
+    const competencyMappings = [
+      {
+        name: 'Vipassana',
+        patterns: ['vipassana', 'meditation', 'ana pana']
+      },
+      {
+        name: 'Nutrition Supplementation + Yoga/Weight Training',
+        patterns: ['nutrition', 'yoga', 'weight training', 'supplementation']
+      },
+      {
+        name: 'Houses and Reward Systems',
+        patterns: ['houses', 'reward systems', 'house']
+      },
+      {
+        name: 'Etiocracy, Co-Creation & Ownership',
+        patterns: ['etiocracy', 'co-creation', 'ownership']
+      },
+      {
+        name: 'Campus interactions',
+        patterns: ['campus interactions', 'interactions']
+      },
+      {
+        name: 'Gratitude',
+        patterns: ['gratitude']
+      },
+      {
+        name: 'Hackathons',
+        patterns: ['hackathons', 'hackathon']
+      },
+      {
+        name: 'English Communication & Comprehension',
+        patterns: ['english', 'communication', 'comprehension']
+      },
+      {
+        name: 'Learning Environment & Peer Support',
+        patterns: ['learning environment', 'peer support', 'learning']
+      },
+      {
+        name: 'Process Principles Understanding & Implementation',
+        patterns: ['process principles', 'process', 'principles']
+      },
+      {
+        name: 'Life Skills Implementation',
+        patterns: ['life skills', 'life skill']
+      }
+    ];
     
-    // Map feedback columns to competencies based on their position and content
     const competencyFeedback = {};
     
-    // Try to map feedback to specific competencies based on context
-    const competencyKeywords = {
-      'Vipassana': ['vipassana', 'meditation', 'anapana', 'mindfulness'],
-      'Nutrition Supplementation + Yoga/Weight Training': ['nutrition', 'exercise', 'yoga', 'weight', 'health', 'fitness'],
-      'Houses and Reward Systems': ['house', 'reward', 'competition', 'points'],
-      'Etiocracy, Co-Creation & Ownership': ['etiocracy', 'ownership', 'decision', 'council', 'leadership'],
-      'Campus interactions': ['interaction', 'team', 'student', 'communication'],
-      'Gratitude': ['gratitude', 'thankful', 'appreciation'],
-      'Hackathons': ['hackathon', 'coding', 'project', 'tech'],
-      'English Communication & Comprehension': ['english', 'communication', 'language'],
-      'Learning Environment & Peer Support': ['learning', 'peer', 'support', 'environment'],
-      'Process Principles Understanding & Implementation': ['process', 'principle', 'implementation'],
-      'Life Skills Implementation': ['life skill', 'activity', 'facilitation']
-    };
-    
-    // Get all feedback values that are not empty and meaningful
-    feedbackColumns.forEach((column, index) => {
-      const feedbackValue = row[column];
-      if (feedbackValue && feedbackValue.trim() !== '' && 
-          feedbackValue.trim().toLowerCase() !== 'na' && 
-          feedbackValue.trim().toLowerCase() !== 'no' &&
-          feedbackValue.trim().toLowerCase() !== 'nope' &&
-          feedbackValue.trim().length > 3) { // Filter out very short responses
-        
-        const feedback = feedbackValue.trim();
-        
-        // Try to match feedback to competency based on keywords
-        let matchedCompetency = null;
-        let maxMatches = 0;
-        
-        Object.entries(competencyKeywords).forEach(([competency, keywords]) => {
-          const matches = keywords.filter(keyword => 
-            feedback.toLowerCase().includes(keyword.toLowerCase())
-          ).length;
-          
-          if (matches > maxMatches) {
-            maxMatches = matches;
-            matchedCompetency = competency;
-          }
-        });
-        
-        if (matchedCompetency && maxMatches > 0) {
-          // If we already have feedback for this competency, append it
-          if (competencyFeedback[matchedCompetency]) {
-            competencyFeedback[matchedCompetency] += `\n\n${feedback}`;
-          } else {
-            competencyFeedback[matchedCompetency] = feedback;
-          }
-        } else {
-          // Only add as general comment if it's substantial feedback
-          if (feedback.length > 20) { // Only meaningful comments
-            competencyFeedback[`General Observation`] = feedback;
-          }
+    // Process each competency mapping
+    competencyMappings.forEach(competency => {
+      // Look for "Why you have selected" questions (compulsory)
+      const whyColumns = allColumns.filter(col => 
+        col.toLowerCase().includes('why') && 
+        col.toLowerCase().includes('selected') &&
+        competency.patterns.some(pattern => 
+          col.toLowerCase().includes(pattern.toLowerCase())
+        )
+      );
+      
+      // Look for "Is there anything you would like to share" questions (optional)
+      const shareColumns = allColumns.filter(col => 
+        col.toLowerCase().includes('anything') && 
+        col.toLowerCase().includes('share') &&
+        competency.patterns.some(pattern => 
+          col.toLowerCase().includes(pattern.toLowerCase())
+        )
+      );
+      
+      let competencyComments = [];
+      
+      // Process "Why selected" feedback
+      whyColumns.forEach(column => {
+        const feedbackValue = row[column];
+        if (feedbackValue && feedbackValue.trim() !== '' && 
+            feedbackValue.trim().toLowerCase() !== 'na' && 
+            feedbackValue.trim().toLowerCase() !== 'no' &&
+            feedbackValue.trim().toLowerCase() !== 'nope' &&
+            feedbackValue.trim().length > 5) {
+          competencyComments.push(`**Why this level was selected:** ${feedbackValue.trim()}`);
         }
+      });
+      
+      // Process "Additional share" feedback
+      shareColumns.forEach(column => {
+        const feedbackValue = row[column];
+        if (feedbackValue && feedbackValue.trim() !== '' && 
+            feedbackValue.trim().toLowerCase() !== 'na' && 
+            feedbackValue.trim().toLowerCase() !== 'no' &&
+            feedbackValue.trim().toLowerCase() !== 'nope' &&
+            feedbackValue.trim().length > 5) {
+          competencyComments.push(`**Additional observations:** ${feedbackValue.trim()}`);
+        }
+      });
+      
+      // If we have any comments for this competency, add them
+      if (competencyComments.length > 0) {
+        competencyFeedback[competency.name] = competencyComments.join('\n\n');
       }
     });
     
-    // Also capture any general feedback, but filter out empty/meaningless responses
+    // Also capture any general feedback columns that don't match specific competencies
     const generalFeedbackColumns = allColumns.filter(col => 
-      col.toLowerCase().includes('additional') || 
-      col.toLowerCase().includes('comment') ||
-      col.toLowerCase().includes('observation')
+      (col.toLowerCase().includes('additional') || 
+       col.toLowerCase().includes('comment') ||
+       col.toLowerCase().includes('observation') ||
+       col.toLowerCase().includes('feedback')) &&
+      !competencyMappings.some(comp => 
+        comp.patterns.some(pattern => 
+          col.toLowerCase().includes(pattern.toLowerCase())
+        )
+      )
     );
     
     generalFeedbackColumns.forEach((column, index) => {
@@ -426,36 +474,8 @@ function processRawDataForFrontend(rawData) {
           feedbackValue.trim().toLowerCase() !== 'na' && 
           feedbackValue.trim().toLowerCase() !== 'no' &&
           feedbackValue.trim().toLowerCase() !== 'nope' &&
-          feedbackValue.trim().length > 10) { // Only substantial feedback
-        
-        const feedback = feedbackValue.trim();
-        
-        // Try to match to competency first
-        let matchedCompetency = null;
-        let maxMatches = 0;
-        
-        Object.entries(competencyKeywords).forEach(([competency, keywords]) => {
-          const matches = keywords.filter(keyword => 
-            feedback.toLowerCase().includes(keyword.toLowerCase())
-          ).length;
-          
-          if (matches > maxMatches) {
-            maxMatches = matches;
-            matchedCompetency = competency;
-          }
-        });
-        
-        if (matchedCompetency && maxMatches > 0) {
-          // If we already have feedback for this competency, append it
-          if (competencyFeedback[matchedCompetency]) {
-            competencyFeedback[matchedCompetency] += `\n\n${feedback}`;
-          } else {
-            competencyFeedback[matchedCompetency] = feedback;
-          }
-        } else {
-          // Add as general feedback only if substantial
-          competencyFeedback[`General Feedback`] = feedback;
-        }
+          feedbackValue.trim().length > 10) {
+        competencyFeedback[`General Feedback`] = feedbackValue.trim();
       }
     });
 
