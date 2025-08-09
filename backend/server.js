@@ -405,29 +405,39 @@ function processRawDataForFrontend(rawData) {
     
     // Process each competency mapping
     competencyMappings.forEach(competency => {
-      // Look for "Why you have selected" questions (compulsory)
-      const whyColumns = allColumns.filter(col => 
-        col.toLowerCase().includes('why') && 
-        col.toLowerCase().includes('selected') &&
-        competency.patterns.some(pattern => 
-          col.toLowerCase().includes(pattern.toLowerCase())
-        )
-      );
+      // Look for "Why you have selected" questions (compulsory) - more flexible patterns
+      const whyColumns = allColumns.filter(col => {
+        const colLower = col.toLowerCase();
+        return (colLower.includes('why') && 
+                (colLower.includes('selected') || colLower.includes('select') || colLower.includes('marked'))) &&
+               competency.patterns.some(pattern => 
+                 colLower.includes(pattern.toLowerCase())
+               );
+      });
       
-      // Look for "Is there anything you would like to share" questions (optional)
-      const shareColumns = allColumns.filter(col => 
-        col.toLowerCase().includes('anything') && 
-        col.toLowerCase().includes('share') &&
-        competency.patterns.some(pattern => 
-          col.toLowerCase().includes(pattern.toLowerCase())
-        )
-      );
+      // Look for "Is there anything you would like to share" questions (optional) - more flexible patterns
+      const shareColumns = allColumns.filter(col => {
+        const colLower = col.toLowerCase();
+        return (colLower.includes('anything') || colLower.includes('share') || colLower.includes('additional')) && 
+               (colLower.includes('share') || colLower.includes('like to') || colLower.includes('would you')) &&
+               competency.patterns.some(pattern => 
+                 colLower.includes(pattern.toLowerCase())
+               );
+      });
       
       let competencyComments = [];
+      
+      // Log what columns were found for this competency
+      if (whyColumns.length > 0 || shareColumns.length > 0) {
+        console.log(`Found columns for ${competency.name}:`);
+        console.log('  Why columns:', whyColumns);
+        console.log('  Share columns:', shareColumns);
+      }
       
       // Process "Why selected" feedback
       whyColumns.forEach(column => {
         const feedbackValue = row[column];
+        console.log(`Processing why column "${column}" with value:`, feedbackValue);
         if (feedbackValue && feedbackValue.trim() !== '' && 
             feedbackValue.trim().toLowerCase() !== 'na' && 
             feedbackValue.trim().toLowerCase() !== 'no' &&
@@ -440,6 +450,7 @@ function processRawDataForFrontend(rawData) {
       // Process "Additional share" feedback
       shareColumns.forEach(column => {
         const feedbackValue = row[column];
+        console.log(`Processing share column "${column}" with value:`, feedbackValue);
         if (feedbackValue && feedbackValue.trim() !== '' && 
             feedbackValue.trim().toLowerCase() !== 'na' && 
             feedbackValue.trim().toLowerCase() !== 'no' &&
@@ -452,30 +463,57 @@ function processRawDataForFrontend(rawData) {
       // If we have any comments for this competency, add them
       if (competencyComments.length > 0) {
         competencyFeedback[competency.name] = competencyComments.join('\n\n');
+        console.log(`Added feedback for ${competency.name}:`, competencyFeedback[competency.name]);
       }
     });
     
-    // Also capture any general feedback columns that don't match specific competencies
-    const generalFeedbackColumns = allColumns.filter(col => 
-      (col.toLowerCase().includes('additional') || 
-       col.toLowerCase().includes('comment') ||
-       col.toLowerCase().includes('observation') ||
-       col.toLowerCase().includes('feedback')) &&
-      !competencyMappings.some(comp => 
-        comp.patterns.some(pattern => 
-          col.toLowerCase().includes(pattern.toLowerCase())
-        )
-      )
-    );
+    // Fallback: try to match any remaining feedback columns to competencies using broader patterns
+    const unmatchedFeedbackColumns = allColumns.filter(col => {
+      const colLower = col.toLowerCase();
+      return (colLower.includes('why') || colLower.includes('share') || colLower.includes('anything') || 
+              colLower.includes('selected') || colLower.includes('bracket') || colLower.includes('level')) &&
+             !Object.keys(competencyFeedback).some(compName => 
+               competencyMappings.find(comp => comp.name === compName)?.patterns.some(pattern => 
+                 colLower.includes(pattern.toLowerCase())
+               )
+             );
+    });
     
-    generalFeedbackColumns.forEach((column, index) => {
+    console.log('Unmatched feedback columns for fallback processing:', unmatchedFeedbackColumns);
+    
+    // Try to match unmatched columns using keyword analysis
+    unmatchedFeedbackColumns.forEach(column => {
       const feedbackValue = row[column];
       if (feedbackValue && feedbackValue.trim() !== '' && 
           feedbackValue.trim().toLowerCase() !== 'na' && 
           feedbackValue.trim().toLowerCase() !== 'no' &&
           feedbackValue.trim().toLowerCase() !== 'nope' &&
-          feedbackValue.trim().length > 10) {
-        competencyFeedback[`General Feedback`] = feedbackValue.trim();
+          feedbackValue.trim().length > 5) {
+        
+        const feedback = feedbackValue.trim();
+        const colLower = column.toLowerCase();
+        
+        // Try to match based on column name containing competency keywords
+        let matchedCompetency = null;
+        competencyMappings.forEach(comp => {
+          if (comp.patterns.some(pattern => colLower.includes(pattern.toLowerCase()))) {
+            matchedCompetency = comp.name;
+          }
+        });
+        
+        if (matchedCompetency) {
+          const prefix = colLower.includes('why') ? '**Why this level was selected:**' : '**Additional observations:**';
+          if (competencyFeedback[matchedCompetency]) {
+            competencyFeedback[matchedCompetency] += `\n\n${prefix} ${feedback}`;
+          } else {
+            competencyFeedback[matchedCompetency] = `${prefix} ${feedback}`;
+          }
+          console.log(`Fallback matched "${column}" to ${matchedCompetency}`);
+        } else {
+          // Add as general feedback if no competency match found
+          competencyFeedback[`General Feedback`] = feedback;
+          console.log(`Added as general feedback: "${column}"`);
+        }
       }
     });
 
