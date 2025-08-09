@@ -239,9 +239,57 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                   ))}
                 </div>
                 
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <h5 className="text-sm font-medium text-gray-900 mb-2">Feedback</h5>
-                  <p className="text-sm text-gray-700">{evaluation.feedback}</p>
+                {/* Enhanced Feedback Section */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                  <h5 className="text-sm font-semibold text-blue-900 mb-3 flex items-center">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Resolver Feedback & Comments
+                  </h5>
+                  
+                  {/* General Feedback */}
+                  {evaluation.feedback && !evaluation.feedback.includes('Comprehensive evaluation') && (
+                    <div className="mb-3">
+                      <div className="text-xs font-medium text-blue-700 mb-1 bg-blue-100 px-2 py-1 rounded inline-block">
+                        General Feedback
+                      </div>
+                      <div className="text-sm text-gray-700 bg-white p-3 rounded border-l-4 border-blue-400 mt-1">
+                        {evaluation.feedback}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Competency-specific Feedback */}
+                  {evaluation.competencyFeedback && Object.keys(evaluation.competencyFeedback).length > 0 && (
+                    <div>
+                      <div className="text-xs font-medium text-blue-700 mb-2 bg-blue-100 px-2 py-1 rounded inline-block">
+                        Competency-Specific Comments
+                      </div>
+                      <div className="space-y-2 mt-1">
+                        {Object.entries(evaluation.competencyFeedback)
+                          .filter(([key, value]) => value && value.trim() !== '')
+                          .map(([key, feedback], index) => (
+                            <div key={key} className="bg-white p-3 rounded border-l-4 border-green-400">
+                              <div className="text-xs text-green-700 font-medium mb-1">
+                                Comment {index + 1}
+                              </div>
+                              <div className="text-sm text-gray-700">{feedback}</div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Default feedback fallback */}
+                  {(!evaluation.feedback || evaluation.feedback.includes('Comprehensive evaluation')) && 
+                   (!evaluation.competencyFeedback || Object.keys(evaluation.competencyFeedback).length === 0) && (
+                    <div className="text-center py-4">
+                      <MessageSquare className="w-8 h-8 text-blue-300 mx-auto mb-2" />
+                      <div className="text-sm text-blue-600">No specific feedback provided</div>
+                      <div className="text-xs text-blue-500 mt-1">
+                        This evaluation was completed without additional comments
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
