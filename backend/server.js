@@ -283,14 +283,18 @@ function processRawDataForFrontend(rawData) {
         id: `campus-${campusMap.size + 1}`,
         name: campusName,
         location: campusName,
-        scores: [],
+        evaluations: [], // Store evaluations with dates instead of just scores
         resolverEmails: new Set(), // Track unique resolver emails per campus
         lastEvaluated: lastEvaluated
       });
     }
 
     const campusData = campusMap.get(campusName);
-    campusData.scores.push(averageScore);
+    campusData.evaluations.push({
+      score: averageScore,
+      date: lastEvaluated,
+      resolverEmail: resolverEmail
+    });
     campusData.resolverEmails.add(resolverEmail); // Add resolver email to set (automatically deduplicates)
     if (lastEvaluated > campusData.lastEvaluated) {
       campusData.lastEvaluated = lastEvaluated;
@@ -395,11 +399,23 @@ function processRawDataForFrontend(rawData) {
 
   // Convert campus map to array with calculated averages
   const campuses = Array.from(campusMap.values()).map(campusData => {
-    const averageScore = campusData.scores.length > 0
-      ? Math.round((campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) * 10) / 10
+    // Sort evaluations by date and get the most recent ones
+    const sortedEvaluations = campusData.evaluations.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Get the most recent evaluation date
+    const mostRecentDate = sortedEvaluations.length > 0 ? sortedEvaluations[0].date : null;
+    
+    // Get all evaluations from the most recent date (in case multiple evaluations happened on the same day)
+    const mostRecentEvaluations = mostRecentDate 
+      ? sortedEvaluations.filter(eval => eval.date === mostRecentDate)
+      : [];
+    
+    // Calculate average of the most recent evaluations
+    const averageScore = mostRecentEvaluations.length > 0
+      ? Math.round((mostRecentEvaluations.reduce((sum, eval) => sum + eval.score, 0) / mostRecentEvaluations.length) * 10) / 10
       : 7.5;
     
-    const ranking = campusData.scores.length > 0
+    const ranking = campusData.evaluations.length > 0
       ? averageScore > 4.67 ? 'High'
         : averageScore > 2.33 ? 'Medium' : 'Low'
       : 'Medium';
