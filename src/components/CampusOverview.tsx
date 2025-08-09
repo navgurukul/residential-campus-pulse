@@ -19,17 +19,21 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
 
   // Helper function to calculate level based on 0-7 scale
   const getCampusLevel = (score: number): string => {
-    // Convert score to level (0-7 maps to Level 0-3)
-    const level = Math.floor(score / 1.75); // 7/4 = 1.75 per level
-    return `Level ${Math.min(3, level)}`;
+    // Convert score to level (0-7 maps to Level 0-7)
+    const level = Math.floor(score); // Direct mapping: score 1.9 = Level 1, score 3.2 = Level 3, etc.
+    return `Level ${Math.min(7, Math.max(0, level))}`;
   };
 
   // Helper function for level colors
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'Level 3': return 'text-green-600 bg-green-100';
-      case 'Level 2': return 'text-blue-600 bg-blue-100';
-      case 'Level 1': return 'text-yellow-600 bg-yellow-100';
+      case 'Level 7': return 'text-emerald-600 bg-emerald-100';
+      case 'Level 6': return 'text-green-600 bg-green-100';
+      case 'Level 5': return 'text-lime-600 bg-lime-100';
+      case 'Level 4': return 'text-blue-600 bg-blue-100';
+      case 'Level 3': return 'text-cyan-600 bg-cyan-100';
+      case 'Level 2': return 'text-yellow-600 bg-yellow-100';
+      case 'Level 1': return 'text-orange-600 bg-orange-100';
       case 'Level 0': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
     }
@@ -60,9 +64,13 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
   }, [campuses, selectedCompetency, evaluations]);
 
   const rankingData = [
-    { name: 'Level 3', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 3').length, color: '#10B981' },
-    { name: 'Level 2', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 2').length, color: '#3B82F6' },
-    { name: 'Level 1', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 1').length, color: '#F59E0B' },
+    { name: 'Level 7', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 7').length, color: '#059669' },
+    { name: 'Level 6', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 6').length, color: '#10B981' },
+    { name: 'Level 5', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 5').length, color: '#65A30D' },
+    { name: 'Level 4', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 4').length, color: '#3B82F6' },
+    { name: 'Level 3', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 3').length, color: '#0891B2' },
+    { name: 'Level 2', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 2').length, color: '#F59E0B' },
+    { name: 'Level 1', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 1').length, color: '#F97316' },
     { name: 'Level 0', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 0').length, color: '#EF4444' }
   ].filter(item => item.value > 0); // Filter out zero values to prevent overlapping labels
 
@@ -112,8 +120,11 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Level 3 Campuses</p>
-              <p className="text-3xl font-bold text-gray-900">{campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 3').length}</p>
+              <p className="text-sm font-medium text-gray-600">Top Level Campuses</p>
+              <p className="text-3xl font-bold text-gray-900">{campuses.filter(c => {
+                const level = getCampusLevel(c.averageScore);
+                return ['Level 6', 'Level 7'].includes(level);
+              }).length}</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
               <Award className="w-6 h-6 text-purple-600" />
@@ -183,12 +194,12 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Level Distribution</h3>
           {rankingData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
+              <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
                 <Pie
                   data={rankingData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={100}
+                  outerRadius={80}
                   dataKey="value"
                   label={({ name, value }) => value > 0 ? `${value} Campuses\nat ${name}` : ''}
                   labelLine={false}
@@ -270,8 +281,9 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                       return (
                         <div className="flex items-center">
                           <div className={`w-3 h-3 rounded-full mr-2 ${
-                            campusLevel === 'Level 3' ? 'bg-green-500 animate-pulse-fast' :
-                            campusLevel === 'Level 2' ? 'bg-blue-500 animate-pulse-medium' :
+                            ['Level 6', 'Level 7'].includes(campusLevel) ? 'bg-emerald-500 animate-pulse-fast' :
+                            ['Level 4', 'Level 5'].includes(campusLevel) ? 'bg-green-500 animate-pulse-medium' :
+                            ['Level 2', 'Level 3'].includes(campusLevel) ? 'bg-blue-500 animate-pulse-medium' :
                             campusLevel === 'Level 1' ? 'bg-yellow-500 animate-pulse-medium' :
                             'bg-red-500 animate-pulse-slow'
                           }`}></div>

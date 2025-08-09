@@ -77,19 +77,19 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Campuses Evaluated by Resolver</h3>
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Campuses Evaluated by Resolver</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="name" 
                 angle={-45}
                 textAnchor="end"
-                height={120}
+                height={100}
                 interval={0}
-                fontSize={11}
-                tick={{ fontSize: 11 }}
+                fontSize={10}
+                tick={{ fontSize: 10 }}
               />
               <YAxis />
               <Tooltip />
@@ -98,21 +98,21 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Average Scores Given</h3>
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Average Scores Given</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="name" 
                 angle={-45}
                 textAnchor="end"
-                height={120}
+                height={100}
                 interval={0}
-                fontSize={11}
-                tick={{ fontSize: 11 }}
+                fontSize={10}
+                tick={{ fontSize: 10 }}
               />
-              <YAxis domain={[0, 10]} />
+              <YAxis domain={[0, 7]} />
               <Tooltip />
               <Bar dataKey="avgScore" fill="#10B981" radius={[4, 4, 0, 0]} />
             </BarChart>
