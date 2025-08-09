@@ -332,11 +332,48 @@ function processRawDataForFrontend(rawData) {
       resolverMap.set(resolverEmail, resolver);
     }
 
-    // Extract feedback
+    // Extract general feedback
     const feedback = getColumnValue(row, [
       'Additional Comments', 'comments', 'Feedback', 'feedback', 'Notes', 'notes',
       'Any additional feedback?', 'Other comments'
     ], `Comprehensive evaluation of ${campusName}. Good performance across most areas with opportunities for improvement.`);
+
+    // Extract competency-specific feedback/comments
+    // Since the same feedback question appears for all competencies, we need to get all feedback columns
+    const allColumns = Object.keys(row);
+    const feedbackColumns = allColumns.filter(col => 
+      col.includes('Is there anything else you would like to share') ||
+      col.includes('Why have you marked this level for this bracket')
+    );
+    
+    console.log('Found feedback columns:', feedbackColumns.length);
+    console.log('Feedback columns:', feedbackColumns);
+    
+    // Map feedback columns to competencies based on their position relative to competency columns
+    const competencyFeedback = {};
+    
+    // Get all feedback values that are not empty
+    feedbackColumns.forEach((column, index) => {
+      const feedbackValue = row[column];
+      if (feedbackValue && feedbackValue.trim() !== '') {
+        // Use a generic key since we can't reliably map to specific competencies
+        competencyFeedback[`feedback_${index + 1}`] = feedbackValue.trim();
+      }
+    });
+    
+    // Also capture any general feedback
+    const generalFeedbackColumns = allColumns.filter(col => 
+      col.toLowerCase().includes('additional') || 
+      col.toLowerCase().includes('comment') ||
+      col.toLowerCase().includes('observation')
+    );
+    
+    generalFeedbackColumns.forEach((column, index) => {
+      const feedbackValue = row[column];
+      if (feedbackValue && feedbackValue.trim() !== '') {
+        competencyFeedback[`general_${index + 1}`] = feedbackValue.trim();
+      }
+    });
 
     // Create evaluation data
     const evaluation = {
@@ -348,6 +385,7 @@ function processRawDataForFrontend(rawData) {
       overallScore: averageScore,
       competencies: competencies,
       feedback: feedback,
+      competencyFeedback: competencyFeedback,
       dateEvaluated: lastEvaluated,
       status: 'Completed'
     };
