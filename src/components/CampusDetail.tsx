@@ -295,7 +295,19 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                       </div>
                       <div className="space-y-2 mt-1">
                         {Object.entries(evaluation.competencyFeedback)
-                          .filter(([key, value]) => value && value.trim() !== '')
+                          .filter(([key, value]) => {
+                            // Filter out empty, meaningless, or generic responses
+                            if (!value || typeof value !== 'string') return false;
+                            const cleanValue = value.trim().toLowerCase();
+                            return cleanValue !== '' && 
+                                   cleanValue !== 'na' && 
+                                   cleanValue !== 'no' && 
+                                   cleanValue !== 'nope' &&
+                                   cleanValue !== 'none' &&
+                                   cleanValue.length > 3 &&
+                                   !key.includes('General Comment') && // Filter out generic numbered comments
+                                   !key.includes('Additional Feedback'); // Filter out generic additional feedback
+                          })
                           .map(([competencyName, feedback]) => {
                             // Determine the color based on competency type
                             const getCompetencyColor = (name: string) => {

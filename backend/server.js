@@ -371,10 +371,15 @@ function processRawDataForFrontend(rawData) {
       'Life Skills Implementation': ['life skill', 'activity', 'facilitation']
     };
     
-    // Get all feedback values that are not empty
+    // Get all feedback values that are not empty and meaningful
     feedbackColumns.forEach((column, index) => {
       const feedbackValue = row[column];
-      if (feedbackValue && feedbackValue.trim() !== '') {
+      if (feedbackValue && feedbackValue.trim() !== '' && 
+          feedbackValue.trim().toLowerCase() !== 'na' && 
+          feedbackValue.trim().toLowerCase() !== 'no' &&
+          feedbackValue.trim().toLowerCase() !== 'nope' &&
+          feedbackValue.trim().length > 3) { // Filter out very short responses
+        
         const feedback = feedbackValue.trim();
         
         // Try to match feedback to competency based on keywords
@@ -393,15 +398,22 @@ function processRawDataForFrontend(rawData) {
         });
         
         if (matchedCompetency && maxMatches > 0) {
-          competencyFeedback[matchedCompetency] = feedback;
+          // If we already have feedback for this competency, append it
+          if (competencyFeedback[matchedCompetency]) {
+            competencyFeedback[matchedCompetency] += `\n\n${feedback}`;
+          } else {
+            competencyFeedback[matchedCompetency] = feedback;
+          }
         } else {
-          // Fallback to generic key if no match found
-          competencyFeedback[`General Comment ${index + 1}`] = feedback;
+          // Only add as general comment if it's substantial feedback
+          if (feedback.length > 20) { // Only meaningful comments
+            competencyFeedback[`General Observation`] = feedback;
+          }
         }
       }
     });
     
-    // Also capture any general feedback
+    // Also capture any general feedback, but filter out empty/meaningless responses
     const generalFeedbackColumns = allColumns.filter(col => 
       col.toLowerCase().includes('additional') || 
       col.toLowerCase().includes('comment') ||
@@ -410,8 +422,40 @@ function processRawDataForFrontend(rawData) {
     
     generalFeedbackColumns.forEach((column, index) => {
       const feedbackValue = row[column];
-      if (feedbackValue && feedbackValue.trim() !== '') {
-        competencyFeedback[`Additional Feedback ${index + 1}`] = feedbackValue.trim();
+      if (feedbackValue && feedbackValue.trim() !== '' && 
+          feedbackValue.trim().toLowerCase() !== 'na' && 
+          feedbackValue.trim().toLowerCase() !== 'no' &&
+          feedbackValue.trim().toLowerCase() !== 'nope' &&
+          feedbackValue.trim().length > 10) { // Only substantial feedback
+        
+        const feedback = feedbackValue.trim();
+        
+        // Try to match to competency first
+        let matchedCompetency = null;
+        let maxMatches = 0;
+        
+        Object.entries(competencyKeywords).forEach(([competency, keywords]) => {
+          const matches = keywords.filter(keyword => 
+            feedback.toLowerCase().includes(keyword.toLowerCase())
+          ).length;
+          
+          if (matches > maxMatches) {
+            maxMatches = matches;
+            matchedCompetency = competency;
+          }
+        });
+        
+        if (matchedCompetency && maxMatches > 0) {
+          // If we already have feedback for this competency, append it
+          if (competencyFeedback[matchedCompetency]) {
+            competencyFeedback[matchedCompetency] += `\n\n${feedback}`;
+          } else {
+            competencyFeedback[matchedCompetency] = feedback;
+          }
+        } else {
+          // Add as general feedback only if substantial
+          competencyFeedback[`General Feedback`] = feedback;
+        }
       }
     });
 
