@@ -17,6 +17,17 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
   // Check if this is a new campus with no evaluations
   const hasNoEvaluations = campusEvaluations.length === 0;
   
+  // Convert score to level-based ranking
+  const getScoreLevel = (score: number): { level: string; color: string; bgColor: string } => {
+    if (score >= 6.0) return { level: 'Level 4', color: 'text-green-700', bgColor: 'bg-green-600' };
+    if (score >= 4.0) return { level: 'Level 3', color: 'text-blue-700', bgColor: 'bg-blue-600' };
+    if (score >= 2.0) return { level: 'Level 2', color: 'text-yellow-700', bgColor: 'bg-yellow-600' };
+    if (score >= 1.0) return { level: 'Level 1', color: 'text-orange-700', bgColor: 'bg-orange-600' };
+    return { level: 'Level 0', color: 'text-red-700', bgColor: 'bg-red-600' };
+  };
+  
+  const campusLevel = getScoreLevel(campus.averageScore);
+  
   // Prepare radar chart data
   const radarData = campusEvaluations.length > 0 
     ? campusEvaluations[0].competencies.map(comp => ({
@@ -130,13 +141,15 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Ranking</p>
-              <p className="text-2xl font-bold text-gray-900">{campus.ranking}</p>
+              <p className="text-sm font-medium text-gray-600">Campus Level</p>
+              <p className={`text-2xl font-bold ${campusLevel.color}`}>{campusLevel.level}</p>
+              <p className="text-xs text-gray-500 mt-1">Score: {campus.averageScore.toFixed(1)}</p>
             </div>
-            <div className={`w-8 h-8 rounded-full ${
-              campus.ranking === 'High' ? 'bg-green-600' : 
-              campus.ranking === 'Medium' ? 'bg-yellow-600' : 'bg-red-600'
-            }`} />
+            <div className={`w-8 h-8 rounded-full ${campusLevel.bgColor} flex items-center justify-center`}>
+              <span className="text-white text-sm font-bold">
+                {campusLevel.level.split(' ')[1]}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -160,7 +173,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               <RadarChart data={radarData}>
                 <PolarGrid />
                 <PolarAngleAxis dataKey="category" tick={{ fontSize: 10 }} />
-                <PolarRadiusAxis angle={90} domain={[0, 10]} />
+                <PolarRadiusAxis angle={90} domain={[0, 7]} />
                 <Radar
                   name="Score"
                   dataKey="score"
@@ -191,7 +204,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               <BarChart data={resolverScores}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="resolver" />
-                <YAxis domain={[0, 10]} />
+                <YAxis domain={[0, 7]} />
                 <Tooltip />
                 <Bar dataKey="score" fill="#10B981" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -232,18 +245,27 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
-                  {evaluation.competencies.map((comp, index) => (
-                    <div key={index} className="text-center">
-                      <div className="text-sm font-medium text-gray-900">{comp.score}/{comp.maxScore}</div>
-                      <div className="text-xs text-gray-500">{comp.category}</div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                          style={{ width: `${(comp.score / comp.maxScore) * 100}%` }}
-                        ></div>
+                  {evaluation.competencies.map((comp, index) => {
+                    const competencyLevel = getScoreLevel(comp.score);
+                    return (
+                      <div key={index} className="text-center">
+                        <div className="text-sm font-medium text-gray-900">{comp.score}/{comp.maxScore}</div>
+                        <div className={`text-xs font-medium ${competencyLevel.color}`}>{competencyLevel.level}</div>
+                        <div className="text-xs text-gray-500 truncate" title={comp.category}>{comp.category}</div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              comp.score >= 6.0 ? 'bg-green-600' :
+                              comp.score >= 4.0 ? 'bg-blue-600' :
+                              comp.score >= 2.0 ? 'bg-yellow-600' :
+                              comp.score >= 1.0 ? 'bg-orange-600' : 'bg-red-600'
+                            }`}
+                            style={{ width: `${(comp.score / comp.maxScore) * 100}%` }}
+                          ></div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 
                 {/* Enhanced Feedback Section */}
