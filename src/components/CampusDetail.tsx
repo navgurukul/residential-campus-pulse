@@ -279,14 +279,48 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                       <div className="space-y-2 mt-1">
                         {Object.entries(evaluation.competencyFeedback)
                           .filter(([key, value]) => value && value.trim() !== '')
-                          .map(([key, feedback], index) => (
-                            <div key={key} className="bg-white p-3 rounded border-l-4 border-green-400">
-                              <div className="text-xs text-green-700 font-medium mb-1">
-                                Comment {index + 1}
+                          .map(([competencyName, feedback]) => {
+                            // Determine the color based on competency type
+                            const getCompetencyColor = (name: string) => {
+                              if (name.includes('Vipassana')) return 'border-purple-400 bg-purple-50';
+                              if (name.includes('Nutrition') || name.includes('Yoga')) return 'border-green-400 bg-green-50';
+                              if (name.includes('Houses') || name.includes('Reward')) return 'border-yellow-400 bg-yellow-50';
+                              if (name.includes('Etiocracy') || name.includes('Ownership')) return 'border-blue-400 bg-blue-50';
+                              if (name.includes('Campus interactions')) return 'border-indigo-400 bg-indigo-50';
+                              if (name.includes('Gratitude')) return 'border-pink-400 bg-pink-50';
+                              if (name.includes('Hackathons')) return 'border-red-400 bg-red-50';
+                              if (name.includes('English')) return 'border-teal-400 bg-teal-50';
+                              if (name.includes('Learning Environment')) return 'border-cyan-400 bg-cyan-50';
+                              if (name.includes('Process Principles')) return 'border-orange-400 bg-orange-50';
+                              if (name.includes('Life Skills')) return 'border-emerald-400 bg-emerald-50';
+                              return 'border-gray-400 bg-gray-50';
+                            };
+
+                            return (
+                              <div key={competencyName} className={`bg-white p-3 rounded border-l-4 ${getCompetencyColor(competencyName)}`}>
+                                <div className="text-xs font-medium mb-1 flex items-center">
+                                  <div className={`w-2 h-2 rounded-full mr-2 ${
+                                    competencyName.includes('Vipassana') ? 'bg-purple-500' :
+                                    competencyName.includes('Nutrition') || competencyName.includes('Yoga') ? 'bg-green-500' :
+                                    competencyName.includes('Houses') || competencyName.includes('Reward') ? 'bg-yellow-500' :
+                                    competencyName.includes('Etiocracy') || competencyName.includes('Ownership') ? 'bg-blue-500' :
+                                    competencyName.includes('Campus interactions') ? 'bg-indigo-500' :
+                                    competencyName.includes('Gratitude') ? 'bg-pink-500' :
+                                    competencyName.includes('Hackathons') ? 'bg-red-500' :
+                                    competencyName.includes('English') ? 'bg-teal-500' :
+                                    competencyName.includes('Learning Environment') ? 'bg-cyan-500' :
+                                    competencyName.includes('Process Principles') ? 'bg-orange-500' :
+                                    competencyName.includes('Life Skills') ? 'bg-emerald-500' :
+                                    'bg-gray-500'
+                                  }`}></div>
+                                  <span className="text-gray-700">
+                                    {competencyName.length > 50 ? `${competencyName.substring(0, 50)}...` : competencyName}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-700 ml-4">{feedback}</div>
                               </div>
-                              <div className="text-sm text-gray-700">{feedback}</div>
-                            </div>
-                          ))}
+                            );
+                          })}
                       </div>
                     </div>
                   )}

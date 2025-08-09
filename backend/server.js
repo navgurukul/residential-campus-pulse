@@ -353,15 +353,51 @@ function processRawDataForFrontend(rawData) {
     console.log('Found feedback columns:', feedbackColumns.length);
     console.log('Feedback columns:', feedbackColumns);
     
-    // Map feedback columns to competencies based on their position relative to competency columns
+    // Map feedback columns to competencies based on their position and content
     const competencyFeedback = {};
+    
+    // Try to map feedback to specific competencies based on context
+    const competencyKeywords = {
+      'Vipassana': ['vipassana', 'meditation', 'anapana', 'mindfulness'],
+      'Nutrition Supplementation + Yoga/Weight Training': ['nutrition', 'exercise', 'yoga', 'weight', 'health', 'fitness'],
+      'Houses and Reward Systems': ['house', 'reward', 'competition', 'points'],
+      'Etiocracy, Co-Creation & Ownership': ['etiocracy', 'ownership', 'decision', 'council', 'leadership'],
+      'Campus interactions': ['interaction', 'team', 'student', 'communication'],
+      'Gratitude': ['gratitude', 'thankful', 'appreciation'],
+      'Hackathons': ['hackathon', 'coding', 'project', 'tech'],
+      'English Communication & Comprehension': ['english', 'communication', 'language'],
+      'Learning Environment & Peer Support': ['learning', 'peer', 'support', 'environment'],
+      'Process Principles Understanding & Implementation': ['process', 'principle', 'implementation'],
+      'Life Skills Implementation': ['life skill', 'activity', 'facilitation']
+    };
     
     // Get all feedback values that are not empty
     feedbackColumns.forEach((column, index) => {
       const feedbackValue = row[column];
       if (feedbackValue && feedbackValue.trim() !== '') {
-        // Use a generic key since we can't reliably map to specific competencies
-        competencyFeedback[`feedback_${index + 1}`] = feedbackValue.trim();
+        const feedback = feedbackValue.trim();
+        
+        // Try to match feedback to competency based on keywords
+        let matchedCompetency = null;
+        let maxMatches = 0;
+        
+        Object.entries(competencyKeywords).forEach(([competency, keywords]) => {
+          const matches = keywords.filter(keyword => 
+            feedback.toLowerCase().includes(keyword.toLowerCase())
+          ).length;
+          
+          if (matches > maxMatches) {
+            maxMatches = matches;
+            matchedCompetency = competency;
+          }
+        });
+        
+        if (matchedCompetency && maxMatches > 0) {
+          competencyFeedback[matchedCompetency] = feedback;
+        } else {
+          // Fallback to generic key if no match found
+          competencyFeedback[`General Comment ${index + 1}`] = feedback;
+        }
       }
     });
     
@@ -375,7 +411,7 @@ function processRawDataForFrontend(rawData) {
     generalFeedbackColumns.forEach((column, index) => {
       const feedbackValue = row[column];
       if (feedbackValue && feedbackValue.trim() !== '') {
-        competencyFeedback[`general_${index + 1}`] = feedbackValue.trim();
+        competencyFeedback[`Additional Feedback ${index + 1}`] = feedbackValue.trim();
       }
     });
 
