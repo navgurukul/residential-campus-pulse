@@ -5,6 +5,35 @@ import { Campus, Evaluation } from '../types';
 import { competencyCategories } from '../data/mockData';
 import { exportToPDF, exportToCSV, prepareCampusDetailDataForExport } from '../utils/exportUtils';
 
+// Helper function to parse markdown-style formatting
+const parseMarkdown = (text: string) => {
+  if (!text) return text;
+  
+  // First split by double line breaks to handle paragraphs
+  const paragraphs = text.split(/\n\n/g);
+  
+  return paragraphs.map((paragraph, paragraphIndex) => {
+    // Split each paragraph by markdown patterns
+    const parts = paragraph.split(/(\*\*[^*]+\*\*)/g);
+    
+    const parsedParts = parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        // Remove the ** and make it bold
+        const boldText = part.slice(2, -2);
+        return <strong key={index} className="font-semibold text-gray-900">{boldText}</strong>;
+      }
+      return part;
+    });
+    
+    // Return each paragraph as a div with margin bottom (except the last one)
+    return (
+      <div key={paragraphIndex} className={paragraphIndex < paragraphs.length - 1 ? "mb-3" : ""}>
+        {parsedParts}
+      </div>
+    );
+  });
+};
+
 interface CampusDetailProps {
   campus: Campus;
   evaluations: Evaluation[];
@@ -282,7 +311,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                         General Feedback
                       </div>
                       <div className="text-sm text-gray-700 bg-white p-3 rounded border-l-4 border-blue-400 mt-1">
-                        {evaluation.feedback}
+                        {parseMarkdown(evaluation.feedback)}
                       </div>
                     </div>
                   )}
@@ -346,7 +375,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                                     {competencyName.length > 50 ? `${competencyName.substring(0, 50)}...` : competencyName}
                                   </span>
                                 </div>
-                                <div className="text-sm text-gray-700 ml-4">{feedback}</div>
+                                <div className="text-sm text-gray-700 ml-4">{parseMarkdown(feedback)}</div>
                               </div>
                             );
                           })}

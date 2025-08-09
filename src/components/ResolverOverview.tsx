@@ -3,6 +3,35 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { User, MapPin, TrendingUp, Calendar, MessageSquare, X } from 'lucide-react';
 import { Resolver, Evaluation } from '../types';
 
+// Helper function to parse markdown-style formatting
+const parseMarkdown = (text: string) => {
+  if (!text) return text;
+  
+  // First split by double line breaks to handle paragraphs
+  const paragraphs = text.split(/\n\n/g);
+  
+  return paragraphs.map((paragraph, paragraphIndex) => {
+    // Split each paragraph by markdown patterns
+    const parts = paragraph.split(/(\*\*[^*]+\*\*)/g);
+    
+    const parsedParts = parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        // Remove the ** and make it bold
+        const boldText = part.slice(2, -2);
+        return <strong key={index} className="font-semibold text-gray-900">{boldText}</strong>;
+      }
+      return part;
+    });
+    
+    // Return each paragraph as a div with margin bottom (except the last one)
+    return (
+      <div key={paragraphIndex} className={paragraphIndex < paragraphs.length - 1 ? "mb-3" : ""}>
+        {parsedParts}
+      </div>
+    );
+  });
+};
+
 interface ResolverOverviewProps {
   resolvers: Resolver[];
   evaluations?: Evaluation[];
@@ -258,7 +287,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                           <div className="mb-3">
                             <div className="text-sm font-medium text-gray-700 mb-1">General Feedback:</div>
                             <div className="text-sm text-gray-600 bg-white p-3 rounded border-l-4 border-blue-400">
-                              {evaluation.feedback}
+                              {parseMarkdown(evaluation.feedback)}
                             </div>
                           </div>
                         )}
@@ -271,7 +300,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                               {feedbackEntries.map(([key, feedback], index) => (
                                 <div key={key} className="bg-white p-3 rounded border-l-4 border-green-400">
                                   <div className="text-xs text-green-700 font-medium mb-1">Comment {index + 1}</div>
-                                  <div className="text-sm text-gray-600">{feedback}</div>
+                                  <div className="text-sm text-gray-600">{parseMarkdown(feedback)}</div>
                                 </div>
                               ))}
                             </div>
