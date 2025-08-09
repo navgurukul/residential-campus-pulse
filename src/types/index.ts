@@ -35,6 +35,9 @@ export interface Evaluation {
   overallScore: number;
   competencies: Competency[];
   feedback: string;
+  competencyFeedback?: {
+    [key: string]: string;
+  };
   dateEvaluated: string;
   status: 'Completed' | 'In Progress' | 'Pending';
 }

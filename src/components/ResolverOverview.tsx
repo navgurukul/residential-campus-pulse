@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { User, MapPin, TrendingUp, Calendar } from 'lucide-react';
-import { Resolver } from '../types';
+import { User, MapPin, TrendingUp, Calendar, MessageSquare, X } from 'lucide-react';
+import { Resolver, Evaluation } from '../types';
 
 interface ResolverOverviewProps {
   resolvers: Resolver[];
+  evaluations?: Evaluation[];
 }
 
-const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
+const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluations = [] }) => {
+  const [selectedResolver, setSelectedResolver] = useState<Resolver | null>(null);
   const chartData = resolvers.map(resolver => ({
     name: resolver.name,
     campuses: resolver.campusesEvaluated,
@@ -140,9 +142,16 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {resolvers.map((resolver) => (
-                <tr key={resolver.id} className="hover:bg-gray-50 transition-colors duration-200">
+                <tr 
+                  key={resolver.id} 
+                  className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                  onClick={() => setSelectedResolver(resolver)}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{resolver.name}</div>
+                    <div className="flex items-center">
+                      <div className="font-medium text-gray-900">{resolver.name}</div>
+                      <MessageSquare className="w-4 h-4 text-gray-400 ml-2" />
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {resolver.email}
@@ -181,6 +190,114 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers }) => {
           </table>
         </div>
       </div>
+
+      {/* Resolver Feedback Modal */}
+      {selectedResolver && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div className="flex items-center">
+                <MessageSquare className="w-6 h-6 text-blue-600 mr-3" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{selectedResolver.name}</h3>
+                  <p className="text-sm text-gray-600">{selectedResolver.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedResolver(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{selectedResolver.campusesEvaluated}</div>
+                  <div className="text-sm text-blue-800">Campuses Evaluated</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{selectedResolver.averageScoreGiven.toFixed(1)}</div>
+                  <div className="text-sm text-green-800">Average Score Given</div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">{selectedResolver.totalEvaluations}</div>
+                  <div className="text-sm text-purple-800">Total Evaluations</div>
+                </div>
+              </div>
+
+              {/* Feedback Section */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <MessageSquare className="w-5 h-5 mr-2 text-blue-600" />
+                  Feedback & Comments
+                </h4>
+                
+                {evaluations
+                  .filter(evaluation => evaluation.resolverName === selectedResolver.name)
+                  .map(evaluation => {
+                    const feedbackEntries = Object.entries(evaluation.competencyFeedback || {})
+                      .filter(([key, value]) => value && value.trim() !== '');
+                    
+                    if (feedbackEntries.length === 0 && (!evaluation.feedback || evaluation.feedback.includes('Comprehensive evaluation'))) {
+                      return null;
+                    }
+                    
+                    return (
+                      <div key={evaluation.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="font-medium text-gray-900">{evaluation.campusName}</div>
+                          <div className="text-sm text-gray-500">{evaluation.dateEvaluated}</div>
+                        </div>
+                        
+                        {/* General Feedback */}
+                        {evaluation.feedback && !evaluation.feedback.includes('Comprehensive evaluation') && (
+                          <div className="mb-3">
+                            <div className="text-sm font-medium text-gray-700 mb-1">General Feedback:</div>
+                            <div className="text-sm text-gray-600 bg-white p-3 rounded border-l-4 border-blue-400">
+                              {evaluation.feedback}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Competency-specific Feedback */}
+                        {feedbackEntries.length > 0 && (
+                          <div>
+                            <div className="text-sm font-medium text-gray-700 mb-2">Competency Comments:</div>
+                            <div className="space-y-2">
+                              {feedbackEntries.map(([key, feedback], index) => (
+                                <div key={key} className="bg-white p-3 rounded border-l-4 border-green-400">
+                                  <div className="text-xs text-green-700 font-medium mb-1">Comment {index + 1}</div>
+                                  <div className="text-sm text-gray-600">{feedback}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                  .filter(Boolean)}
+                
+                {evaluations.filter(evaluation => 
+                  evaluation.resolverName === selectedResolver.name &&
+                  (Object.values(evaluation.competencyFeedback || {}).some(feedback => feedback && feedback.trim() !== '') ||
+                   (evaluation.feedback && !evaluation.feedback.includes('Comprehensive evaluation')))
+                ).length === 0 && (
+                  <div className="text-center py-8">
+                    <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <div className="text-gray-500">No feedback available for this resolver yet.</div>
+                    <div className="text-sm text-gray-400 mt-1">Feedback will appear here once evaluations with comments are submitted.</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

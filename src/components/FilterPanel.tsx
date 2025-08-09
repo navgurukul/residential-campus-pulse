@@ -8,6 +8,7 @@ interface FilterPanelProps {
   onExport: (format: 'csv' | 'pdf') => void;
   campuses: Array<{ id: string; name: string }>;
   resolvers: Array<{ id: string; name: string }>;
+  currentView: string;
 }
 
 // Utility function for Title Case

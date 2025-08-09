@@ -284,6 +284,7 @@ function App() {
             onExport={handleExport}
             campuses={campuses.map(c => ({ id: c.id, name: c.name }))}
             resolvers={resolvers.map(r => ({ id: r.id, name: r.name }))}
+            currentView={currentView}
           />
         )}
 
@@ -306,7 +307,10 @@ function App() {
         )}
 
         {currentView === 'resolver-overview' && (
-          <ResolverOverview resolvers={filteredResolvers} />
+          <ResolverOverview 
+            resolvers={filteredResolvers} 
+            evaluations={evaluations.length > 0 ? evaluations : mockEvaluations}
+          />
         )}
       </main>
     </div>
