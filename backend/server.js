@@ -127,8 +127,8 @@ function convertLevelToScore(levelText) {
   const levelMatch = levelText.match(/Level\s*(\d+)/i);
   if (levelMatch) {
     const level = parseInt(levelMatch[1]);
-    // Convert level 0-3 to score 0-10 (you can adjust this mapping)
-    return Math.min(10, level * 2.5); // Level 0=0, Level 1=2.5, Level 2=5, Level 3=7.5, Level 4=10
+    // Convert level 0-3 to score 0-7 (maximum competency score is 7)
+    return Math.min(7, level * 1.75); // Level 0=0, Level 1=1.75, Level 2=3.5, Level 3=5.25, Level 4=7
   }
 
   return null;
@@ -257,17 +257,17 @@ function processRawDataForFrontend(rawData) {
         competencies.push({
           category: mapping.category,
           score: score,
-          maxScore: 10
+          maxScore: 7
         });
         totalScore += score;
         scoreCount++;
       } else {
         // Fallback score if no level found
-        const fallbackScore = 5 + Math.random() * 3; // Random score between 5-8
+        const fallbackScore = 3 + Math.random() * 4; // Random score between 3-7
         competencies.push({
           category: mapping.category,
           score: Math.round(fallbackScore * 10) / 10,
-          maxScore: 10
+          maxScore: 7
         });
         totalScore += fallbackScore;
         scoreCount++;
@@ -365,8 +365,8 @@ function processRawDataForFrontend(rawData) {
       : 7.5,
     totalResolvers: campusData.resolverEmails.size, // Use deduplicated count
     ranking: campusData.scores.length > 0
-      ? (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 8 ? 'High'
-        : (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 6 ? 'Medium' : 'Low'
+      ? (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 4.67 ? 'High'
+        : (campusData.scores.reduce((sum, score) => sum + score, 0) / campusData.scores.length) > 2.33 ? 'Medium' : 'Low'
       : 'Medium',
     lastEvaluated: campusData.lastEvaluated
   }));
