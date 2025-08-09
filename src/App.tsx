@@ -277,6 +277,24 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="main-content">
+        {/* Process Principles Framework Link */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-blue-900">Process Principles Framework</h3>
+              <p className="text-xs text-blue-700 mt-1">Understanding & Implementation guidelines for team members</p>
+            </div>
+            <a
+              href="https://docs.google.com/document/d/1G9zxUyv4NKIXJpYy04ehRt1MgdSFspj-DnyGhraHJ0k/edit?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors duration-200"
+            >
+              View Document
+            </a>
+          </div>
+        </div>
+
         {currentView !== 'campus-detail' && (
           <FilterPanel
             filters={filters}
