@@ -12,37 +12,10 @@ interface CampusDetailProps {
 }
 
 const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack }) => {
-  let campusEvaluations = evaluations.filter(evaluation => evaluation.campusId === campus.id);
+  const campusEvaluations = evaluations.filter(evaluation => evaluation.campusId === campus.id);
   
-  // If no evaluations found for this campus, create dummy data
-  if (campusEvaluations.length === 0) {
-
-    const resolvers = [
-      'Suraj Sahani',
-      'Mubin',
-      'Vinit Gore',
-      'Priyanka',
-      'Bilqees',
-      'Vikas Patel'
-    ];
-
-    campusEvaluations = resolvers.map((resolverName, index) => ({
-      id: `${campus.id}-dummy-${index + 1}`,
-      campusId: campus.id,
-      resolverId: `resolver-${campus.id}-${index + 1}`,
-      resolverName,
-      campusName: campus.name,
-      overallScore: Math.round((campus.averageScore + (Math.random() - 0.5) * 1) * 10) / 10,
-      competencies: competencyCategories.map(category => ({
-        category,
-        score: Math.round((campus.averageScore + (Math.random() - 0.5) * 2) * 10) / 10,
-        maxScore: 10
-      })),
-      feedback: `Comprehensive evaluation of ${campus.name}. ${resolverName} provided detailed insights on various competency areas including ${competencyCategories.slice(0, 3).join(', ')} and others. The campus shows strong performance in most areas with opportunities for continued improvement.`,
-      dateEvaluated: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      status: 'Completed' as const
-    }));
-  }
+  // Check if this is a new campus with no evaluations
+  const hasNoEvaluations = campusEvaluations.length === 0;
   
   // Prepare radar chart data
   const radarData = campusEvaluations.length > 0 
@@ -87,11 +60,21 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                   Campus Relocated to {campus.relocatedTo}
                 </span>
               )}
+              {hasNoEvaluations && campus.name === 'Raigarh' && (
+                <span className="ml-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  New Campus
+                </span>
+              )}
             </div>
             <p className="text-gray-600">{campus.location}</p>
             {campus.status === 'Relocated' && (
               <p className="text-sm text-orange-600 mt-1">
                 This campus has been relocated. Historical evaluation data is preserved below.
+              </p>
+            )}
+            {hasNoEvaluations && campus.name === 'Raigarh' && (
+              <p className="text-sm text-green-600 mt-1">
+                This is a new campus. No evaluations have been conducted yet.
               </p>
             )}
           </div>
@@ -140,7 +123,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               <p className="text-sm font-medium text-gray-600">Completed Evaluations</p>
               <p className="text-2xl font-bold text-gray-900">{campusEvaluations.length}</p>
             </div>
-            <MessageSquare className="w-8 h-8 text-green-600" />
+            <MessageSquare className={`w-8 h-8 ${campusEvaluations.length > 0 ? 'text-green-600' : 'text-gray-400'}`} />
           </div>
         </div>
 
@@ -189,8 +172,14 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               </RadarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              No evaluation data available
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+              <MessageSquare className="w-12 h-12 mb-3 opacity-50" />
+              <div className="text-center">
+                <p className="font-medium">No evaluation data available</p>
+                {hasNoEvaluations && campus.name === 'Raigarh' && (
+                  <p className="text-sm mt-1">This new campus hasn't been evaluated yet</p>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -208,8 +197,14 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              No resolver scores available
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+              <User className="w-12 h-12 mb-3 opacity-50" />
+              <div className="text-center">
+                <p className="font-medium">No resolver scores available</p>
+                {hasNoEvaluations && campus.name === 'Raigarh' && (
+                  <p className="text-sm mt-1">No resolvers have evaluated this campus yet</p>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -221,7 +216,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
           <h3 className="text-lg font-semibold text-gray-900">Detailed Evaluations</h3>
         </div>
         
-        {campusEvaluations.length > 0 ? (
+        {!hasNoEvaluations ? (
           <div className="p-6 space-y-6">
             {campusEvaluations.map((evaluation) => (
               <div key={evaluation.id} className="border border-gray-200 rounded-lg p-4">
@@ -342,8 +337,18 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
           </div>
         ) : (
           <div className="p-12 text-center text-gray-500">
-            <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No evaluations available for this campus</p>
+            <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-30" />
+            <div className="space-y-2">
+              <p className="text-lg font-medium">No evaluations available for this campus</p>
+              {campus.name === 'Raigarh' ? (
+                <div className="text-sm space-y-1">
+                  <p className="text-green-600">This is a new campus that hasn't been evaluated yet.</p>
+                  <p>Once resolvers conduct evaluations, the data will appear here.</p>
+                </div>
+              ) : (
+                <p className="text-sm">Evaluation data will appear here once available.</p>
+              )}
+            </div>
           </div>
         )}
         </div>
