@@ -17,11 +17,14 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
 
 
 
-  // Helper function to calculate level based on 0-7 scale
+  // Helper function to calculate level based on 0-7 score scale mapping to 0-4 levels
   const getCampusLevel = (score: number): string => {
-    // Convert score to level (0-7 maps to Level 0-7)
-    const level = Math.floor(score); // Direct mapping: score 1.9 = Level 1, score 3.2 = Level 3, etc.
-    return `Level ${Math.min(7, Math.max(0, level))}`;
+    // Convert score to level (0-7 score maps to Level 0-4)
+    if (score >= 6.5) return 'Level 4';
+    if (score >= 4.5) return 'Level 3';
+    if (score >= 2.5) return 'Level 2';
+    if (score >= 1) return 'Level 1';
+    return 'Level 0';
   };
 
   // Helper function for level colors
@@ -63,15 +66,15 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
     }));
   }, [campuses, selectedCompetency, evaluations]);
 
+  // Only include active campuses in level distribution
+  const activeCampuses = campuses.filter(campus => campus.status !== 'Relocated');
+  
   const rankingData = [
-    { name: 'Level 7', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 7').length, color: '#059669' },
-    { name: 'Level 6', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 6').length, color: '#10B981' },
-    { name: 'Level 5', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 5').length, color: '#65A30D' },
-    { name: 'Level 4', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 4').length, color: '#3B82F6' },
-    { name: 'Level 3', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 3').length, color: '#0891B2' },
-    { name: 'Level 2', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 2').length, color: '#F59E0B' },
-    { name: 'Level 1', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 1').length, color: '#F97316' },
-    { name: 'Level 0', value: campuses.filter(c => getCampusLevel(c.averageScore) === 'Level 0').length, color: '#EF4444' }
+    { name: 'Level 4', value: activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 4').length, color: '#059669' },
+    { name: 'Level 3', value: activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 3').length, color: '#3B82F6' },
+    { name: 'Level 2', value: activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 2').length, color: '#F59E0B' },
+    { name: 'Level 1', value: activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 1').length, color: '#F97316' },
+    { name: 'Level 0', value: activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 0').length, color: '#EF4444' }
   ].filter(item => item.value > 0); // Filter out zero values to prevent overlapping labels
 
   const totalResolvers = campuses.reduce((sum, campus) => sum + campus.totalResolvers, 0);
@@ -85,7 +88,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Campuses</p>
-              <p className="text-3xl font-bold text-gray-900">{campuses.length}</p>
+              <p className="text-3xl font-bold text-gray-900">{campuses.filter(campus => campus.status !== 'Relocated').length}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <MapPin className="w-6 h-6 text-blue-600" />
@@ -121,9 +124,9 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Top Level Campuses</p>
-              <p className="text-3xl font-bold text-gray-900">{campuses.filter(c => {
+              <p className="text-3xl font-bold text-gray-900">{activeCampuses.filter(c => {
                 const level = getCampusLevel(c.averageScore);
-                return ['Level 6', 'Level 7'].includes(level);
+                return ['Level 3', 'Level 4'].includes(level);
               }).length}</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
