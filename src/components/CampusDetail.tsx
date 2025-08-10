@@ -273,37 +273,88 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
-                  {evaluation.competencies.map((comp, index) => {
-                    const competencyLevel = getScoreLevel(comp.score);
-                    return (
-                      <div key={index} className="text-center">
-                        <div className="text-sm font-medium text-gray-900">
-                          {comp.level ? `${comp.level} - ${comp.score}/${comp.maxScore}` : `${comp.score}/${comp.maxScore}`}
+                {/* Beautiful Competency Cards */}
+                <div className="mb-6">
+                  <h4 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="w-1 h-6 bg-blue-500 rounded-full mr-3"></div>
+                    Competency Assessment
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {evaluation.competencies.map((comp, index) => {
+                      const getLevelStyling = (level: string) => {
+                        if (level?.includes('7') || level?.includes('6')) return {
+                          bg: 'bg-gradient-to-r from-emerald-50 to-green-50',
+                          border: 'border-emerald-200',
+                          dot: 'bg-emerald-500',
+                          text: 'text-emerald-700'
+                        };
+                        if (level?.includes('5') || level?.includes('4')) return {
+                          bg: 'bg-gradient-to-r from-blue-50 to-indigo-50',
+                          border: 'border-blue-200',
+                          dot: 'bg-blue-500',
+                          text: 'text-blue-700'
+                        };
+                        if (level?.includes('3') || level?.includes('2')) return {
+                          bg: 'bg-gradient-to-r from-amber-50 to-yellow-50',
+                          border: 'border-amber-200',
+                          dot: 'bg-amber-500',
+                          text: 'text-amber-700'
+                        };
+                        if (level?.includes('1')) return {
+                          bg: 'bg-gradient-to-r from-orange-50 to-red-50',
+                          border: 'border-orange-200',
+                          dot: 'bg-orange-500',
+                          text: 'text-orange-700'
+                        };
+                        return {
+                          bg: 'bg-gradient-to-r from-red-50 to-pink-50',
+                          border: 'border-red-200',
+                          dot: 'bg-red-500',
+                          text: 'text-red-700'
+                        };
+                      };
+                      
+                      const styling = getLevelStyling(comp.level);
+                      
+                      return (
+                        <div key={index} className={`${styling.bg} ${styling.border} border rounded-xl p-4 hover:shadow-lg transition-all duration-300 hover:scale-105`}>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 pr-4">
+                              <h5 className="font-semibold text-gray-800 text-sm leading-snug mb-2">
+                                {comp.category}
+                              </h5>
+                              <div className="flex items-center space-x-2">
+                                <div className={`w-2 h-2 rounded-full ${styling.dot}`}></div>
+                                <span className={`text-xs font-medium ${styling.text}`}>
+                                  {comp.level ? comp.level : `Level ${Math.round(comp.score)}`}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-gray-800">
+                                {comp.score}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                / {comp.maxScore}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500 truncate" title={comp.category}>{comp.category}</div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                          <div 
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              comp.score >= 6.0 ? 'bg-green-600' :
-                              comp.score >= 4.0 ? 'bg-blue-600' :
-                              comp.score >= 2.0 ? 'bg-yellow-600' :
-                              comp.score >= 1.0 ? 'bg-orange-600' : 'bg-red-600'
-                            }`}
-                            style={{ width: `${(comp.score / comp.maxScore) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
                 
-                {/* Enhanced Feedback Section */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-                  <h5 className="text-sm font-semibold text-blue-900 mb-3 flex items-center">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Resolver Feedback & Comments
-                  </h5>
+                {/* Collapsible Detailed Feedback Section */}
+                <details className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                  <summary className="cursor-pointer p-4 hover:bg-blue-100 rounded-lg transition-colors">
+                    <span className="text-sm font-semibold text-blue-900 flex items-center">
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Detailed Feedback & Comments
+                      <span className="ml-2 text-xs text-blue-600">(Click to expand)</span>
+                    </span>
+                  </summary>
+                  <div className="p-4 pt-0">
                   
                   {/* General Feedback */}
                   {evaluation.feedback && !evaluation.feedback.includes('Comprehensive evaluation') && (
@@ -395,7 +446,8 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                       </div>
                     </div>
                   )}
-                </div>
+                  </div>
+                </details>
               </div>
             ))}
           </div>
