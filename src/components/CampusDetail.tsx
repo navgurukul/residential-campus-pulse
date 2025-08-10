@@ -138,7 +138,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold text-blue-600">{campus.averageScore.toFixed(1)}</div>
-            <div className="text-sm text-gray-500">Overall Score</div>
+            <div className="text-sm text-gray-500">Latest Score</div>
           </div>
         </div>
       </div>
@@ -269,7 +269,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                   </div>
                   <div className="text-right">
                     <div className="text-xl font-bold text-blue-600">{evaluation.overallScore}</div>
-                    <div className="text-xs text-gray-500">Overall Score</div>
+                    <div className="text-xs text-gray-500">Latest Score</div>
                   </div>
                 </div>
                 

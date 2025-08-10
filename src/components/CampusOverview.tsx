@@ -148,7 +148,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                 onChange={(e) => setSelectedCompetency(e.target.value)}
                 className="text-sm border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">Overall Score</option>
+                <option value="">Latest Score</option>
                 {competencyCategories.map(category => (
                   <option key={category} value={category}>
                     {category}
@@ -186,7 +186,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               <Tooltip 
                 formatter={(value: number) => [
                   value.toFixed(1), 
-                  selectedCompetency || 'Overall Score'
+                  selectedCompetency || 'Latest Score'
                 ]}
                 labelFormatter={(label) => `Campus: ${label}`}
               />
