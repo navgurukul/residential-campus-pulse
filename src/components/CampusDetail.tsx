@@ -57,10 +57,28 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
   
   const campusLevel = getScoreLevel(campus.averageScore);
   
+  // Helper function to shorten category names for radar chart
+  const shortenCategoryName = (category: string): string => {
+    const shortNames: { [key: string]: string } = {
+      'Vipassana': 'Vipassana',
+      'Nutrition Supplementation + Yoga/Weight Training': 'Nutrition + Yoga',
+      'Houses and Reward Systems': 'Houses & Rewards',
+      'Etiocracy, Co-Creation & Ownership': 'Etiocracy & Ownership',
+      'Campus interactions': 'Campus Interactions',
+      'Gratitude': 'Gratitude',
+      'Hackathons': 'Hackathons',
+      'English Communication & Comprehension': 'English Comm.',
+      'Learning Environment & Peer Support': 'Learning Environment',
+      'Process Principles Understanding & Implementation': 'Process Principles',
+      'Life Skills Implementation': 'Life Skills'
+    };
+    return shortNames[category] || category;
+  };
+
   // Prepare radar chart data
   const radarData = campusEvaluations.length > 0 
     ? campusEvaluations[0].competencies.map(comp => ({
-        category: comp.category,
+        category: shortenCategoryName(comp.category),
         score: comp.score,
         maxScore: comp.maxScore
       }))
@@ -198,11 +216,15 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Competency Analysis</h3>
           {radarData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <RadarChart data={radarData}>
+            <ResponsiveContainer width="100%" height={400}>
+              <RadarChart data={radarData} margin={{ top: 40, right: 80, bottom: 40, left: 80 }}>
                 <PolarGrid />
-                <PolarAngleAxis dataKey="category" tick={{ fontSize: 10 }} />
-                <PolarRadiusAxis angle={90} domain={[0, 7]} />
+                <PolarAngleAxis 
+                  dataKey="category" 
+                  tick={{ fontSize: 11, fill: '#6B7280' }}
+                  className="text-xs"
+                />
+                <PolarRadiusAxis angle={90} domain={[0, 7]} tick={{ fontSize: 10 }} />
                 <Radar
                   name="Score"
                   dataKey="score"
