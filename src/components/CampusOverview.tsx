@@ -64,7 +64,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
   const chartData = useMemo(() => {
     return campuses.map(campus => ({
       name: campus.status === 'Relocated' ? `${campus.name} (→${campus.relocatedTo})` : campus.name,
-      score: selectedCompetency 
+      score: selectedCompetency
         ? getCompetencyScoreForCampus(campus.id, selectedCompetency)
         : campus.averageScore,
       resolvers: campus.totalResolvers
@@ -73,7 +73,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
 
   // Only include active campuses in level distribution
   const activeCampuses = campuses.filter(campus => campus.status !== 'Relocated');
-  
+
   const rankingData = [
     { name: 'Level 4', value: activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 4').length, color: '#059669' },
     { name: 'Level 3', value: activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 3').length, color: '#3B82F6' },
@@ -162,25 +162,25 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               </select>
             </div>
           </div>
-          
+
 
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-              <CartesianGrid 
-                strokeDasharray="3 3" 
+              <CartesianGrid
+                strokeDasharray="3 3"
                 stroke="#e0e0e0"
                 horizontalPoints={[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7]}
               />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 angle={-45}
                 textAnchor="end"
                 height={80}
                 interval={0}
                 tick={{ fontSize: 12 }}
               />
-              <YAxis 
-                domain={[0, 7]} 
+              <YAxis
+                domain={[0, 7]}
                 type="number"
                 ticks={[0, 1, 2, 3, 4, 5, 6, 7]}
                 tickCount={8}
@@ -188,9 +188,9 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                 allowDecimals={true}
                 tick={{ fontSize: 12 }}
               />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: number) => [
-                  value.toFixed(1), 
+                  value.toFixed(1),
                   selectedCompetency || 'Latest Score'
                 ]}
                 labelFormatter={(label) => `Campus: ${label}`}
@@ -260,8 +260,8 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {campuses.map((campus) => (
-                <tr 
-                  key={campus.id} 
+                <tr
+                  key={campus.id}
                   className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
                   onClick={() => onCampusSelect(campus.id)}
                 >
@@ -291,8 +291,8 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                     <div className="flex items-center">
                       <div className="text-sm font-medium text-gray-900">{campus.averageScore.toFixed(1)}</div>
                       <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${(campus.averageScore / 7) * 100}%` }}
                         ></div>
                       </div>
@@ -306,13 +306,12 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                       const campusLevel = getCampusLevel(campus.averageScore);
                       return (
                         <div className="flex items-center">
-                          <div className={`w-3 h-3 rounded-full mr-2 ${
-                            ['Level 6', 'Level 7'].includes(campusLevel) ? 'bg-emerald-500 animate-pulse-fast' :
-                            ['Level 4', 'Level 5'].includes(campusLevel) ? 'bg-green-500 animate-pulse-medium' :
-                            ['Level 2', 'Level 3'].includes(campusLevel) ? 'bg-blue-500 animate-pulse-medium' :
-                            campusLevel === 'Level 1' ? 'bg-yellow-500 animate-pulse-medium' :
-                            'bg-red-500 animate-pulse-slow'
-                          }`}></div>
+                          <div className={`w-3 h-3 rounded-full mr-2 ${['Level 6', 'Level 7'].includes(campusLevel) ? 'bg-emerald-500 animate-pulse-fast' :
+                              ['Level 4', 'Level 5'].includes(campusLevel) ? 'bg-green-500 animate-pulse-medium' :
+                                ['Level 2', 'Level 3'].includes(campusLevel) ? 'bg-blue-500 animate-pulse-medium' :
+                                  campusLevel === 'Level 1' ? 'bg-yellow-500 animate-pulse-medium' :
+                                    'bg-red-500 animate-pulse-slow'
+                            }`}></div>
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getLevelColor(campusLevel)}`}>
                             {campusLevel}
                           </span>
@@ -336,7 +335,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
           <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
           Campus Performance Analytics
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Analytics Cards */}
           <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-4 rounded-lg border border-emerald-200">
@@ -344,12 +343,12 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               <div>
                 <p className="text-sm font-medium text-emerald-700">Top Performing Campus</p>
                 <p className="text-lg font-bold text-emerald-900">
-                  {activeCampuses.reduce((prev, current) => 
+                  {activeCampuses.reduce((prev, current) =>
                     (prev.averageScore > current.averageScore) ? prev : current
                   ).name}
                 </p>
                 <p className="text-xs text-emerald-600">
-                  Score: {activeCampuses.reduce((prev, current) => 
+                  Score: {activeCampuses.reduce((prev, current) =>
                     (prev.averageScore > current.averageScore) ? prev : current
                   ).averageScore.toFixed(1)}/7
                 </p>
@@ -363,12 +362,12 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               <div>
                 <p className="text-sm font-medium text-blue-700">Most Evaluated Campus</p>
                 <p className="text-lg font-bold text-blue-900">
-                  {activeCampuses.reduce((prev, current) => 
+                  {activeCampuses.reduce((prev, current) =>
                     (prev.totalResolvers > current.totalResolvers) ? prev : current
                   ).name}
                 </p>
                 <p className="text-xs text-blue-600">
-                  {activeCampuses.reduce((prev, current) => 
+                  {activeCampuses.reduce((prev, current) =>
                     (prev.totalResolvers > current.totalResolvers) ? prev : current
                   ).totalResolvers} evaluators
                 </p>
@@ -418,7 +417,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               ].map((tier, index) => {
                 const count = activeCampuses.filter(c => getCampusLevel(c.averageScore) === tier.level).length;
                 const percentage = (count / activeCampuses.length) * 100;
-                
+
                 return (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">{tier.name}</span>
@@ -478,21 +477,21 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
             <div className="bg-white p-3 rounded-lg">
               <h5 className="font-medium text-gray-800 mb-2">🎯 Focus Areas</h5>
               <p className="text-sm text-gray-600">
-                {activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 0').length} campuses need immediate attention. 
+                {activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 0').length} campuses need immediate attention.
                 Prioritize support for lowest-performing locations.
               </p>
             </div>
             <div className="bg-white p-3 rounded-lg">
               <h5 className="font-medium text-gray-800 mb-2">📊 Best Practices</h5>
               <p className="text-sm text-gray-600">
-                Study practices from {activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 4').length} top-performing campuses. 
+                Study practices from {activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 4').length} top-performing campuses.
                 Share successful strategies across network.
               </p>
             </div>
             <div className="bg-white p-3 rounded-lg">
               <h5 className="font-medium text-gray-800 mb-2">🔄 Evaluation Frequency</h5>
               <p className="text-sm text-gray-600">
-                Average {(activeCampuses.reduce((sum, c) => sum + c.totalResolvers, 0) / activeCampuses.length).toFixed(1)} evaluators per campus. 
+                Average {(activeCampuses.reduce((sum, c) => sum + c.totalResolvers, 0) / activeCampuses.length).toFixed(1)} evaluators per campus.
                 Consider increasing evaluation frequency for better insights.
               </p>
             </div>
