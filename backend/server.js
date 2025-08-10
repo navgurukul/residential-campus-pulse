@@ -265,17 +265,20 @@ function processRawDataForFrontend(rawData) {
         competencies.push({
           category: mapping.category,
           score: score,
-          maxScore: 7
+          maxScore: 7,
+          level: levelText // Store the original level text
         });
         totalScore += score;
         scoreCount++;
       } else {
         // Fallback score if no level found
         const fallbackScore = 3 + Math.random() * 4; // Random score between 3-7
+        const fallbackLevel = convertScoreToLevel(fallbackScore);
         competencies.push({
           category: mapping.category,
           score: Math.round(fallbackScore * 10) / 10,
-          maxScore: 7
+          maxScore: 7,
+          level: `Level ${fallbackLevel}` // Store the converted level
         });
         totalScore += fallbackScore;
         scoreCount++;

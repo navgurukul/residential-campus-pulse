@@ -26,6 +26,7 @@ export interface Competency {
   category: string;
   score: number;
   maxScore: number;
+  level?: string; // Original level text like "Level 1", "Level 2", etc.
 }
 
 export interface Evaluation {

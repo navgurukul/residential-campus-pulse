@@ -278,7 +278,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                     const competencyLevel = getScoreLevel(comp.score);
                     return (
                       <div key={index} className="text-center">
-                        <div className="text-sm font-medium text-gray-900">{comp.score}/{comp.maxScore}</div>
+                        <div className="text-sm font-medium text-gray-900">{comp.level || `${comp.score}/${comp.maxScore}`}</div>
                         <div className={`text-xs font-medium ${competencyLevel.color}`}>{competencyLevel.level}</div>
                         <div className="text-xs text-gray-500 truncate" title={comp.category}>{comp.category}</div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mt-1">

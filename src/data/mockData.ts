@@ -1,5 +1,14 @@
 import { Evaluation } from '../types';
 
+// Helper function to convert score to level for mock data
+const convertScoreToLevel = (score: number): string => {
+  if (score >= 6.5) return 'Level 4';
+  if (score >= 4.5) return 'Level 3';
+  if (score >= 2.5) return 'Level 2';
+  if (score >= 1) return 'Level 1';
+  return 'Level 0';
+};
+
 export const competencyCategories = [
   'Vipassana',
   'Nutrition Supplementation + Yoga/Weight Training',
@@ -36,11 +45,15 @@ const generateEvaluationsForCampus = (campusId: string, campusName: string, base
       resolverName,
       campusName,
       overallScore: Math.round((baseScore + (Math.random() - 0.5) * 2) * 10) / 10,
-      competencies: competencyCategories.map(category => ({
-        category,
-        score: Math.round((baseScore + (Math.random() - 0.5) * 3) * 10) / 10,
-        maxScore: 10
-      })),
+      competencies: competencyCategories.map(category => {
+        const score = Math.round((baseScore + (Math.random() - 0.5) * 3) * 10) / 10;
+        return {
+          category,
+          score,
+          maxScore: 7,
+          level: convertScoreToLevel(score)
+        };
+      }),
       feedback: `Comprehensive evaluation of ${campusName}. ${resolverName} provided detailed insights on various competency areas including ${competencyCategories.slice(0, 3).join(', ')} and others.`,
       dateEvaluated: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'Completed' as const
@@ -58,11 +71,15 @@ const generateEvaluationsForCampus = (campusId: string, campusName: string, base
       resolverName,
       campusName,
       overallScore: Math.round((baseScore + (Math.random() - 0.5) * 2) * 10) / 10,
-      competencies: competencyCategories.map(category => ({
-        category,
-        score: Math.round((baseScore + (Math.random() - 0.5) * 3) * 10) / 10,
-        maxScore: 10
-      })),
+      competencies: competencyCategories.map(category => {
+        const score = Math.round((baseScore + (Math.random() - 0.5) * 3) * 10) / 10;
+        return {
+          category,
+          score,
+          maxScore: 7,
+          level: convertScoreToLevel(score)
+        };
+      }),
       feedback: `Follow-up evaluation of ${campusName} by ${resolverName}. Noted improvements in several areas since last evaluation.`,
       dateEvaluated: new Date(Date.now() - Math.random() * 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // More recent
       status: 'Completed' as const
@@ -100,11 +117,15 @@ export const mockEvaluations: Evaluation[] = [
       resolverName: `Evaluator ${i + 1}`,
       campusName,
       overallScore: Math.round(baseScore * 10) / 10,
-      competencies: competencyCategories.map(category => ({
-        category,
-        score: Math.round((baseScore + (Math.random() - 0.5) * 2) * 10) / 10,
-        maxScore: 10
-      })),
+      competencies: competencyCategories.map(category => {
+        const score = Math.round((baseScore + (Math.random() - 0.5) * 2) * 10) / 10;
+        return {
+          category,
+          score,
+          maxScore: 7,
+          level: convertScoreToLevel(score)
+        };
+      }),
       feedback: `Detailed evaluation of ${campusName} covering all key competency areas with specific focus on improvement opportunities.`,
       dateEvaluated: new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'Completed' as const
