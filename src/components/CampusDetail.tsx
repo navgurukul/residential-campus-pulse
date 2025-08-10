@@ -224,7 +224,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                   tick={{ fontSize: 11, fill: '#6B7280' }}
                   className="text-xs"
                 />
-                <PolarRadiusAxis angle={90} domain={[0, 7]} tick={{ fontSize: 10 }} />
+                <PolarRadiusAxis angle={90} domain={[0, 7]} tick={{ fontSize: 10 }} tickCount={8} />
                 <Radar
                   name="Score"
                   dataKey="score"
@@ -255,7 +255,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               <BarChart data={resolverScores}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="resolver" />
-                <YAxis domain={[0, 7]} />
+                <YAxis domain={[0, 7]} ticks={[0, 1, 2, 3, 4, 5, 6, 7]} />
                 <Tooltip />
                 <Bar dataKey="score" fill="#10B981" radius={[4, 4, 0, 0]} />
               </BarChart>
