@@ -6,14 +6,14 @@ import { Resolver, Evaluation } from '../types';
 // Helper function to parse markdown-style formatting
 const parseMarkdown = (text: string) => {
   if (!text) return text;
-  
+
   // First split by double line breaks to handle paragraphs
   const paragraphs = text.split(/\n\n/g);
-  
+
   return paragraphs.map((paragraph, paragraphIndex) => {
     // Split each paragraph by markdown patterns
     const parts = paragraph.split(/(\*\*[^*]+\*\*)/g);
-    
+
     const parsedParts = parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         // Remove the ** and make it bold
@@ -22,7 +22,7 @@ const parseMarkdown = (text: string) => {
       }
       return part;
     });
-    
+
     // Return each paragraph as a div with margin bottom (except the last one)
     return (
       <div key={paragraphIndex} className={paragraphIndex < paragraphs.length - 1 ? "mb-3" : ""}>
@@ -46,7 +46,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
   }));
 
   const totalEvaluations = resolvers.reduce((sum, resolver) => sum + resolver.totalEvaluations, 0);
-  const uniqueCampusesEvaluated = new Set(resolvers.flatMap(resolver => 
+  const uniqueCampusesEvaluated = new Set(resolvers.flatMap(resolver =>
     // This is an approximation since we don't have campus names per resolver in the current data structure
     Array(resolver.campusesEvaluated).fill(0).map((_, i) => `campus-${resolver.id}-${i}`)
   )).size;
@@ -113,8 +113,8 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 angle={-45}
                 textAnchor="end"
                 height={100}
@@ -122,7 +122,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                 fontSize={10}
                 tick={{ fontSize: 10 }}
               />
-              <YAxis />
+              <YAxis domain={[0, 'dataMax']} allowDecimals={false} interval={0} />
               <Tooltip />
               <Bar dataKey="campuses" fill="#3B82F6" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -134,8 +134,8 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 angle={-45}
                 textAnchor="end"
                 height={100}
@@ -143,7 +143,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                 fontSize={10}
                 tick={{ fontSize: 10 }}
               />
-              <YAxis domain={[0, 7]} />
+              <YAxis domain={[0, 7]} ticks={[0, 1, 2, 3, 4, 5, 6, 7]} />
               <Tooltip />
               <Bar dataKey="avgScore" fill="#10B981" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -171,8 +171,8 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {resolvers.map((resolver) => (
-                <tr 
-                  key={resolver.id} 
+                <tr
+                  key={resolver.id}
                   className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
                   onClick={() => setSelectedResolver(resolver)}
                 >
@@ -189,8 +189,8 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                     <div className="flex items-center">
                       <span className="text-sm font-medium text-gray-900">{resolver.campusesEvaluated}</span>
                       <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${(resolver.campusesEvaluated / 9) * 100}%` }}
                         ></div>
                       </div>
@@ -200,8 +200,8 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                     <div className="flex items-center">
                       <span className="text-sm font-medium text-gray-900">{resolver.averageScoreGiven.toFixed(1)}</span>
                       <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-green-600 h-2 rounded-full transition-all duration-300" 
+                        <div
+                          className="bg-green-600 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${(resolver.averageScoreGiven / 10) * 100}%` }}
                         ></div>
                       </div>
@@ -264,24 +264,24 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                   <MessageSquare className="w-5 h-5 mr-2 text-blue-600" />
                   Feedback & Comments
                 </h4>
-                
+
                 {evaluations
                   .filter(evaluation => evaluation.resolverName === selectedResolver.name)
                   .map(evaluation => {
                     const feedbackEntries = Object.entries(evaluation.competencyFeedback || {})
                       .filter(([key, value]) => value && value.trim() !== '');
-                    
+
                     if (feedbackEntries.length === 0 && (!evaluation.feedback || evaluation.feedback.includes('Comprehensive evaluation'))) {
                       return null;
                     }
-                    
+
                     return (
                       <div key={evaluation.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <div className="flex items-center justify-between mb-3">
                           <div className="font-medium text-gray-900">{evaluation.campusName}</div>
                           <div className="text-sm text-gray-500">{evaluation.dateEvaluated}</div>
                         </div>
-                        
+
                         {/* General Feedback */}
                         {evaluation.feedback && !evaluation.feedback.includes('Comprehensive evaluation') && (
                           <div className="mb-3">
@@ -291,7 +291,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Competency-specific Feedback */}
                         {feedbackEntries.length > 0 && (
                           <div>
@@ -310,18 +310,18 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                     );
                   })
                   .filter(Boolean)}
-                
-                {evaluations.filter(evaluation => 
+
+                {evaluations.filter(evaluation =>
                   evaluation.resolverName === selectedResolver.name &&
                   (Object.values(evaluation.competencyFeedback || {}).some(feedback => feedback && feedback.trim() !== '') ||
-                   (evaluation.feedback && !evaluation.feedback.includes('Comprehensive evaluation')))
+                    (evaluation.feedback && !evaluation.feedback.includes('Comprehensive evaluation')))
                 ).length === 0 && (
-                  <div className="text-center py-8">
-                    <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <div className="text-gray-500">No feedback available for this resolver yet.</div>
-                    <div className="text-sm text-gray-400 mt-1">Feedback will appear here once evaluations with comments are submitted.</div>
-                  </div>
-                )}
+                    <div className="text-center py-8">
+                      <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <div className="text-gray-500">No feedback available for this resolver yet.</div>
+                      <div className="text-sm text-gray-400 mt-1">Feedback will appear here once evaluations with comments are submitted.</div>
+                    </div>
+                  )}
               </div>
             </div>
           </div>
