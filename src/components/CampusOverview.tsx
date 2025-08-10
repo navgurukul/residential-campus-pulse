@@ -15,6 +15,11 @@ interface CampusOverviewProps {
 const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, onCampusSelect, onSort, sortConfig }) => {
   const [selectedCompetency, setSelectedCompetency] = useState<string>('');
 
+  // Safety check to prevent crashes when data is loading
+  if (!campuses || !Array.isArray(campuses)) {
+    return <div className="flex items-center justify-center h-64">Loading campus data...</div>;
+  }
+
 
 
   // Helper function to calculate level based on 0-7 score scale mapping to 0-4 levels
@@ -78,7 +83,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
   ].filter(item => item.value > 0); // Filter out zero values to prevent overlapping labels
 
   const totalResolvers = campuses.reduce((sum, campus) => sum + campus.totalResolvers, 0);
-  const averageScore = campuses.reduce((sum, campus) => sum + campus.averageScore, 0) / campuses.length;
+  const averageScore = campuses.length > 0 ? campuses.reduce((sum, campus) => sum + campus.averageScore, 0) / campuses.length : 0;
 
   return (
     <div className="space-y-6">

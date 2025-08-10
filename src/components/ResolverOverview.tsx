@@ -39,6 +39,12 @@ interface ResolverOverviewProps {
 
 const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluations = [] }) => {
   const [selectedResolver, setSelectedResolver] = useState<Resolver | null>(null);
+  
+  // Safety check to prevent crashes when data is loading
+  if (!resolvers || !Array.isArray(resolvers)) {
+    return <div className="flex items-center justify-center h-64">Loading resolver data...</div>;
+  }
+
   const chartData = resolvers.map(resolver => ({
     name: resolver.name,
     campuses: resolver.campusesEvaluated,

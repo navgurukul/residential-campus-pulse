@@ -41,6 +41,15 @@ interface CampusDetailProps {
 }
 
 const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack }) => {
+  // Safety checks to prevent crashes
+  if (!campus) {
+    return <div className="flex items-center justify-center h-64">Campus not found</div>;
+  }
+  
+  if (!evaluations || !Array.isArray(evaluations)) {
+    return <div className="flex items-center justify-center h-64">Loading evaluation data...</div>;
+  }
+
   const campusEvaluations = evaluations.filter(evaluation => evaluation.campusId === campus.id);
   
   // Check if this is a new campus with no evaluations
