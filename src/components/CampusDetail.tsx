@@ -1,6 +1,6 @@
 import React from 'react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import { ArrowLeft, MessageSquare, Calendar, User, Download, FileText } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Calendar, User, Download, FileText, TrendingUp, Award, AlertCircle, Users } from 'lucide-react';
 import { Campus, Evaluation } from '../types';
 import { competencyCategories } from '../data/mockData';
 import { exportToPDF, exportToCSV, prepareCampusDetailDataForExport } from '../utils/exportUtils';
@@ -489,6 +489,198 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
             </div>
           </div>
         )}
+        </div>
+
+        {/* Campus-Specific Analytics Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
+          <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+            {campus.name} - Detailed Analytics
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Analytics Cards */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-700">Total Evaluations</p>
+                  <p className="text-lg font-bold text-blue-900">{campusEvaluations.length}</p>
+                  <p className="text-xs text-blue-600">
+                    {campusEvaluations.length > 1 ? 'Multiple assessments' : 'Single assessment'}
+                  </p>
+                </div>
+                <FileText className="w-8 h-8 text-blue-600" />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-700">Strongest Competency</p>
+                  <p className="text-lg font-bold text-green-900">
+                    {campusEvaluations.length > 0 ? 
+                      campusEvaluations[0].competencies.reduce((prev, current) => 
+                        (prev.score > current.score) ? prev : current
+                      ).score.toFixed(1) : 'N/A'
+                    }
+                  </p>
+                  <p className="text-xs text-green-600">
+                    {campusEvaluations.length > 0 ? 
+                      shortenCategoryName(campusEvaluations[0].competencies.reduce((prev, current) => 
+                        (prev.score > current.score) ? prev : current
+                      ).category) : 'No data'
+                    }
+                  </p>
+                </div>
+                <Award className="w-8 h-8 text-green-600" />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border border-orange-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-orange-700">Improvement Area</p>
+                  <p className="text-lg font-bold text-orange-900">
+                    {campusEvaluations.length > 0 ? 
+                      campusEvaluations[0].competencies.reduce((prev, current) => 
+                        (prev.score < current.score) ? prev : current
+                      ).score.toFixed(1) : 'N/A'
+                    }
+                  </p>
+                  <p className="text-xs text-orange-600">
+                    {campusEvaluations.length > 0 ? 
+                      shortenCategoryName(campusEvaluations[0].competencies.reduce((prev, current) => 
+                        (prev.score < current.score) ? prev : current
+                      ).category) : 'No data'
+                    }
+                  </p>
+                </div>
+                <AlertCircle className="w-8 h-8 text-orange-600" />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-purple-700">Evaluator Count</p>
+                  <p className="text-lg font-bold text-purple-900">{campus.totalResolvers}</p>
+                  <p className="text-xs text-purple-600">
+                    {campus.totalResolvers > 5 ? 'Well evaluated' : 'Needs more evaluators'}
+                  </p>
+                </div>
+                <Users className="w-8 h-8 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Competency Analysis */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4">Competency Performance Analysis</h4>
+              {campusEvaluations.length > 0 ? (
+                <div className="space-y-3">
+                  {campusEvaluations[0].competencies
+                    .sort((a, b) => b.score - a.score)
+                    .map((comp, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700 flex-1 mr-2">
+                          {shortenCategoryName(comp.category)}
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                comp.score >= 6 ? 'bg-green-500' :
+                                comp.score >= 4 ? 'bg-blue-500' :
+                                comp.score >= 2 ? 'bg-yellow-500' :
+                                comp.score >= 1 ? 'bg-orange-500' : 'bg-red-500'
+                              }`}
+                              style={{ width: `${(comp.score / comp.maxScore) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-600 w-12">{comp.score.toFixed(1)}/7</span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No competency data available</p>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4">Campus Insights</h4>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">Campus Level</span>
+                  <span className={`text-lg font-bold ${campusLevel.color}`}>
+                    {campusLevel.level}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">Last Evaluation</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {new Date(campus.lastEvaluated).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">Campus Status</span>
+                  <span className={`text-sm font-medium ${
+                    campus.status === 'Active' ? 'text-green-600' :
+                    campus.status === 'Relocated' ? 'text-blue-600' : 'text-gray-600'
+                  }`}>
+                    {campus.status}
+                    {campus.relocatedTo && ` → ${campus.relocatedTo}`}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">Score vs Network Avg</span>
+                  <span className={`text-lg font-bold ${
+                    campus.averageScore > 4 ? 'text-green-600' : 
+                    campus.averageScore > 2 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {campus.averageScore > 4 ? '+' : ''}{(campus.averageScore - 4).toFixed(1)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Items */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+              <Award className="w-5 h-5 mr-2" />
+              Recommended Actions for {campus.name}
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white p-3 rounded-lg">
+                <h5 className="font-medium text-gray-800 mb-2">🎯 Priority Focus</h5>
+                <p className="text-sm text-gray-600">
+                  {campusEvaluations.length > 0 ? (
+                    `Focus on improving ${shortenCategoryName(campusEvaluations[0].competencies.reduce((prev, current) => 
+                      (prev.score < current.score) ? prev : current
+                    ).category)} (currently ${campusEvaluations[0].competencies.reduce((prev, current) => 
+                      (prev.score < current.score) ? prev : current
+                    ).score.toFixed(1)}/7)`
+                  ) : (
+                    'Schedule comprehensive evaluation to identify focus areas'
+                  )}
+                </p>
+              </div>
+              <div className="bg-white p-3 rounded-lg">
+                <h5 className="font-medium text-gray-800 mb-2">📈 Growth Opportunity</h5>
+                <p className="text-sm text-gray-600">
+                  {campus.totalResolvers < 5 ? 
+                    `Increase evaluator participation (currently ${campus.totalResolvers} evaluators)` :
+                    'Maintain current evaluation frequency and focus on implementation'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

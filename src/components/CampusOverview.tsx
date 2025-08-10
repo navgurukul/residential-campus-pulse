@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Users, Award, MapPin, ArrowUpDown, Filter } from 'lucide-react';
+import { TrendingUp, Users, Award, MapPin, ArrowUpDown, Filter, BarChart3 } from 'lucide-react';
 import { Campus, Evaluation } from '../types';
 import { competencyCategories } from '../data/mockData';
 
@@ -322,6 +322,176 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Comprehensive Campus Analytics Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
+        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+          <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+          Campus Performance Analytics
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Analytics Cards */}
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-4 rounded-lg border border-emerald-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-emerald-700">Top Performing Campus</p>
+                <p className="text-lg font-bold text-emerald-900">
+                  {activeCampuses.reduce((prev, current) => 
+                    (prev.averageScore > current.averageScore) ? prev : current
+                  ).name}
+                </p>
+                <p className="text-xs text-emerald-600">
+                  Score: {activeCampuses.reduce((prev, current) => 
+                    (prev.averageScore > current.averageScore) ? prev : current
+                  ).averageScore.toFixed(1)}/7
+                </p>
+              </div>
+              <Award className="w-8 h-8 text-emerald-600" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-700">Most Evaluated Campus</p>
+                <p className="text-lg font-bold text-blue-900">
+                  {activeCampuses.reduce((prev, current) => 
+                    (prev.totalResolvers > current.totalResolvers) ? prev : current
+                  ).name}
+                </p>
+                <p className="text-xs text-blue-600">
+                  {activeCampuses.reduce((prev, current) => 
+                    (prev.totalResolvers > current.totalResolvers) ? prev : current
+                  ).totalResolvers} evaluators
+                </p>
+              </div>
+              <Users className="w-8 h-8 text-blue-600" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-purple-700">Score Variance</p>
+                <p className="text-lg font-bold text-purple-900">
+                  {(Math.max(...activeCampuses.map(c => c.averageScore)) - Math.min(...activeCampuses.map(c => c.averageScore))).toFixed(1)}
+                </p>
+                <p className="text-xs text-purple-600">Points difference</p>
+              </div>
+              <BarChart3 className="w-8 h-8 text-purple-600" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border border-orange-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-orange-700">Evaluation Coverage</p>
+                <p className="text-lg font-bold text-orange-900">
+                  {((activeCampuses.reduce((sum, c) => sum + c.totalResolvers, 0) / (activeCampuses.length * 11)) * 100).toFixed(1)}%
+                </p>
+                <p className="text-xs text-orange-600">Avg resolver participation</p>
+              </div>
+              <MapPin className="w-8 h-8 text-orange-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Performance Trends */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">Campus Performance Tiers</h4>
+            <div className="space-y-3">
+              {[
+                { name: 'Excellent (Level 4)', level: 'Level 4', color: 'bg-emerald-500' },
+                { name: 'Good (Level 3)', level: 'Level 3', color: 'bg-blue-500' },
+                { name: 'Average (Level 2)', level: 'Level 2', color: 'bg-yellow-500' },
+                { name: 'Below Average (Level 1)', level: 'Level 1', color: 'bg-orange-500' },
+                { name: 'Needs Improvement (Level 0)', level: 'Level 0', color: 'bg-red-500' }
+              ].map((tier, index) => {
+                const count = activeCampuses.filter(c => getCampusLevel(c.averageScore) === tier.level).length;
+                const percentage = (count / activeCampuses.length) * 100;
+                
+                return (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">{tier.name}</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-24 bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-300 ${tier.color}`}
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-600 w-12">{count} ({percentage.toFixed(0)}%)</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">Campus Insights</h4>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Highest Scoring Campus</span>
+                <span className="text-lg font-bold text-green-600">
+                  {Math.max(...activeCampuses.map(c => c.averageScore)).toFixed(1)}/7
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Lowest Scoring Campus</span>
+                <span className="text-lg font-bold text-red-600">
+                  {Math.min(...activeCampuses.map(c => c.averageScore)).toFixed(1)}/7
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Most Recent Evaluation</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {new Date(Math.max(...activeCampuses.map(c => new Date(c.lastEvaluated).getTime()))).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Campuses Above Average</span>
+                <span className="text-lg font-bold text-blue-600">
+                  {activeCampuses.filter(c => c.averageScore > averageScore).length}/{activeCampuses.length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Strategic Recommendations */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+            <Award className="w-5 h-5 mr-2" />
+            Strategic Recommendations
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-3 rounded-lg">
+              <h5 className="font-medium text-gray-800 mb-2">🎯 Focus Areas</h5>
+              <p className="text-sm text-gray-600">
+                {activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 0').length} campuses need immediate attention. 
+                Prioritize support for lowest-performing locations.
+              </p>
+            </div>
+            <div className="bg-white p-3 rounded-lg">
+              <h5 className="font-medium text-gray-800 mb-2">📊 Best Practices</h5>
+              <p className="text-sm text-gray-600">
+                Study practices from {activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 4').length} top-performing campuses. 
+                Share successful strategies across network.
+              </p>
+            </div>
+            <div className="bg-white p-3 rounded-lg">
+              <h5 className="font-medium text-gray-800 mb-2">🔄 Evaluation Frequency</h5>
+              <p className="text-sm text-gray-600">
+                Average {(activeCampuses.reduce((sum, c) => sum + c.totalResolvers, 0) / activeCampuses.length).toFixed(1)} evaluators per campus. 
+                Consider increasing evaluation frequency for better insights.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
