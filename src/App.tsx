@@ -190,13 +190,36 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="animated-background">
+        {/* Enhanced Leaves */}
         <div className="leaf"></div>
         <div className="leaf"></div>
         <div className="leaf"></div>
         <div className="leaf"></div>
+        
+        {/* Beautiful Flower Petals */}
         <div className="petal"></div>
         <div className="petal"></div>
         <div className="petal"></div>
+        
+        {/* Floating Flowers */}
+        <div className="flower"></div>
+        <div className="flower"></div>
+        <div className="flower"></div>
+        
+        {/* Magical Sparkles */}
+        <div className="sparkle"></div>
+        <div className="sparkle"></div>
+        <div className="sparkle"></div>
+        <div className="sparkle"></div>
+        
+        {/* Flying Butterflies */}
+        <div className="butterfly"></div>
+        <div className="butterfly"></div>
+        
+        {/* Gentle Bubbles */}
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
       </div>
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
