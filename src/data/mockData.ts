@@ -2,11 +2,9 @@ import { Evaluation } from '../types';
 
 // Helper function to convert score to level for mock data
 const convertScoreToLevel = (score: number): string => {
-  if (score >= 6.5) return 'Level 4';
-  if (score >= 4.5) return 'Level 3';
-  if (score >= 2.5) return 'Level 2';
-  if (score >= 1) return 'Level 1';
-  return 'Level 0';
+  // Simple 1:1 mapping: score 7=Level 7, score 6=Level 6, etc.
+  const level = Math.min(7, Math.max(0, Math.round(score)));
+  return `Level ${level}`;
 };
 
 export const competencyCategories = [

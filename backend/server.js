@@ -127,11 +127,18 @@ function convertLevelToScore(levelText) {
   const levelMatch = levelText.match(/Level\s*(\d+)/i);
   if (levelMatch) {
     const level = parseInt(levelMatch[1]);
-    // Convert level 0-3 to score 0-7 (maximum competency score is 7)
-    return Math.min(7, level * 1.75); // Level 0=0, Level 1=1.75, Level 2=3.5, Level 3=5.25, Level 4=7
+    // Simple 1:1 mapping: Level 0=0, Level 1=1, Level 2=2, ..., Level 7=7
+    return Math.min(7, level);
   }
 
   return null;
+}
+
+// Helper function to convert numeric score to level
+function convertScoreToLevel(score) {
+  if (score === null || score === undefined) return 0;
+  // Simple 1:1 mapping: score 7=Level 7, score 6=Level 6, etc.
+  return Math.min(7, Math.max(0, Math.round(score)));
 }
 
 // Function to process raw Google Sheet data into frontend format

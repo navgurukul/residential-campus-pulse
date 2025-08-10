@@ -4,7 +4,7 @@ export interface Campus {
   location: string;
   averageScore: number;
   totalResolvers: number;
-  ranking: 'High' | 'Medium' | 'Low';
+  ranking: 'Level 0' | 'Level 1' | 'Level 2' | 'Level 3' | 'Level 4' | 'Level 5' | 'Level 6' | 'Level 7';
   lastEvaluated: string;
   status?: 'Active' | 'Closed' | 'Relocated';
   relocatedTo?: string;
