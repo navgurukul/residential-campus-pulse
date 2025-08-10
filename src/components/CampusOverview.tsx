@@ -307,10 +307,10 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                       return (
                         <div className="flex items-center">
                           <div className={`w-3 h-3 rounded-full mr-2 ${['Level 6', 'Level 7'].includes(campusLevel) ? 'bg-emerald-500 animate-pulse-fast' :
-                              ['Level 4', 'Level 5'].includes(campusLevel) ? 'bg-green-500 animate-pulse-medium' :
-                                ['Level 2', 'Level 3'].includes(campusLevel) ? 'bg-blue-500 animate-pulse-medium' :
-                                  campusLevel === 'Level 1' ? 'bg-yellow-500 animate-pulse-medium' :
-                                    'bg-red-500 animate-pulse-slow'
+                            ['Level 4', 'Level 5'].includes(campusLevel) ? 'bg-green-500 animate-pulse-medium' :
+                              ['Level 2', 'Level 3'].includes(campusLevel) ? 'bg-blue-500 animate-pulse-medium' :
+                                campusLevel === 'Level 1' ? 'bg-yellow-500 animate-pulse-medium' :
+                                  'bg-red-500 animate-pulse-slow'
                             }`}></div>
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getLevelColor(campusLevel)}`}>
                             {campusLevel}
@@ -343,14 +343,14 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               <div>
                 <p className="text-sm font-medium text-emerald-700">Top Performing Campus</p>
                 <p className="text-lg font-bold text-emerald-900">
-                  {activeCampuses.reduce((prev, current) =>
+                  {activeCampuses.length > 0 ? activeCampuses.reduce((prev, current) =>
                     (prev.averageScore > current.averageScore) ? prev : current
-                  ).name}
+                  ).name : 'N/A'}
                 </p>
                 <p className="text-xs text-emerald-600">
-                  Score: {activeCampuses.reduce((prev, current) =>
+                  Score: {activeCampuses.length > 0 ? activeCampuses.reduce((prev, current) =>
                     (prev.averageScore > current.averageScore) ? prev : current
-                  ).averageScore.toFixed(1)}/7
+                  ).averageScore.toFixed(1) : '0'}/7
                 </p>
               </div>
               <Award className="w-8 h-8 text-emerald-600" />
@@ -362,14 +362,14 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               <div>
                 <p className="text-sm font-medium text-blue-700">Most Evaluated Campus</p>
                 <p className="text-lg font-bold text-blue-900">
-                  {activeCampuses.reduce((prev, current) =>
+                  {activeCampuses.length > 0 ? activeCampuses.reduce((prev, current) =>
                     (prev.totalResolvers > current.totalResolvers) ? prev : current
-                  ).name}
+                  ).name : 'N/A'}
                 </p>
                 <p className="text-xs text-blue-600">
-                  {activeCampuses.reduce((prev, current) =>
+                  {activeCampuses.length > 0 ? activeCampuses.reduce((prev, current) =>
                     (prev.totalResolvers > current.totalResolvers) ? prev : current
-                  ).totalResolvers} evaluators
+                  ).totalResolvers : 0} evaluators
                 </p>
               </div>
               <Users className="w-8 h-8 text-blue-600" />
@@ -381,7 +381,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               <div>
                 <p className="text-sm font-medium text-purple-700">Score Variance</p>
                 <p className="text-lg font-bold text-purple-900">
-                  {(Math.max(...activeCampuses.map(c => c.averageScore)) - Math.min(...activeCampuses.map(c => c.averageScore))).toFixed(1)}
+                  {activeCampuses.length > 0 ? (Math.max(...activeCampuses.map(c => c.averageScore)) - Math.min(...activeCampuses.map(c => c.averageScore))).toFixed(1) : '0.0'}
                 </p>
                 <p className="text-xs text-purple-600">Points difference</p>
               </div>
@@ -394,7 +394,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               <div>
                 <p className="text-sm font-medium text-orange-700">Evaluation Coverage</p>
                 <p className="text-lg font-bold text-orange-900">
-                  {((activeCampuses.reduce((sum, c) => sum + c.totalResolvers, 0) / (activeCampuses.length * 11)) * 100).toFixed(1)}%
+                  {activeCampuses.length > 0 ? ((activeCampuses.reduce((sum, c) => sum + c.totalResolvers, 0) / (activeCampuses.length * 11)) * 100).toFixed(1) : '0.0'}%
                 </p>
                 <p className="text-xs text-orange-600">Avg resolver participation</p>
               </div>
@@ -442,19 +442,19 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                 <span className="text-sm font-medium text-gray-700">Highest Scoring Campus</span>
                 <span className="text-lg font-bold text-green-600">
-                  {Math.max(...activeCampuses.map(c => c.averageScore)).toFixed(1)}/7
+                  {activeCampuses.length > 0 ? Math.max(...activeCampuses.map(c => c.averageScore)).toFixed(1) : '0.0'}/7
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                 <span className="text-sm font-medium text-gray-700">Lowest Scoring Campus</span>
                 <span className="text-lg font-bold text-red-600">
-                  {Math.min(...activeCampuses.map(c => c.averageScore)).toFixed(1)}/7
+                  {activeCampuses.length > 0 ? Math.min(...activeCampuses.map(c => c.averageScore)).toFixed(1) : '0.0'}/7
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                 <span className="text-sm font-medium text-gray-700">Most Recent Evaluation</span>
                 <span className="text-sm font-medium text-gray-900">
-                  {new Date(Math.max(...activeCampuses.map(c => new Date(c.lastEvaluated).getTime()))).toLocaleDateString()}
+                  {activeCampuses.length > 0 ? new Date(Math.max(...activeCampuses.map(c => new Date(c.lastEvaluated).getTime()))).toLocaleDateString() : 'N/A'}
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
@@ -491,7 +491,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
             <div className="bg-white p-3 rounded-lg">
               <h5 className="font-medium text-gray-800 mb-2">🔄 Evaluation Frequency</h5>
               <p className="text-sm text-gray-600">
-                Average {(activeCampuses.reduce((sum, c) => sum + c.totalResolvers, 0) / activeCampuses.length).toFixed(1)} evaluators per campus.
+                Average {activeCampuses.length > 0 ? (activeCampuses.reduce((sum, c) => sum + c.totalResolvers, 0) / activeCampuses.length).toFixed(1) : '0'} evaluators per campus.
                 Consider increasing evaluation frequency for better insights.
               </p>
             </div>
