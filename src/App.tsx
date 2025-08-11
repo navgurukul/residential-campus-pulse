@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Building2, Users, BarChart3, Settings, RefreshCw } from 'lucide-react';
+import { Building2, Users, BarChart3, Settings, Lock } from 'lucide-react';
 import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
 import ResolverOverview from './components/ResolverOverview';
@@ -74,29 +74,7 @@ function App() {
     fetchData();
   }, [filters.competency]);
 
-  const handleRefreshData = () => {
-    setLoading(true);
-    // Re-run the fetch data effect
-    const fetchData = async () => {
-      try {
-        const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data');
-        const data = await response.json();
-        
-        if (data.campuses && data.resolvers && data.evaluations) {
-          setCampuses(data.campuses);
-          setResolvers(data.resolvers);
-          setEvaluations(data.evaluations);
-          setLastUpdated(data.lastUpdated);
-          console.log('Data refreshed from backend');
-        }
-      } catch (error) {
-        console.error('Error refreshing data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  };
+
 
   // Filter and sort data based on current filters and sort configuration
   const filteredCampuses = useMemo(() => {
@@ -226,14 +204,12 @@ function App() {
                   <>Data cleared for privacy - Admin refresh required</>
                 )}
               </div>
-              <button
-                onClick={handleRefreshData}
-                disabled={loading}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 disabled:opacity-50 flex-shrink-0"
-                title="Refresh data from backend"
+              <div
+                className="p-2 text-gray-400 flex-shrink-0"
+                title="Data refresh restricted to admin access only"
               >
-                <RefreshCw className={`w-4 h-4 md:w-5 md:h-5 ${loading ? 'animate-spin' : ''}`} />
-              </button>
+                <Lock className="w-4 h-4 md:w-5 md:h-5" />
+              </div>
               <Settings className="w-4 h-4 md:w-5 md:h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors duration-200 flex-shrink-0" />
             </div>
           </div>
