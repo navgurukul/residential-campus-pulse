@@ -223,7 +223,7 @@ function App() {
                     </span>
                   </div>
                 ) : (
-                  <>Using mock data</>
+                  <>Data cleared for privacy - Admin refresh required</>
                 )}
               </div>
               <button
