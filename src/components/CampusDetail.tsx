@@ -84,13 +84,26 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
     return shortNames[category] || category;
   };
 
-  // Prepare radar chart data
+  // Prepare radar chart data - calculate average scores across all evaluations
   const radarData = campusEvaluations.length > 0 
-    ? campusEvaluations[0].competencies.map(comp => ({
-        category: shortenCategoryName(comp.category),
-        score: comp.score,
-        maxScore: comp.maxScore
-      }))
+    ? competencyCategories.map(category => {
+        // Get all scores for this competency across all evaluations
+        const competencyScores = campusEvaluations
+          .flatMap(evaluation => evaluation.competencies)
+          .filter(comp => comp.category === category)
+          .map(comp => comp.score);
+        
+        // Calculate average score for this competency
+        const averageScore = competencyScores.length > 0 
+          ? competencyScores.reduce((sum, score) => sum + score, 0) / competencyScores.length
+          : 0;
+        
+        return {
+          category: shortenCategoryName(category),
+          score: Number(averageScore.toFixed(1)),
+          maxScore: 7
+        };
+      })
     : [];
 
   // Prepare resolver scores chart data
