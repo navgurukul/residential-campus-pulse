@@ -33,8 +33,40 @@ function App() {
     const fetchData = async () => {
       setLoading(true);
       
+      // First, try to load from localStorage
       try {
-        // Fetch data from your deployed backend
+        const cachedData = localStorage.getItem('campus-pulse-data');
+        const cachedTimestamp = localStorage.getItem('campus-pulse-timestamp');
+        
+        if (cachedData && cachedTimestamp) {
+          const data = JSON.parse(cachedData);
+          const timestamp = parseInt(cachedTimestamp);
+          const now = Date.now();
+          const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+          
+          // Use cached data if it's less than 1 hour old and has valid data
+          if ((now - timestamp) < oneHour && data.campuses && data.resolvers && data.evaluations) {
+            setCampuses(data.campuses);
+            setResolvers(data.resolvers);
+            setEvaluations(data.evaluations);
+            setLastUpdated(data.lastUpdated);
+            setLoading(false);
+            console.log('Data loaded from cache:', {
+              campuses: data.campuses.length,
+              resolvers: data.resolvers.length,
+              evaluations: data.evaluations.length,
+              lastUpdated: data.lastUpdated,
+              cacheAge: Math.round((now - timestamp) / 1000 / 60) + ' minutes'
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('Cache read error, fetching fresh data:', error);
+      }
+      
+      // If no valid cache, fetch from backend
+      try {
         const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data');
         const data = await response.json();
         
@@ -44,7 +76,12 @@ function App() {
           setResolvers(data.resolvers);
           setEvaluations(data.evaluations);
           setLastUpdated(data.lastUpdated);
-          console.log('Data loaded from backend:', {
+          
+          // Cache the successful response
+          localStorage.setItem('campus-pulse-data', JSON.stringify(data));
+          localStorage.setItem('campus-pulse-timestamp', Date.now().toString());
+          
+          console.log('Data loaded from backend and cached:', {
             campuses: data.campuses.length,
             resolvers: data.resolvers.length,
             evaluations: data.evaluations.length,
@@ -74,7 +111,29 @@ function App() {
     fetchData();
   }, [filters.competency]);
 
+  // Function to clear cache (for admin use)
+  const clearCache = () => {
+    localStorage.removeItem('campus-pulse-data');
+    localStorage.removeItem('campus-pulse-timestamp');
+    console.log('Cache cleared - refresh page to fetch fresh data');
+    // Optionally reload the page to fetch fresh data
+    window.location.reload();
+  };
 
+  // Add keyboard shortcut for cache clearing (Ctrl+Shift+C)
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key === 'C') {
+        event.preventDefault();
+        if (confirm('Clear cached data and reload fresh data from backend?')) {
+          clearCache();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   // Filter and sort data based on current filters and sort configuration
   const filteredCampuses = useMemo(() => {
@@ -185,8 +244,8 @@ function App() {
               <div className="text-xs md:text-sm text-gray-500 whitespace-nowrap">
                 {lastUpdated ? (
                   <div className="flex flex-col md:flex-row md:items-center">
-                    <span className="hidden md:inline">Backend data: </span>
-                    <span className="md:hidden">Data: </span>
+                    <span className="hidden md:inline">Data cached: </span>
+                    <span className="md:hidden">Cached: </span>
                     <span className="font-mono">
                       {new Date(lastUpdated).toLocaleString('en-IN', {
                         timeZone: 'Asia/Kolkata',
@@ -199,6 +258,7 @@ function App() {
                         hour12: true
                       })}
                     </span>
+                    <span className="text-xs text-gray-400 ml-1">(Ctrl+Shift+C to clear)</span>
                   </div>
                 ) : (
                   <>Data cleared for privacy - Admin refresh required</>
