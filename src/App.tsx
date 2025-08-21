@@ -42,10 +42,9 @@ function App() {
           const data = JSON.parse(cachedData);
           const timestamp = parseInt(cachedTimestamp);
           const now = Date.now();
-          const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
           
-          // Use cached data if it's less than 1 hour old and has valid data
-          if ((now - timestamp) < oneHour && data.campuses && data.resolvers && data.evaluations) {
+          // Use cached data if it has valid data (no expiry check)
+          if (data.campuses && data.resolvers && data.evaluations) {
             setCampuses(data.campuses);
             setResolvers(data.resolvers);
             setEvaluations(data.evaluations);
@@ -56,7 +55,7 @@ function App() {
               resolvers: data.resolvers.length,
               evaluations: data.evaluations.length,
               lastUpdated: data.lastUpdated,
-              cacheAge: Math.round((now - timestamp) / 1000 / 60) + ' minutes'
+              cacheAge: Math.round((now - timestamp) / 1000 / 60) + ' minutes ago'
             });
             return;
           }
@@ -258,7 +257,7 @@ function App() {
                         hour12: true
                       })}
                     </span>
-                    <span className="text-xs text-gray-400 ml-1">(Ctrl+Shift+C to clear)</span>
+                    <span className="text-xs text-gray-400 ml-1">(Persistent cache - Ctrl+Shift+C to clear)</span>
                   </div>
                 ) : (
                   <>Data cleared for privacy - Admin refresh required</>
