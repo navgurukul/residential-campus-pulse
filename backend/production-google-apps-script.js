@@ -230,8 +230,8 @@ function sendUrgentNotificationEmail(data) {
 
         const subject = `🚨 URGENT: Campus Issue Reported - ${data.campusName}`;
 
-        // Dashboard URLs
-        const dashboardBaseUrl = 'https://surajsahani.github.io/NG-Campus-Pulse';
+        // Dashboard URLs - Updated to use Vercel deployment
+        const dashboardBaseUrl = 'https://ng-campus-pulse.vercel.app';
         const urgentIssuesUrl = `${dashboardBaseUrl}/#urgent-issues`;
         const campusDetailUrl = `${dashboardBaseUrl}/#campus-detail`;
 
