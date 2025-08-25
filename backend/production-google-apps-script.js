@@ -9,7 +9,7 @@ const CONFIG = {
     TIMEOUT: 30000,
     MAX_RETRIES: 3,
     RETRY_DELAY: 2000,
-    EMAIL_RECIPIENT: 'surajsahani@navgurukul.org'
+    EMAIL_RECIPIENTS: ['surajsahani@navgurukul.org', 'priyanka@navgurukul.org']
 };
 
 /**
@@ -353,17 +353,20 @@ function sendUrgentNotificationEmail(data) {
 </body>
 </html>`;
 
-        GmailApp.sendEmail(
-            CONFIG.EMAIL_RECIPIENT,
-            subject,
-            '',
-            {
-                htmlBody: emailBody,
-                name: 'NavGurukul Campus Pulse System'
-            }
-        );
+        // Send email to all recipients
+        CONFIG.EMAIL_RECIPIENTS.forEach(recipient => {
+            GmailApp.sendEmail(
+                recipient,
+                subject,
+                '',
+                {
+                    htmlBody: emailBody,
+                    name: 'NavGurukul Campus Pulse System'
+                }
+            );
+        });
 
-        console.log(`✅ ${data.type} email sent successfully to ${CONFIG.EMAIL_RECIPIENT}`);
+        console.log(`✅ ${data.type} email sent successfully to ${CONFIG.EMAIL_RECIPIENTS.join(', ')}`);
         console.log(`🔗 Dashboard links included: ${dashboardBaseUrl}`);
 
     } catch (error) {
@@ -783,7 +786,7 @@ function testEmailNotification() {
         sendUrgentNotificationEmail(testData);
 
         console.log('✅ Test email sent successfully!');
-        console.log('📧 Check your inbox at: ' + CONFIG.EMAIL_RECIPIENT);
+        console.log('📧 Check your inbox at: ' + CONFIG.EMAIL_RECIPIENTS.join(', '));
 
         return { success: true, message: 'Test email sent successfully' };
 
