@@ -6,9 +6,11 @@ import ResolverOverview from './components/ResolverOverview';
 import UrgentIssues from './components/UrgentIssues';
 import FilterPanel from './components/FilterPanel';
 import LoadingSpinner from './components/LoadingSpinner';
+import CacheManager from './components/CacheManager';
 import { FilterState, Campus, Resolver, Evaluation } from './types';
 import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
-import { processApiData } from './utils/apiUtils';
+import { fetchCampusData, refreshCampusData, getCacheStatus } from './utils/apiUtils';
+import { LocalStorageManager } from './utils/localStorage';
 import { mockEvaluations } from './data/mockData';
 
 type View = 'campus-overview' | 'campus-detail' | 'resolver-overview' | 'urgent-issues';
@@ -48,105 +50,102 @@ function App() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [cacheStatus, setCacheStatus] = useState<any>(null);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Campus; direction: 'ascending' | 'descending' } | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       setLoading(true);
       
-      // First, try to load from localStorage
       try {
-        const cachedData = localStorage.getItem('campus-pulse-data');
-        const cachedTimestamp = localStorage.getItem('campus-pulse-timestamp');
+        // Use the new localStorage-integrated fetch function
+        const data = await fetchCampusData();
         
-        if (cachedData && cachedTimestamp) {
-          const data = JSON.parse(cachedData);
-          const timestamp = parseInt(cachedTimestamp);
-          const now = Date.now();
-          
-          // Use cached data if it has valid data (no expiry check)
-          if (data.campuses && data.resolvers && data.evaluations) {
-            setCampuses(data.campuses);
-            setResolvers(data.resolvers);
-            setEvaluations(data.evaluations);
-            setLastUpdated(data.lastUpdated);
-            setLoading(false);
-            console.log('Data loaded from cache:', {
-              campuses: data.campuses.length,
-              resolvers: data.resolvers.length,
-              evaluations: data.evaluations.length,
-              lastUpdated: data.lastUpdated,
-              cacheAge: Math.round((now - timestamp) / 1000 / 60) + ' minutes ago'
-            });
-            return;
-          }
-        }
-      } catch (error) {
-        console.log('Cache read error, fetching fresh data:', error);
-      }
-      
-      // If no valid cache, fetch from backend
-      try {
-        const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data');
-        const data = await response.json();
+        setCampuses(data.campuses);
+        setResolvers(data.resolvers);
+        setEvaluations(data.evaluations);
         
-        if (data.campuses && data.resolvers && data.evaluations) {
-          // Use data directly from backend (already processed)
-          setCampuses(data.campuses);
-          setResolvers(data.resolvers);
-          setEvaluations(data.evaluations);
-          setLastUpdated(data.lastUpdated);
-          
-          // Cache the successful response
-          localStorage.setItem('campus-pulse-data', JSON.stringify(data));
-          localStorage.setItem('campus-pulse-timestamp', Date.now().toString());
-          
-          console.log('Data loaded from backend and cached:', {
-            campuses: data.campuses.length,
-            resolvers: data.resolvers.length,
-            evaluations: data.evaluations.length,
-            lastUpdated: data.lastUpdated
-          });
-        } else {
-          // Fallback to mock data if backend has no data yet
-          console.log('No data from backend, using mock data');
-          const { campuses, resolvers, evaluations } = processApiData([]);
-          setCampuses(campuses);
-          setResolvers(resolvers);
-          setEvaluations(mockEvaluations);
-        }
+        // Update cache status
+        const status = getCacheStatus();
+        setCacheStatus(status);
+        setLastUpdated(status.lastSync || new Date().toISOString());
+        
+        console.log('✅ Data loaded successfully:', {
+          campuses: data.campuses.length,
+          resolvers: data.resolvers.length,
+          evaluations: data.evaluations.length,
+          cacheStatus: status
+        });
+        
       } catch (error) {
-        console.error('Error fetching data from backend:', error);
-        // Fallback to mock data on error
-        console.log('Backend error, using mock data');
-        const { campuses, resolvers, evaluations } = processApiData([]);
-        setCampuses(campuses);
-        setResolvers(resolvers);
+        console.error('❌ Failed to load data:', error);
+        
+        // Fallback to mock data
+        setCampuses([]);
+        setResolvers([]);
         setEvaluations(mockEvaluations);
+        setLastUpdated(new Date().toISOString());
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    loadData();
   }, [filters.competency]);
 
-  // Function to clear cache (for admin use)
-  const clearCache = () => {
-    localStorage.removeItem('campus-pulse-data');
-    localStorage.removeItem('campus-pulse-timestamp');
-    console.log('Cache cleared - refresh page to fetch fresh data');
-    // Optionally reload the page to fetch fresh data
+  // Function to refresh data (force fetch from backend)
+  const refreshData = async () => {
+    setLoading(true);
+    try {
+      const data = await refreshCampusData();
+      setCampuses(data.campuses);
+      setResolvers(data.resolvers);
+      setEvaluations(data.evaluations);
+      
+      const status = getCacheStatus();
+      setCacheStatus(status);
+      setLastUpdated(status.lastSync || new Date().toISOString());
+      
+      console.log('✅ Data refreshed successfully');
+    } catch (error) {
+      console.error('❌ Failed to refresh data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to clear all cache
+  const clearAllCache = () => {
+    LocalStorageManager.clearAllData();
+    console.log('🗑️ All cache cleared');
     window.location.reload();
   };
 
-  // Add keyboard shortcut for cache clearing (Ctrl+Shift+C)
+  // Add keyboard shortcuts for cache management
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.shiftKey && event.key === 'C') {
-        event.preventDefault();
-        if (confirm('Clear cached data and reload fresh data from backend?')) {
-          clearCache();
+      if (event.ctrlKey && event.shiftKey) {
+        if (event.key === 'R') {
+          event.preventDefault();
+          if (confirm('Refresh data from backend?')) {
+            refreshData();
+          }
+        } else if (event.key === 'C') {
+          event.preventDefault();
+          if (confirm('Clear all cached data and reload?')) {
+            clearAllCache();
+          }
+        } else if (event.key === 'I') {
+          event.preventDefault();
+          // Show cache info
+          const info = LocalStorageManager.getStorageInfo();
+          const status = getCacheStatus();
+          alert(`Cache Info:
+Size: ${Math.round(info.totalSize / 1024)}KB
+Age: ${status.ageMinutes} minutes
+Valid: ${info.isValid}
+Last Sync: ${status.lastSync}
+Offline Mode: ${status.isOffline}`);
         }
       }
     };
@@ -263,26 +262,33 @@ function App() {
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
               <div className="text-xs md:text-sm text-gray-500 whitespace-nowrap">
-                {lastUpdated ? (
+                {cacheStatus ? (
                   <div className="flex flex-col md:flex-row md:items-center">
-                    <span className="hidden md:inline">Data cached: </span>
-                    <span className="md:hidden">Cached: </span>
-                    <span className="font-mono">
-                      {new Date(lastUpdated).toLocaleString('en-IN', {
+                    <div className="flex items-center space-x-2">
+                      <span className={`w-2 h-2 rounded-full ${cacheStatus.isValid ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+                      <span className="hidden md:inline">
+                        {cacheStatus.isValid ? 'Cached' : 'Stale'}: 
+                      </span>
+                      <span className="md:hidden">
+                        {cacheStatus.ageMinutes}m
+                      </span>
+                    </div>
+                    <span className="font-mono text-xs">
+                      {lastUpdated && new Date(lastUpdated).toLocaleString('en-IN', {
                         timeZone: 'Asia/Kolkata',
-                        year: 'numeric',
                         month: '2-digit',
                         day: '2-digit',
                         hour: '2-digit',
                         minute: '2-digit',
-                        second: '2-digit',
                         hour12: true
                       })}
                     </span>
-                    <span className="text-xs text-gray-400 ml-1">(Persistent cache - Ctrl+Shift+C to clear)</span>
+                    <span className="text-xs text-gray-400 ml-1">
+                      ({cacheStatus.sizeKB}KB • Ctrl+Shift+R to refresh)
+                    </span>
                   </div>
                 ) : (
-                  <>Data cleared for privacy - Admin refresh required</>
+                  <>Loading cache status...</>
                 )}
               </div>
               <div
@@ -387,6 +393,9 @@ function App() {
           <UrgentIssues />
         )}
       </main>
+
+      {/* Cache Manager - Always available */}
+      <CacheManager onDataRefresh={() => window.location.reload()} />
     </div>
   );
 }

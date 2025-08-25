@@ -1,7 +1,6 @@
 /**
  * PRODUCTION VERSION - Google Apps Script for Campus Pulse
- * Optimized for real-world usage with proper email handling
- * FIXED VERSION - All syntax errors resolved
+ * COMPLETE CORRECTED VERSION - Fixed emoji encoding issues
  * 
  * 🚀 QUICK START FUNCTIONS (Run in this order):
  * 1. checkTriggerStatus() - Verify triggers are active
@@ -231,13 +230,13 @@ function isValidUrgentContent(content) {
 }
 
 /**
- * Send urgent notification email with dashboard links
+ * Send urgent notification email with dashboard links - CORRECTED VERSION
  */
 function sendUrgentNotificationEmail(data) {
     try {
         console.log(`📧 Sending ${data.type} email for ${data.campusName}...`);
 
-        const subject = `🚨 URGENT: Campus Issue Reported - ${data.campusName}`;
+        const subject = `URGENT: Campus Issue Reported - ${data.campusName}`;
 
         // Dashboard URLs - Updated to use Vercel deployment
         const dashboardBaseUrl = 'https://ng-campus-pulse.vercel.app';
@@ -260,7 +259,7 @@ function sendUrgentNotificationEmail(data) {
         ⚠️ View All Urgent Issues
       </a>
       <a href="${dashboardBaseUrl}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 0 10px;">
-        �  Open Dashboard
+        📊 Open Dashboard
       </a>
     </div>
     
@@ -300,7 +299,7 @@ function sendUrgentNotificationEmail(data) {
     </div>
     
     <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-      <h3 style="color: #721c24; margin-top: 0;">� IIssue Report</h3>
+      <h3 style="color: #721c24; margin-top: 0;">📋 Issue Report</h3>
       <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #dc3545;">
         <p style="margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.5;">${data.content}</p>
       </div>
@@ -433,7 +432,6 @@ function sendDataWithRetry(data, attempt = 1) {
 
 /**
  * FUNCTION 8: Manual data sync - Run this for production use
- * Alternative to pushDataToBackend() with user-friendly output
  */
 function syncDataNow() {
     console.log('🔄 Initiating manual data synchronization...');
@@ -511,7 +509,6 @@ function disableAutoSync() {
 
 /**
  * Function that runs automatically when spreadsheet is edited
- * This triggers immediate email notifications for urgent issues
  */
 function onEdit(e) {
     try {
@@ -611,7 +608,6 @@ function checkFormSubmissionForUrgentIssues(headers, submissionValues) {
 
 /**
  * FUNCTION 2: Test function to verify email notifications work
- * Run this to test if emails are being sent correctly to both recipients
  */
 function testEmailNotification() {
     try {
@@ -644,7 +640,6 @@ function testEmailNotification() {
 
 /**
  * FUNCTION 1: Check current trigger status
- * Run this first to verify your triggers are set up correctly
  */
 function checkTriggerStatus() {
     try {
@@ -691,7 +686,6 @@ function checkTriggerStatus() {
 
 /**
  * FUNCTION 10: MANUAL TRIGGER SETUP - 100% RELIABLE METHOD
- * Run this to get step-by-step instructions for setting up triggers
  */
 function setupManualTrigger() {
     console.log('📋 MANUAL TRIGGER SETUP INSTRUCTIONS:');
@@ -725,9 +719,9 @@ function setupManualTrigger() {
 
     return { success: true, message: 'Manual setup instructions provided - follow the steps above' };
 }
+
 /**
  * 🚀 QUICK START: Complete System Test
- * Run this function to test the entire Campus Pulse system
  */
 function runCompleteSystemTest() {
     console.log('🚀 CAMPUS PULSE COMPLETE SYSTEM TEST');
@@ -753,51 +747,10 @@ function runCompleteSystemTest() {
         console.log('1. Check your email inboxes for test notifications');
         console.log('2. Submit a test form with urgent content');
         console.log('3. Check your dashboard at: https://ng-campus-pulse.vercel.app');
-        console.log('4. Verify "View Issues" navigation works');
-
-    } else {
-        console.log('⚠️ TRIGGERS NOT ACTIVE!');
         console.log('');
-        console.log('🔧 TO FIX:');
-        console.log('1. Run: setupManualTrigger()');
-        console.log('2. Follow the step-by-step instructions');
-        console.log('3. Then run this test again');
+    } else {
+        console.log('⚠️ SETUP REQUIRED: Run setupManualTrigger() first');
     }
 
-    return { success: triggerStatus.active, message: 'System test completed' };
-}
-
-/**
- * 📋 FUNCTION REFERENCE GUIDE
- * Run this to see all available functions and their purposes
- */
-function showFunctionGuide() {
-    console.log('📋 CAMPUS PULSE FUNCTION REFERENCE');
-    console.log('==================================');
-    console.log('');
-    console.log('🔧 SETUP FUNCTIONS:');
-    console.log('1. checkTriggerStatus() - Check if automatic triggers are active');
-    console.log('2. setupManualTrigger() - Get instructions to set up triggers');
-    console.log('');
-    console.log('📧 TESTING FUNCTIONS:');
-    console.log('3. testEmailNotification() - Send test email to both recipients');
-    console.log('4. runCompleteSystemTest() - Test entire system end-to-end');
-    console.log('');
-    console.log('📊 DATA FUNCTIONS:');
-    console.log('5. pushDataToBackend() - Sync Google Sheets data to dashboard');
-    console.log('6. syncDataNow() - User-friendly version of data sync');
-    console.log('');
-    console.log('🛠️ MAINTENANCE FUNCTIONS:');
-    console.log('7. disableFormSubmissionTrigger() - Stop automatic emails');
-    console.log('8. enableAutoSync() - Enable hourly data sync');
-    console.log('9. disableAutoSync() - Disable hourly data sync');
-    console.log('');
-    console.log('🚀 QUICK START:');
-    console.log('Run: runCompleteSystemTest()');
-    console.log('');
-    console.log('📧 Email Recipients:');
-    console.log('- surajsahani@navgurukul.org');
-    console.log('- priyanka@navgurukul.org');
-
-    return { success: true, message: 'Function guide displayed' };
+    return triggerStatus;
 }

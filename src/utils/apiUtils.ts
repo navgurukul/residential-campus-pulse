@@ -1,6 +1,7 @@
 // src/utils/apiUtils.ts
 import { Campus, Resolver, Evaluation } from '../types';
 import { mockEvaluations } from '../data/mockData';
+import { LocalStorageManager } from './localStorage';
 
 interface ApiResponse {
   status: string;
@@ -121,4 +122,94 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
   }));
 
   return { campuses, resolvers, evaluations };
+};
+
+// Enhanced API function with local storage integration
+export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> => {
+  // First, try to get cached data
+  const cachedData = LocalStorageManager.getCachedCampusData();
+  if (cachedData) {
+    console.log('📦 Using cached data, age:', LocalStorageManager.getCacheAgeMinutes(), 'minutes');
+    return cachedData;
+  }
+
+  console.log('🌐 Fetching fresh data from API...');
+  
+  try {
+    // Try to fetch from the backend API
+    const response = await fetch('https://ng-campus-pulse.onrender.com/api/data', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Add timeout
+      signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const apiData: ApiResponse = await response.json();
+    const processedData = processApiData(apiData);
+    
+    // Save to localStorage
+    LocalStorageManager.saveCampusData(
+      processedData.campuses, 
+      processedData.resolvers, 
+      processedData.evaluations
+    );
+    
+    console.log('✅ Fresh data fetched and cached');
+    return processedData;
+    
+  } catch (error) {
+    console.error('❌ API fetch failed:', error);
+    
+    // Try to use expired cache as fallback
+    const expiredCache = localStorage.getItem('campus_pulse_data');
+    if (expiredCache) {
+      try {
+        const cachedData = JSON.parse(expiredCache);
+        console.log('📦 Using expired cache as fallback');
+        return {
+          campuses: cachedData.campuses || [],
+          resolvers: cachedData.resolvers || [],
+          evaluations: cachedData.evaluations || []
+        };
+      } catch (parseError) {
+        console.error('❌ Failed to parse expired cache:', parseError);
+      }
+    }
+    
+    // Last resort: return empty data
+    console.log('⚠️ No data available, returning empty datasets');
+    return { campuses: [], resolvers: [], evaluations: [] };
+  }
+};
+
+// Function to force refresh data
+export const refreshCampusData = async (): Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> => {
+  console.log('🔄 Force refreshing campus data...');
+  LocalStorageManager.clearCampusData();
+  return await fetchCampusData();
+};
+
+// Function to check if we should fetch fresh data
+export const shouldFetchFreshData = (): boolean => {
+  return !LocalStorageManager.isCacheValid();
+};
+
+// Function to get cache status
+export const getCacheStatus = () => {
+  const storageInfo = LocalStorageManager.getStorageInfo();
+  const lastSync = LocalStorageManager.getLastSyncTime();
+  
+  return {
+    isValid: storageInfo.isValid,
+    ageMinutes: LocalStorageManager.getCacheAgeMinutes(),
+    lastSync: lastSync?.toLocaleString(),
+    sizeKB: Math.round(storageInfo.totalSize / 1024),
+    isOffline: LocalStorageManager.isOfflineMode()
+  };
 };
