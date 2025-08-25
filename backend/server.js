@@ -175,15 +175,17 @@ function processRawDataForFrontend(rawData) {
       'Timestamp', 'timestamp', 'Date', 'Created Date', 'Submission Time'
     ], new Date().toISOString());
 
-    // Extract the two new urgent fields
+    // Extract the two new urgent fields - using exact column names from your form
     const urgentCampusIssue = getColumnValue(row, [
       'Is there anything that you find pressing in the campus, that needs urgent attention?',
+      'pressing in the campus, that needs urgent attention',
       'pressing in the campus',
       'urgent attention'
     ], '');
 
     const escalationIssue = getColumnValue(row, [
       'Is there anything that you find in the campus, that directly needs escalation? This answer would be mailed to senior most team for urgent attention.',
+      'directly needs escalation? This answer would be mailed to senior most team for urgent attention',
       'directly needs escalation',
       'escalation'
     ], '');
@@ -663,7 +665,7 @@ app.get('/api/urgent-issues', (req, res) => {
       eval.urgentCampusIssue.trim().toLowerCase() !== 'no' &&
       eval.urgentCampusIssue.trim().toLowerCase() !== 'na' &&
       eval.urgentCampusIssue.trim().toLowerCase() !== 'none' &&
-      eval.urgentCampusIssue.trim().length > 5
+      eval.urgentCampusIssue.trim().length > 2
     ).map(eval => ({
       id: eval.id,
       campusName: eval.campusName,
