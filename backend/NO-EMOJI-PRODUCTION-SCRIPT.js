@@ -16,7 +16,7 @@ const CONFIG = {
     TIMEOUT: 30000,
     MAX_RETRIES: 3,
     RETRY_DELAY: 2000,
-    EMAIL_RECIPIENTS: ['surajsahani@navgurukul.org', 'priyanka@navgurukul.org']
+    EMAIL_RECIPIENTS: ['surajsahani@navgurukul.org', 'priyanka@navgurukul.org', 'surajkumarsahani1997@gmail.com']
 };
 
 /**
@@ -127,7 +127,7 @@ function pushDataToBackend() {
 }
 
 /**
- * PRODUCTION EMAIL CHECKER - Sends only one email per urgent field per submission
+ * PRODUCTION EMAIL CHECKER - Sends only one email per urgent issue (with deduplication)
  */
 function checkAndSendUrgentEmails(headers, dataRows) {
     try {
@@ -149,6 +149,9 @@ function checkAndSendUrgentEmails(headers, dataRows) {
 
         console.log(`Urgent field column: ${urgentFieldColumn}, Escalation field column: ${escalationFieldColumn}`);
 
+        // Get previously sent emails to avoid duplicates
+        const sentEmails = getSentEmailLog();
+
         // Check only the last 2 form submissions
         const recentRows = dataRows.slice(-2);
 
@@ -163,21 +166,20 @@ function checkAndSendUrgentEmails(headers, dataRows) {
 
             console.log(`Campus: ${campusName}, Resolver: ${resolverName}`);
 
+            // Collect all urgent issues from this submission
+            const urgentIssues = [];
+
             // Check urgent field (Column 38)
             if (urgentFieldColumn !== -1) {
                 const urgentContent = row[urgentFieldColumn];
                 console.log(`Checking urgent field: "${urgentContent}"`);
 
                 if (isValidUrgentContent(urgentContent)) {
-                    console.log(`Urgent content found: "${urgentContent}"`);
-                    sendUrgentNotificationEmail({
-                        campusName,
-                        resolverName,
-                        timestamp,
+                    urgentIssues.push({
+                        type: 'Urgent Campus Issue',
                         field: headers[urgentFieldColumn],
                         content: urgentContent.toString(),
-                        rowNumber: actualRowNumber,
-                        type: 'Urgent Campus Issue'
+                        priority: 'URGENT'
                     });
                 }
             }
@@ -188,22 +190,130 @@ function checkAndSendUrgentEmails(headers, dataRows) {
                 console.log(`Checking escalation field: "${escalationContent}"`);
 
                 if (isValidUrgentContent(escalationContent)) {
-                    console.log(`Escalation content found: "${escalationContent}"`);
-                    sendUrgentNotificationEmail({
+                    urgentIssues.push({
+                        type: 'Escalation Required',
+                        field: headers[escalationFieldColumn],
+                        content: escalationContent.toString(),
+                        priority: 'HIGH PRIORITY'
+                    });
+                }
+            }
+
+            // If we found urgent issues, send ONE combined email
+            if (urgentIssues.length > 0) {
+                // Create a combined email key to prevent duplicates
+                const combinedContent = urgentIssues.map(issue => issue.content).join('|');
+                const emailKey = generateEmailKey(campusName, resolverName, combinedContent, 'combined');
+
+                if (!sentEmails.includes(emailKey)) {
+                    console.log(`NEW urgent issues found (${urgentIssues.length} issues) - sending combined email`);
+
+                    // Send single email with all urgent issues
+                    sendCombinedUrgentNotificationEmail({
                         campusName,
                         resolverName,
                         timestamp,
-                        field: headers[escalationFieldColumn],
-                        content: escalationContent.toString(),
-                        rowNumber: actualRowNumber,
-                        type: 'Escalation Required'
+                        urgentIssues,
+                        rowNumber: actualRowNumber
                     });
+
+                    // Log this email as sent
+                    logSentEmail(emailKey);
+                } else {
+                    console.log(`DUPLICATE urgent issues - combined email already sent for this submission`);
                 }
             }
         });
 
     } catch (error) {
         console.error('Error checking urgent emails:', error);
+    }
+}
+
+/**
+ * Generate a unique key for each urgent issue to prevent duplicate emails
+ */
+function generateEmailKey(campusName, resolverName, content, type) {
+    // Create a hash-like key based on campus, content, and type
+    const contentHash = content.toLowerCase().replace(/\s+/g, '').substring(0, 50);
+    return `${campusName}-${type}-${contentHash}`;
+}
+
+/**
+ * Get list of previously sent email keys from PropertiesService
+ */
+function getSentEmailLog() {
+    try {
+        const properties = PropertiesService.getScriptProperties();
+        const sentEmailsJson = properties.getProperty('SENT_URGENT_EMAILS');
+
+        if (sentEmailsJson) {
+            const sentEmails = JSON.parse(sentEmailsJson);
+            console.log(`Found ${sentEmails.length} previously sent emails`);
+            return sentEmails;
+        }
+
+        console.log('No previous email log found - starting fresh');
+        return [];
+    } catch (error) {
+        console.error('Error reading sent email log:', error);
+        return [];
+    }
+}
+
+/**
+ * Log that an email has been sent to prevent duplicates
+ */
+function logSentEmail(emailKey) {
+    try {
+        const properties = PropertiesService.getScriptProperties();
+        const sentEmails = getSentEmailLog();
+
+        // Add new email key
+        sentEmails.push(emailKey);
+
+        // Keep only last 100 entries to prevent storage bloat
+        const recentEmails = sentEmails.slice(-100);
+
+        // Save back to properties
+        properties.setProperty('SENT_URGENT_EMAILS', JSON.stringify(recentEmails));
+
+        console.log(`Logged sent email: ${emailKey}`);
+        console.log(`Total logged emails: ${recentEmails.length}`);
+    } catch (error) {
+        console.error('Error logging sent email:', error);
+    }
+}
+
+/**
+ * ADMIN FUNCTION: Clear email log (use if you want to reset email tracking)
+ */
+function clearEmailLog() {
+    try {
+        const properties = PropertiesService.getScriptProperties();
+        properties.deleteProperty('SENT_URGENT_EMAILS');
+        console.log('Email log cleared - all urgent issues will trigger emails again');
+        return { success: true, message: 'Email log cleared successfully' };
+    } catch (error) {
+        console.error('Error clearing email log:', error);
+        return { success: false, message: error.toString() };
+    }
+}
+
+/**
+ * ADMIN FUNCTION: View current email log
+ */
+function viewEmailLog() {
+    try {
+        const sentEmails = getSentEmailLog();
+        console.log('Current email log:');
+        sentEmails.forEach((email, index) => {
+            console.log(`${index + 1}. ${email}`);
+        });
+        return { success: true, count: sentEmails.length, emails: sentEmails };
+    } catch (error) {
+        console.error('Error viewing email log:', error);
+        return { success: false, message: error.toString() };
     }
 }
 
@@ -229,7 +339,201 @@ function isValidUrgentContent(content) {
 }
 
 /**
+ * Send COMBINED urgent notification email with multiple issues - NO EMOJI VERSION
+ */
+function sendCombinedUrgentNotificationEmail(data) {
+    try {
+        const { campusName, resolverName, timestamp, urgentIssues, rowNumber } = data;
+
+        console.log(`Sending combined urgent email for ${campusName} with ${urgentIssues.length} issues...`);
+
+        // Determine email subject and priority based on highest priority issue
+        const hasEscalation = urgentIssues.some(issue => issue.type === 'Escalation Required');
+        const subject = hasEscalation
+            ? `CRITICAL: Multiple Campus Issues Reported - ${campusName}`
+            : `URGENT: Campus Issues Reported - ${campusName}`;
+
+        // Dashboard URLs
+        const dashboardBaseUrl = 'https://ng-campus-pulse.vercel.app';
+        const urgentIssuesUrl = `${dashboardBaseUrl}/#urgent-issues`;
+        const campusDetailUrl = `${dashboardBaseUrl}/#campus-detail`;
+
+        // Build issues HTML
+        let issuesHtml = '';
+        urgentIssues.forEach((issue, index) => {
+            const bgColor = issue.type === 'Escalation Required' ? '#f8d7da' : '#fff3cd';
+            const borderColor = issue.type === 'Escalation Required' ? '#dc3545' : '#fd7e14';
+
+            issuesHtml += `
+            <div style="background: ${bgColor}; border: 1px solid ${borderColor}; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                <h4 style="color: #721c24; margin: 0 0 10px 0; font-size: 16px;">
+                    Issue ${index + 1}: ${issue.type}
+                </h4>
+                <div style="background: white; padding: 12px; border-radius: 4px; border-left: 4px solid ${borderColor};">
+                    <p style="margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.5;">${issue.content}</p>
+                </div>
+            </div>`;
+        });
+
+        const emailBody = `
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    
+    <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h1 style="margin: 0; font-size: 24px;">URGENT CAMPUS ALERT</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">${urgentIssues.length} Issue${urgentIssues.length > 1 ? 's' : ''} Reported</p>
+    </div>
+    
+    <!-- Quick Action Buttons -->
+    <div style="text-align: center; margin-bottom: 20px;">
+      <a href="${urgentIssuesUrl}" style="display: inline-block; background: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 0 10px;">
+        View All Urgent Issues
+      </a>
+      <a href="${dashboardBaseUrl}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 0 10px;">
+        Open Dashboard
+      </a>
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h2 style="color: #2c3e50; margin-top: 0;">Campus Details</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold; width: 30%;">Campus:</td>
+          <td style="padding: 8px 0;">
+            <strong>${campusName}</strong>
+            <a href="${campusDetailUrl}" style="margin-left: 10px; color: #007bff; text-decoration: none; font-size: 12px;">
+              View Campus Details
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">Reported by:</td>
+          <td style="padding: 8px 0;">${resolverName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">Timestamp:</td>
+          <td style="padding: 8px 0;">${new Date(timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">Form Row:</td>
+          <td style="padding: 8px 0;">#${rowNumber}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">Total Issues:</td>
+          <td style="padding: 8px 0;">
+            <span style="background: ${hasEscalation ? '#dc3545' : '#fd7e14'}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+              ${urgentIssues.length} Issue${urgentIssues.length > 1 ? 's' : ''} - ${hasEscalation ? 'HIGH PRIORITY' : 'URGENT'}
+            </span>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <!-- Multiple Issues Section -->
+    <div style="margin-bottom: 20px;">
+      <h3 style="color: #2c3e50; margin-bottom: 15px;">Issue Reports</h3>
+      ${issuesHtml}
+    </div>
+    
+    <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h3 style="color: #0c5460; margin-top: 0;">Immediate Actions Required</h3>
+      <div style="margin-bottom: 15px;">
+        <table style="width: 100%; border-collapse: separate; border-spacing: 8px;">
+          <tr>
+            <td style="width: 33.33%; text-align: center;">
+              <a href="${urgentIssuesUrl}" style="display: block; background: #17a2b8; color: white; padding: 10px 8px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold;">
+                Track in Dashboard
+              </a>
+            </td>
+            <td style="width: 33.33%; text-align: center;">
+              <a href="mailto:${resolverName.toLowerCase().replace(/\s+/g, '.')}@navgurukul.org" style="display: block; background: #28a745; color: white; padding: 10px 8px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold;">
+                Contact Resolver
+              </a>
+            </td>
+            <td style="width: 33.33%; text-align: center;">
+              <a href="${dashboardBaseUrl}" style="display: block; background: #6f42c1; color: white; padding: 10px 8px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold;">
+                View Full Report
+              </a>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+        <li><strong>Immediate:</strong> Review all ${urgentIssues.length} reported issue${urgentIssues.length > 1 ? 's' : ''} and assess severity</li>
+        <li><strong>Contact:</strong> Reach out to the campus resolver for additional context</li>
+        <li><strong>Coordinate:</strong> Engage with local campus management team</li>
+        <li><strong>Document:</strong> Log resolution steps in the Campus Pulse system</li>
+        <li><strong>Follow-up:</strong> Schedule check-in to ensure all issues are resolved</li>
+      </ul>
+    </div>
+    
+    <!-- Dashboard Access Section -->
+    <div style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+      <h3 style="margin: 0 0 10px 0;">Campus Pulse Dashboard</h3>
+      <p style="margin: 0 0 15px 0; font-size: 14px;">Access real-time campus data and urgent issue tracking</p>
+      <table style="width: 100%; max-width: 500px; margin: 0 auto; border-collapse: separate; border-spacing: 10px;">
+        <tr>
+          <td style="width: 33.33%; text-align: center;">
+            <a href="${urgentIssuesUrl}" style="display: block; background: rgba(255,255,255,0.2); color: white; padding: 12px 8px; text-decoration: none; border-radius: 6px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); font-size: 13px;">
+              Urgent Issues
+            </a>
+          </td>
+          <td style="width: 33.33%; text-align: center;">
+            <a href="${dashboardBaseUrl}" style="display: block; background: rgba(255,255,255,0.2); color: white; padding: 12px 8px; text-decoration: none; border-radius: 6px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); font-size: 13px;">
+              Campus Overview
+            </a>
+          </td>
+          <td style="width: 33.33%; text-align: center;">
+            <a href="${dashboardBaseUrl}/#resolver-overview" style="display: block; background: rgba(255,255,255,0.2); color: white; padding: 12px 8px; text-decoration: none; border-radius: 6px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); font-size: 13px;">
+              Resolver Data
+            </a>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <!-- System Info -->
+    <div style="text-align: center; padding: 20px; background: #e9ecef; border-radius: 8px;">
+      <p style="margin: 0 0 10px 0; color: #6c757d; font-size: 14px;">
+        <strong>NavGurukul Campus Pulse System</strong><br>
+        Automated notification • Generated on ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+      </p>
+      <div style="font-size: 12px; color: #868e96;">
+        <a href="${dashboardBaseUrl}" style="color: #007bff; text-decoration: none;">Dashboard</a> • 
+        <a href="${urgentIssuesUrl}" style="color: #dc3545; text-decoration: none;">Urgent Issues</a> • 
+        <a href="https://github.com/surajsahani/NG-Campus-Pulse" style="color: #6c757d; text-decoration: none;">GitHub</a>
+      </div>
+    </div>
+    
+  </div>
+</body>
+</html>`;
+
+        // Send email to all recipients
+        CONFIG.EMAIL_RECIPIENTS.forEach(recipient => {
+            GmailApp.sendEmail(
+                recipient,
+                subject,
+                '',
+                {
+                    htmlBody: emailBody,
+                    name: 'NavGurukul Campus Pulse System'
+                }
+            );
+        });
+
+        console.log(`Combined urgent email sent successfully to ${CONFIG.EMAIL_RECIPIENTS.join(', ')}`);
+        console.log(`Email contained ${urgentIssues.length} issues from ${campusName}`);
+
+    } catch (error) {
+        console.error('Failed to send combined urgent notification email:', error);
+    }
+}
+
+/**
  * Send urgent notification email with dashboard links - NO EMOJI VERSION
+ * (Kept for backward compatibility, but now unused)
  */
 function sendUrgentNotificationEmail(data) {
     try {

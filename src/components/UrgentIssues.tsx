@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Clock, MapPin, User, Mail, Calendar, RefreshCw, Database, Wifi, WifiOff } from 'lucide-react';
-import { LocalStorageManager, UrgentIssue } from '../utils/localStorage';
+import { AlertTriangle, Clock, MapPin, User, Mail, Calendar, RefreshCw } from 'lucide-react';
 
-// UrgentIssue interface is now imported from localStorage.ts
+
+interface UrgentIssue {
+  id: string;
+  campusName: string;
+  resolverName: string;
+  dateEvaluated: string;
+  issue: string;
+  type: 'urgent' | 'escalation';
+}
 
 interface UrgentIssuesData {
   urgentIssues: UrgentIssue[];
@@ -12,195 +19,41 @@ interface UrgentIssuesData {
   lastUpdated: string | null;
 }
 
-interface CacheStatus {
-  hasCache: boolean;
-  cacheAge: number;
-  isOnline: boolean;
-}
+
 
 const UrgentIssues: React.FC = () => {
   const [data, setData] = useState<UrgentIssuesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIssue, setSelectedIssue] = useState<UrgentIssue | null>(null);
-  const [cacheStatus, setCacheStatus] = useState<CacheStatus>({
-    hasCache: false,
-    cacheAge: 0,
-    isOnline: navigator.onLine
-  });
 
-  const loadUrgentIssues = async (forceRefresh = false) => {
+  const fetchUrgentIssues = async () => {
     try {
       setLoading(true);
+      console.log('Fetching urgent issues from API...');
+      
+      const response = await fetch('https://ng-campus-pulse.onrender.com/api/urgent-issues');
+      console.log('API Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch urgent issues: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Urgent issues API response:', result);
+      
+      setData(result);
       setError(null);
-      
-      // First, try to load from localStorage
-      if (!forceRefresh) {
-        const cachedIssues = LocalStorageManager.getUrgentIssues();
-        if (cachedIssues.length > 0) {
-          console.log('📦 Loading urgent issues from cache:', cachedIssues.length);
-          
-          // Convert cached issues to the expected format
-          const urgentIssues = cachedIssues.filter(issue => issue.type === 'Urgent Campus Issue');
-          const escalationIssues = cachedIssues.filter(issue => issue.type === 'Escalation Required');
-          
-          setData({
-            urgentIssues: urgentIssues.map(issue => ({
-              id: issue.id,
-              campusName: issue.campusName,
-              resolverName: issue.resolverName,
-              dateEvaluated: issue.timestamp,
-              issue: issue.content,
-              type: issue.type === 'Escalation Required' ? 'escalation' : 'urgent'
-            })),
-            escalationIssues: escalationIssues.map(issue => ({
-              id: issue.id,
-              campusName: issue.campusName,
-              resolverName: issue.resolverName,
-              dateEvaluated: issue.timestamp,
-              issue: issue.content,
-              type: 'escalation'
-            })),
-            totalUrgent: urgentIssues.length,
-            totalEscalation: escalationIssues.length,
-            lastUpdated: new Date().toISOString()
-          });
-          
-          setCacheStatus({
-            hasCache: true,
-            cacheAge: 0, // We'll calculate this properly
-            isOnline: navigator.onLine
-          });
-          
-          setLoading(false);
-          return;
-        }
-      }
-      
-      // If no cache or force refresh, try to fetch from API
-      if (navigator.onLine) {
-        console.log('🌐 Fetching urgent issues from API...');
-        
-        const response = await fetch('https://ng-campus-pulse.onrender.com/api/urgent-issues', {
-          signal: AbortSignal.timeout(10000) // 10 second timeout
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        console.log('✅ Urgent issues fetched from API:', result);
-        
-        // Save to localStorage
-        if (result.urgentIssues || result.escalationIssues) {
-          const allIssues: UrgentIssue[] = [
-            ...(result.urgentIssues || []).map((issue: any) => ({
-              id: `urgent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-              campusName: issue.campusName,
-              resolverName: issue.resolverName,
-              content: issue.issue,
-              timestamp: issue.dateEvaluated,
-              type: 'Urgent Campus Issue' as const,
-              priority: 'URGENT' as const,
-              status: 'new' as const
-            })),
-            ...(result.escalationIssues || []).map((issue: any) => ({
-              id: `escalation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-              campusName: issue.campusName,
-              resolverName: issue.resolverName,
-              content: issue.issue,
-              timestamp: issue.dateEvaluated,
-              type: 'Escalation Required' as const,
-              priority: 'HIGH' as const,
-              status: 'new' as const
-            }))
-          ];
-          
-          LocalStorageManager.saveUrgentIssues(allIssues);
-        }
-        
-        setData(result);
-        setCacheStatus({
-          hasCache: true,
-          cacheAge: 0,
-          isOnline: true
-        });
-        
-      } else {
-        throw new Error('No internet connection and no cached data available');
-      }
-      
     } catch (err) {
-      console.error('❌ Error loading urgent issues:', err);
+      console.error('Error fetching urgent issues:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
-      
-      // Try to use any cached data as fallback
-      const cachedIssues = LocalStorageManager.getUrgentIssues();
-      if (cachedIssues.length > 0) {
-        console.log('📦 Using cached data as fallback');
-        // Convert and set cached data (same logic as above)
-        const urgentIssues = cachedIssues.filter(issue => issue.type === 'Urgent Campus Issue');
-        const escalationIssues = cachedIssues.filter(issue => issue.type === 'Escalation Required');
-        
-        setData({
-          urgentIssues: urgentIssues.map(issue => ({
-            id: issue.id,
-            campusName: issue.campusName,
-            resolverName: issue.resolverName,
-            dateEvaluated: issue.timestamp,
-            issue: issue.content,
-            type: 'urgent'
-          })),
-          escalationIssues: escalationIssues.map(issue => ({
-            id: issue.id,
-            campusName: issue.campusName,
-            resolverName: issue.resolverName,
-            dateEvaluated: issue.timestamp,
-            issue: issue.content,
-            type: 'escalation'
-          })),
-          totalUrgent: urgentIssues.length,
-          totalEscalation: escalationIssues.length,
-          lastUpdated: new Date().toISOString()
-        });
-        
-        setCacheStatus({
-          hasCache: true,
-          cacheAge: 0,
-          isOnline: false
-        });
-      }
-      
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshUrgentIssues = () => {
-    loadUrgentIssues(true);
-  };
-
   useEffect(() => {
-    loadUrgentIssues();
-    
-    // Listen for online/offline events
-    const handleOnline = () => {
-      setCacheStatus(prev => ({ ...prev, isOnline: true }));
-      loadUrgentIssues(true); // Refresh when coming back online
-    };
-    
-    const handleOffline = () => {
-      setCacheStatus(prev => ({ ...prev, isOnline: false }));
-    };
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    fetchUrgentIssues();
   }, []);
 
   if (loading) {
@@ -220,7 +73,7 @@ const UrgentIssues: React.FC = () => {
           <span className="text-red-800">Error: {error}</span>
         </div>
         <button
-          onClick={refreshUrgentIssues}
+          onClick={fetchUrgentIssues}
           className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
         >
           Retry
@@ -250,38 +103,13 @@ const UrgentIssues: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900">Urgent Campus Issues</h2>
           <p className="text-gray-600 mt-1">Issues requiring immediate attention and escalation</p>
         </div>
-        <div className="flex items-center space-x-3">
-          {/* Connection Status */}
-          <div className="flex items-center space-x-2 text-sm">
-            {cacheStatus.isOnline ? (
-              <div className="flex items-center text-green-600">
-                <Wifi className="w-4 h-4 mr-1" />
-                <span>Online</span>
-              </div>
-            ) : (
-              <div className="flex items-center text-orange-600">
-                <WifiOff className="w-4 h-4 mr-1" />
-                <span>Offline</span>
-              </div>
-            )}
-            
-            {cacheStatus.hasCache && (
-              <div className="flex items-center text-gray-500">
-                <Database className="w-4 h-4 mr-1" />
-                <span>Cached</span>
-              </div>
-            )}
-          </div>
-          
-          <button
-            onClick={refreshUrgentIssues}
-            disabled={loading}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Loading...' : 'Refresh'}
-          </button>
-        </div>
+        <button
+          onClick={fetchUrgentIssues}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </button>
       </div>
 
       {/* Summary Cards */}
@@ -323,23 +151,7 @@ const UrgentIssues: React.FC = () => {
         </div>
       </div>
 
-      {/* Debug Info (remove in production) */}
-      {process.env.NODE_ENV === 'development' && data && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-          <h4 className="font-medium text-gray-900 mb-2">Debug Info:</h4>
-          <pre className="text-xs text-gray-600 overflow-auto">
-            {JSON.stringify({
-              totalUrgent: data.totalUrgent,
-              totalEscalation: data.totalEscalation,
-              urgentIssuesCount: data.urgentIssues?.length || 0,
-              escalationIssuesCount: data.escalationIssues?.length || 0,
-              lastUpdated: data.lastUpdated,
-              sampleUrgent: data.urgentIssues?.[0] || null,
-              sampleEscalation: data.escalationIssues?.[0] || null
-            }, null, 2)}
-          </pre>
-        </div>
-      )}
+
 
       {/* Issues List */}
       {allIssues.length === 0 ? (
