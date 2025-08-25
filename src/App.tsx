@@ -23,6 +23,26 @@ function App() {
     competencyCategory: '',
     competency: 'vipasana', // Default to 'vipasana'
   });
+
+  // Handle hash-based navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'urgent-issues' || hash === 'campus-overview' || hash === 'resolver-overview') {
+        setCurrentView(hash as View);
+      }
+    };
+
+    // Set initial view based on hash
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [resolvers, setResolvers] = useState<Resolver[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -288,7 +308,10 @@ function App() {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setCurrentView(item.id as View)}
+                    onClick={() => {
+                      window.location.hash = item.id;
+                      setCurrentView(item.id as View);
+                    }}
                     className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${isActive
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'

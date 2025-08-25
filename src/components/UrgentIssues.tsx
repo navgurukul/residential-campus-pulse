@@ -27,14 +27,22 @@ const UrgentIssues: React.FC = () => {
   const fetchUrgentIssues = async () => {
     try {
       setLoading(true);
+      console.log('Fetching urgent issues from API...');
+      
       const response = await fetch('https://ng-campus-pulse.onrender.com/api/urgent-issues');
+      console.log('API Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch urgent issues');
+        throw new Error(`Failed to fetch urgent issues: ${response.status} ${response.statusText}`);
       }
+      
       const result = await response.json();
+      console.log('Urgent issues API response:', result);
+      
       setData(result);
       setError(null);
     } catch (err) {
+      console.error('Error fetching urgent issues:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -140,12 +148,40 @@ const UrgentIssues: React.FC = () => {
         </div>
       </div>
 
+      {/* Debug Info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && data && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+          <h4 className="font-medium text-gray-900 mb-2">Debug Info:</h4>
+          <pre className="text-xs text-gray-600 overflow-auto">
+            {JSON.stringify({
+              totalUrgent: data.totalUrgent,
+              totalEscalation: data.totalEscalation,
+              urgentIssuesCount: data.urgentIssues?.length || 0,
+              escalationIssuesCount: data.escalationIssues?.length || 0,
+              lastUpdated: data.lastUpdated,
+              sampleUrgent: data.urgentIssues?.[0] || null,
+              sampleEscalation: data.escalationIssues?.[0] || null
+            }, null, 2)}
+          </pre>
+        </div>
+      )}
+
       {/* Issues List */}
       {allIssues.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
           <AlertTriangle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Urgent Issues</h3>
-          <p className="text-gray-500">Great news! No urgent issues have been reported recently.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Urgent Issues Found</h3>
+          <p className="text-gray-500">
+            {data?.lastUpdated 
+              ? `No urgent issues have been reported. Last data update: ${new Date(data.lastUpdated).toLocaleString()}`
+              : 'No data available yet. Please ensure the Google Apps Script is running and sending data.'
+            }
+          </p>
+          {data && (
+            <div className="mt-4 text-sm text-gray-400">
+              <p>Total urgent: {data.totalUrgent || 0} | Total escalation: {data.totalEscalation || 0}</p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">

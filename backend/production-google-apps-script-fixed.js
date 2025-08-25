@@ -1,6 +1,7 @@
 /**
  * PRODUCTION VERSION - Google Apps Script for Campus Pulse
  * Optimized for real-world usage with proper email handling
+ * FIXED VERSION - All syntax errors resolved
  */
 
 // Backend Configuration
@@ -241,7 +242,7 @@ function sendUrgentNotificationEmail(data) {
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
     
     <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-      <h1 style="margin: 0; font-size: 24px;">� URGENmT CAMPUS ALERT</h1>
+      <h1 style="margin: 0; font-size: 24px;">🚨 URGENT CAMPUS ALERT</h1>
       <p style="margin: 10px 0 0 0; font-size: 16px;">${data.type}</p>
     </div>
     
@@ -495,77 +496,37 @@ function disableAutoSync() {
         return { success: false, message: error.toString() };
     }
 }
-/**
- * Set up automatic form submission trigger for instant email notifications
- * Run this function ONCE to enable automatic emails on form submission
- */
-function enableFormSubmissionTrigger() {
-    try {
-        console.log('🚀 Setting up automatic form submission trigger...');
-
-        // Delete existing triggers to avoid duplicates
-        const existingTriggers = ScriptApp.getProjectTriggers().filter(trigger =>
-            trigger.getHandlerFunction() === 'onFormSubmit' ||
-            trigger.getHandlerFunction() === 'onEdit'
-        );
-
-        if (existingTriggers.length > 0) {
-            console.log('🔄 Removing existing triggers...');
-            existingTriggers.forEach(trigger => ScriptApp.deleteTrigger(trigger));
-        }
-
-        // Create edit trigger (this catches form submissions to spreadsheets)
-        const editTrigger = ScriptApp.newTrigger('onEdit')
-            .onEdit()
-            .create();
-
-        console.log('✅ Spreadsheet edit trigger created successfully!');
-        console.log('📧 Emails will now be sent automatically when forms are submitted');
-        console.log('🎯 Urgent issues will be detected and emailed immediately');
-
-        return { success: true, message: 'Form submission trigger enabled' };
-
-    } catch (error) {
-        console.error('❌ Failed to enable form submission trigger:', error);
-        console.log('💡 Make sure this script is bound to a Google Spreadsheet that receives form responses');
-        return { success: false, message: error.toString() };
-    }
-}
 
 /**
- * Function that runs automatically when form is submitted
+ * Function that runs automatically when spreadsheet is edited
  * This triggers immediate email notifications for urgent issues
  */
-function onFormSubmit(e) {
+function onEdit(e) {
     try {
-        console.log('📝 Form submitted! Processing for urgent issues...');
+        // Only process if this is a new row (form submission)
+        const range = e.range;
+        const sheet = range.getSheet();
 
-        // Get the form and spreadsheet
-        const form = e.source;
-        const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-        const sheet = spreadsheet.getActiveSheet();
+        // Check if this is a new row being added (typical form submission)
+        if (range.getRow() > 1 && range.getColumn() === 1) {
+            console.log('📝 New row detected - likely form submission!');
 
-        // Get all data to find headers
-        const allData = sheet.getDataRange().getValues();
-        const headers = allData[0];
+            // Get the new row data
+            const rowData = sheet.getRange(range.getRow(), 1, 1, sheet.getLastColumn()).getValues()[0];
+            const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
-        // Get the submitted values (e.values contains the form responses)
-        const submissionValues = e.values;
+            console.log('🔍 Processing new submission for urgent content...');
 
-        console.log('📋 Form submission data received');
-        console.log(`📊 Headers: ${headers.length}, Submission values: ${submissionValues.length}`);
-        console.log('🔍 Checking for urgent content...');
+            // Check for urgent content
+            checkFormSubmissionForUrgentIssues(headers, rowData);
 
-        // Check for urgent content in the submission
-        checkFormSubmissionForUrgentIssues(headers, submissionValues);
-
-        // Also sync data to backend (optional - you can remove this if you only want hourly sync)
-        console.log('📡 Syncing data to backend...');
-        pushDataToBackend();
+            // Sync to backend
+            console.log('📡 Syncing updated data to backend...');
+            pushDataToBackend();
+        }
 
     } catch (error) {
-        console.error('❌ Error processing form submission:', error);
-        console.error('Error details:', error.toString());
+        console.error('❌ Error in onEdit trigger:', error);
     }
 }
 
@@ -637,132 +598,7 @@ function checkFormSubmissionForUrgentIssues(headers, submissionValues) {
 }
 
 /**
- * Alternative trigger function for spreadsheet edits (fallback method)
- * This runs when the spreadsheet is edited (including form submissions)
- */
-function onEdit(e) {
-    try {
-        // Only process if this is a new row (form submission)
-        const range = e.range;
-        const sheet = range.getSheet();
-
-        // Check if this is a new row being added (typical form submission)
-        if (range.getRow() > 1 && range.getColumn() === 1) {
-            console.log('📝 New row detected - likely form submission!');
-
-            // Get the new row data
-            const rowData = sheet.getRange(range.getRow(), 1, 1, sheet.getLastColumn()).getValues()[0];
-            const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-
-            console.log('🔍 Processing new submission for urgent content...');
-
-            // Check for urgent content
-            checkFormSubmissionForUrgentIssues(headers, rowData);
-
-            // Sync to backend
-            console.log('📡 Syncing updated data to backend...');
-            pushDataToBackend();
-        }
-
-    } catch (error) {
-        console.error('❌ Error in onEdit trigger:', error);
-    }
-}
-
-/**
- * Setup comprehensive triggers for form submissions
- * This creates both form submission and edit triggers for maximum reliability
- */
-function setupComprehensiveTriggers() {
-    try {
-        console.log('🚀 Setting up comprehensive form submission detection...');
-
-        // Remove all existing triggers
-        const allTriggers = ScriptApp.getProjectTriggers();
-        const relevantTriggers = allTriggers.filter(trigger =>
-            trigger.getHandlerFunction() === 'onFormSubmit' ||
-            trigger.getHandlerFunction() === 'onEdit'
-        );
-
-        if (relevantTriggers.length > 0) {
-            console.log('🔄 Removing existing triggers...');
-            relevantTriggers.forEach(trigger => ScriptApp.deleteTrigger(trigger));
-        }
-
-        let triggersCreated = 0;
-        const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-
-        // Create edit trigger (this works for form submissions to spreadsheets)
-        try {
-            const editTrigger = ScriptApp.newTrigger('onEdit')
-                .onEdit()
-                .create();
-            console.log('✅ Spreadsheet edit trigger created');
-            triggersCreated++;
-        } catch (error) {
-            console.log('⚠️ Edit trigger failed:', error.message);
-        }
-
-        // Try to create form submission trigger (if this spreadsheet is connected to a form)
-        try {
-            const formTrigger = ScriptApp.newTrigger('onFormSubmit')
-                .onFormSubmit()
-                .create();
-            console.log('✅ Form submission trigger created');
-            triggersCreated++;
-        } catch (error) {
-            console.log('⚠️ Form submission trigger failed (this is normal if no form is connected):', error.message);
-            console.log('💡 Using edit trigger instead - this will work for form submissions');
-        }
-
-        if (triggersCreated > 0) {
-            console.log(`🎉 Successfully created ${triggersCreated} trigger(s)`);
-            console.log('📧 Automatic email notifications are now active!');
-            console.log('🎯 Form submissions will now trigger immediate emails for urgent issues');
-            return { success: true, message: `${triggersCreated} triggers created successfully` };
-        } else {
-            throw new Error('Failed to create any triggers');
-        }
-
-    } catch (error) {
-        console.error('❌ Failed to setup triggers:', error);
-        return { success: false, message: error.toString() };
-    }
-}
-
-/**
- * Disable form submission trigger
- */
-function disableFormSubmissionTrigger() {
-    try {
-        const allTriggers = ScriptApp.getProjectTriggers();
-        const relevantTriggers = allTriggers.filter(trigger =>
-            trigger.getHandlerFunction() === 'onFormSubmit' ||
-            trigger.getHandlerFunction() === 'onEdit' ||
-            trigger.getEventType() === ScriptApp.EventType.ON_FORM_SUBMIT ||
-            trigger.getEventType() === ScriptApp.EventType.ON_EDIT
-        );
-
-        if (relevantTriggers.length === 0) {
-            console.log('ℹ️ Form submission triggers are already disabled');
-            return { success: true, message: 'Form triggers already disabled' };
-        }
-
-        console.log('⏹️ Disabling form submission triggers...');
-        relevantTriggers.forEach(trigger => ScriptApp.deleteTrigger(trigger));
-
-        console.log('✅ All form submission triggers disabled successfully');
-        return { success: true, message: 'Form triggers disabled successfully' };
-
-    } catch (error) {
-        console.error('❌ Failed to disable form submission triggers:', error);
-        return { success: false, message: error.toString() };
-    }
-}
-/**
-
  * Test function to verify email notifications work
- * Run this to test if emails are being sent correctly
  */
 function testEmailNotification() {
     try {
@@ -801,23 +637,15 @@ function checkTriggerStatus() {
         console.log('🔍 Checking current trigger status...');
 
         const allTriggers = ScriptApp.getProjectTriggers();
-        const formTriggers = allTriggers.filter(trigger =>
-            trigger.getEventType() === ScriptApp.EventType.ON_FORM_SUBMIT
-        );
         const editTriggers = allTriggers.filter(trigger =>
             trigger.getEventType() === ScriptApp.EventType.ON_EDIT
         );
 
         console.log(`📊 Total triggers: ${allTriggers.length}`);
-        console.log(`📝 Form submission triggers: ${formTriggers.length}`);
         console.log(`✏️ Edit triggers: ${editTriggers.length}`);
 
-        if (formTriggers.length > 0 || editTriggers.length > 0) {
+        if (editTriggers.length > 0) {
             console.log('✅ Automatic email notifications are ACTIVE');
-
-            formTriggers.forEach(trigger => {
-                console.log(`  - Form trigger: ${trigger.getHandlerFunction()}`);
-            });
 
             editTriggers.forEach(trigger => {
                 console.log(`  - Edit trigger: ${trigger.getHandlerFunction()}`);
@@ -826,20 +654,18 @@ function checkTriggerStatus() {
             return {
                 success: true,
                 active: true,
-                formTriggers: formTriggers.length,
                 editTriggers: editTriggers.length,
                 message: 'Email notifications are active'
             };
         } else {
             console.log('⚠️ No active triggers found - emails will NOT be sent automatically');
-            console.log('💡 Run setupComprehensiveTriggers() to enable automatic emails');
+            console.log('💡 Run setupManualTrigger() to get setup instructions');
 
             return {
                 success: true,
                 active: false,
-                formTriggers: 0,
                 editTriggers: 0,
-                message: 'No active triggers - run setupComprehensiveTriggers() to enable'
+                message: 'No active triggers - run setupManualTrigger() for instructions'
             };
         }
 
@@ -848,50 +674,10 @@ function checkTriggerStatus() {
         return { success: false, message: error.toString() };
     }
 }
+
 /**
-
- * Simple and reliable trigger setup - RECOMMENDED METHOD
- * This creates an edit trigger that catches all form submissions
- */
-function setupSimpleTrigger() {
-    try {
-        console.log('🚀 Setting up simple and reliable form submission detection...');
-
-        // Remove existing triggers
-        const existingTriggers = ScriptApp.getProjectTriggers().filter(trigger =>
-            trigger.getHandlerFunction() === 'onEdit' ||
-            trigger.getHandlerFunction() === 'onFormSubmit'
-        );
-
-        if (existingTriggers.length > 0) {
-            console.log('🔄 Removing existing triggers...');
-            existingTriggers.forEach(trigger => ScriptApp.deleteTrigger(trigger));
-        }
-
-        // Create a simple edit trigger
-        ScriptApp.newTrigger('onEdit')
-            .onEdit()
-            .create();
-
-        console.log('✅ Edit trigger created successfully!');
-        console.log('📧 Automatic email notifications are now ACTIVE!');
-        console.log('🎯 When someone submits your form:');
-        console.log('   1. New row gets added to spreadsheet');
-        console.log('   2. onEdit() function triggers automatically');
-        console.log('   3. Script checks for urgent content');
-        console.log('   4. Email sent immediately if urgent issue found');
-
-        return { success: true, message: 'Simple trigger setup completed' };
-
-    } catch (error) {
-        console.error('❌ Failed to setup simple trigger:', error);
-        return { success: false, message: error.toString() };
-    }
-}
-/
-**
  * MANUAL TRIGGER SETUP - 100% RELIABLE METHOD
- * Since the API is giving issues, use this manual method
+ * Since the API has issues, use this manual method
  */
 function setupManualTrigger() {
     console.log('📋 MANUAL TRIGGER SETUP INSTRUCTIONS:');
@@ -922,43 +708,6 @@ function setupManualTrigger() {
     console.log('');
     console.log('✅ This manual method is 100% reliable and will work!');
     console.log('📧 Once set up, emails will be sent automatically on every form submission');
-    
-    return { success: true, message: 'Manual setup instructions provided - follow the steps above' };
-}
 
-/**
- * Alternative: Create trigger programmatically with different syntax
- */
-function createTriggerAlternative() {
-    try {
-        console.log('🔄 Trying alternative trigger creation method...');
-        
-        // Remove existing triggers
-        const triggers = ScriptApp.getProjectTriggers();
-        triggers.forEach(trigger => {
-            if (trigger.getHandlerFunction() === 'onEdit') {
-                ScriptApp.deleteTrigger(trigger);
-            }
-        });
-        
-        // Try creating trigger with different approach
-        const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-        
-        // This should work - creating trigger on the spreadsheet
-        const trigger = ScriptApp.newTrigger('onEdit')
-            .onEdit()
-            .create();
-            
-        console.log('✅ Alternative trigger created successfully!');
-        return { success: true, message: 'Alternative trigger created' };
-        
-    } catch (error) {
-        console.error('❌ Alternative method also failed:', error);
-        console.log('');
-        console.log('🔧 SOLUTION: Use the manual setup method instead');
-        console.log('   Run: setupManualTrigger()');
-        console.log('   Then follow the step-by-step instructions');
-        
-        return { success: false, message: 'Use manual setup method' };
-    }
+    return { success: true, message: 'Manual setup instructions provided - follow the steps above' };
 }

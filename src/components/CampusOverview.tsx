@@ -138,7 +138,11 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
               </div>
             </div>
             <button
-              onClick={() => window.location.hash = 'urgent-issues'}
+              onClick={() => {
+                window.location.hash = 'urgent-issues';
+                // Trigger a custom event to notify the App component
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+              }}
               className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
             >
               View Issues →
