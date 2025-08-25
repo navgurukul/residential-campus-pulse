@@ -31,7 +31,8 @@ const CONFIG = {
   BACKEND_URL: 'https://ng-campus-pulse.onrender.com/api/import-data',
   TIMEOUT: 30000, // 30 seconds timeout
   MAX_RETRIES: 3,
-  RETRY_DELAY: 2000 // 2 seconds between retries
+  RETRY_DELAY: 2000, // 2 seconds between retries
+  EMAIL_RECIPIENT: 'surajsahani@navgurukul.org' // Email for urgent notifications
 };
 
 /**
@@ -85,6 +86,9 @@ function pushDataToBackend() {
       console.error(`❌ Missing required columns: ${missingColumns.join(', ')}`);
       return { success: false, message: `Missing columns: ${missingColumns.join(', ')}` };
     }
+    
+    // Check for new urgent fields and send emails if needed
+    checkAndSendUrgentEmails(headers, dataRows);
     
     // Convert to array of objects and validate data
     const data = [];
@@ -323,5 +327,169 @@ function checkSyncStatus() {
   } catch (error) {
     console.error('❌ Failed to check sync status:', error);
     return { success: false, message: error.toString() };
+  }
+}
+
+/**
+ * Check for urgent fields and send email notifications
+ * Sends emails when the last two form fields are filled
+ */
+function checkAndSendUrgentEmails(headers, dataRows) {
+  try {
+    console.log('🔍 Checking for urgent email notifications...');
+    
+    // Define the two urgent fields from your form
+    const urgentFields = [
+      'Is there anything that you find pressing in the campus, that needs urgent attention?',
+      'Is there anything that you find in the campus, that directly needs escalation? This answer would be mailed to senior most team for urgent attention.'
+    ];
+    
+    // Find column indices for urgent fields
+    const urgentFieldIndices = urgentFields.map(field => {
+      const index = headers.findIndex(header => 
+        header.includes('pressing in the campus') || 
+        header.includes('directly needs escalation')
+      );
+      return { field, index };
+    }).filter(item => item.index !== -1);
+    
+    if (urgentFieldIndices.length === 0) {
+      console.log('⚠️ No urgent fields found in form headers');
+      return;
+    }
+    
+    console.log(`📋 Found ${urgentFieldIndices.length} urgent fields`);
+    
+    // Check the last 2 form submissions for urgent content
+    const recentRows = dataRows.slice(-2); // Get last 2 submissions
+    
+    recentRows.forEach((row, rowIndex) => {
+      const actualRowNumber = dataRows.length - recentRows.length + rowIndex + 1;
+      console.log(`📝 Checking row ${actualRowNumber} for urgent content...`);
+      
+      // Extract basic info
+      const campusName = row[headers.findIndex(h => h.includes('Choose the campus'))] || 'Unknown Campus';
+      const resolverName = row[headers.findIndex(h => h.includes('Name'))] || 'Unknown Resolver';
+      const timestamp = row[0] || new Date().toISOString(); // Assuming first column is timestamp
+      
+      // Check each urgent field
+      urgentFieldIndices.forEach(({ field, index }) => {
+        const urgentContent = row[index];
+        
+        if (urgentContent && urgentContent.trim() !== '' && 
+            urgentContent.trim().toLowerCase() !== 'no' &&
+            urgentContent.trim().toLowerCase() !== 'na' &&
+            urgentContent.trim().toLowerCase() !== 'none' &&
+            urgentContent.trim().length > 5) {
+          
+          console.log(`🚨 Urgent content found in "${field}": ${urgentContent.substring(0, 50)}...`);
+          
+          // Send email notification
+          sendUrgentNotificationEmail({
+            campusName,
+            resolverName,
+            timestamp,
+            field,
+            content: urgentContent,
+            rowNumber: actualRowNumber
+          });
+        }
+      });
+    });
+    
+  } catch (error) {
+    console.error('❌ Error checking urgent emails:', error);
+  }
+}
+
+/**
+ * Send urgent notification email to senior team
+ */
+function sendUrgentNotificationEmail(data) {
+  try {
+    console.log(`📧 Sending urgent notification email for ${data.campusName}...`);
+    
+    const subject = `🚨 URGENT: Campus Issue Reported - ${data.campusName}`;
+    
+    const emailBody = `
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    
+    <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h1 style="margin: 0; font-size: 24px;">🚨 URGENT CAMPUS ALERT</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">Immediate attention required</p>
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h2 style="color: #2c3e50; margin-top: 0;">📍 Campus Details</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold; width: 30%;">Campus:</td>
+          <td style="padding: 8px 0;">${data.campusName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">Reported by:</td>
+          <td style="padding: 8px 0;">${data.resolverName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">Timestamp:</td>
+          <td style="padding: 8px 0;">${new Date(data.timestamp).toLocaleString()}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">Form Row:</td>
+          <td style="padding: 8px 0;">#${data.rowNumber}</td>
+        </tr>
+      </table>
+    </div>
+    
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h3 style="color: #856404; margin-top: 0;">⚠️ Issue Category</h3>
+      <p style="margin: 0; font-style: italic;">${data.field}</p>
+    </div>
+    
+    <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h3 style="color: #721c24; margin-top: 0;">📝 Detailed Report</h3>
+      <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #dc3545;">
+        <p style="margin: 0; white-space: pre-wrap;">${data.content}</p>
+      </div>
+    </div>
+    
+    <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h3 style="color: #0c5460; margin-top: 0;">🎯 Recommended Actions</h3>
+      <ul style="margin: 0; padding-left: 20px;">
+        <li>Review the reported issue immediately</li>
+        <li>Contact the campus resolver for additional details</li>
+        <li>Coordinate with local campus management</li>
+        <li>Document resolution steps in Campus Pulse system</li>
+      </ul>
+    </div>
+    
+    <div style="text-align: center; padding: 20px; background: #e9ecef; border-radius: 8px;">
+      <p style="margin: 0; color: #6c757d; font-size: 14px;">
+        This is an automated notification from the NavGurukul Campus Pulse System<br>
+        Generated on ${new Date().toLocaleString()}
+      </p>
+    </div>
+    
+  </div>
+</body>
+</html>`;
+
+    // Send the email
+    GmailApp.sendEmail(
+      CONFIG.EMAIL_RECIPIENT,
+      subject,
+      '', // Plain text version (empty since we're using HTML)
+      {
+        htmlBody: emailBody,
+        name: 'NavGurukul Campus Pulse System'
+      }
+    );
+    
+    console.log(`✅ Urgent notification email sent successfully to ${CONFIG.EMAIL_RECIPIENT}`);
+    
+  } catch (error) {
+    console.error('❌ Failed to send urgent notification email:', error);
   }
 }

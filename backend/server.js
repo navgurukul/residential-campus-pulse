@@ -175,6 +175,19 @@ function processRawDataForFrontend(rawData) {
       'Timestamp', 'timestamp', 'Date', 'Created Date', 'Submission Time'
     ], new Date().toISOString());
 
+    // Extract the two new urgent fields
+    const urgentCampusIssue = getColumnValue(row, [
+      'Is there anything that you find pressing in the campus, that needs urgent attention?',
+      'pressing in the campus',
+      'urgent attention'
+    ], '');
+
+    const escalationIssue = getColumnValue(row, [
+      'Is there anything that you find in the campus, that directly needs escalation? This answer would be mailed to senior most team for urgent attention.',
+      'directly needs escalation',
+      'escalation'
+    ], '');
+
     // Extract campus name - using your actual column name
     const campusName = getColumnValue(row, [
       'Choose the campus you are referring to ',
@@ -542,6 +555,8 @@ function processRawDataForFrontend(rawData) {
       competencies: competencies,
       feedback: feedback,
       competencyFeedback: competencyFeedback,
+      urgentCampusIssue: urgentCampusIssue,
+      escalationIssue: escalationIssue,
       dateEvaluated: lastEvaluated,
       status: 'Completed'
     };
@@ -625,6 +640,71 @@ function processRawDataForFrontend(rawData) {
     evaluations
   };
 }
+
+// Endpoint to get urgent issues
+app.get('/api/urgent-issues', (req, res) => {
+  try {
+    console.log('=== Urgent Issues Endpoint Called ===');
+    
+    if (storedData.length === 0) {
+      return res.status(200).json({
+        urgentIssues: [],
+        escalationIssues: [],
+        lastUpdated: null,
+        message: 'No data available yet'
+      });
+    }
+
+    const processedData = processRawDataForFrontend(storedData);
+    
+    // Filter evaluations that have urgent issues
+    const urgentIssues = processedData.evaluations.filter(eval => 
+      eval.urgentCampusIssue && eval.urgentCampusIssue.trim() !== '' &&
+      eval.urgentCampusIssue.trim().toLowerCase() !== 'no' &&
+      eval.urgentCampusIssue.trim().toLowerCase() !== 'na' &&
+      eval.urgentCampusIssue.trim().toLowerCase() !== 'none' &&
+      eval.urgentCampusIssue.trim().length > 5
+    ).map(eval => ({
+      id: eval.id,
+      campusName: eval.campusName,
+      resolverName: eval.resolverName,
+      dateEvaluated: eval.dateEvaluated,
+      issue: eval.urgentCampusIssue,
+      type: 'urgent'
+    }));
+
+    // Filter evaluations that have escalation issues
+    const escalationIssues = processedData.evaluations.filter(eval => 
+      eval.escalationIssue && eval.escalationIssue.trim() !== '' &&
+      eval.escalationIssue.trim().toLowerCase() !== 'no' &&
+      eval.escalationIssue.trim().toLowerCase() !== 'na' &&
+      eval.escalationIssue.trim().toLowerCase() !== 'none' &&
+      eval.escalationIssue.trim().length > 5
+    ).map(eval => ({
+      id: eval.id,
+      campusName: eval.campusName,
+      resolverName: eval.resolverName,
+      dateEvaluated: eval.dateEvaluated,
+      issue: eval.escalationIssue,
+      type: 'escalation'
+    }));
+
+    res.status(200).json({
+      urgentIssues,
+      escalationIssues,
+      totalUrgent: urgentIssues.length,
+      totalEscalation: escalationIssues.length,
+      lastUpdated
+    });
+
+  } catch (error) {
+    console.error('Error serving urgent issues:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+});
 
 // Debug endpoint to see raw stored data
 app.get('/api/debug-data', (req, res) => {
