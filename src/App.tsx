@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Building2, Users, BarChart3, Settings, Lock } from 'lucide-react';
+import { Building2, Users, BarChart3, Settings, Lock, AlertTriangle } from 'lucide-react';
 import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
 import ResolverOverview from './components/ResolverOverview';
+import UrgentIssues from './components/UrgentIssues';
 import FilterPanel from './components/FilterPanel';
 import LoadingSpinner from './components/LoadingSpinner';
 import { FilterState, Campus, Resolver, Evaluation } from './types';
@@ -10,7 +11,7 @@ import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDa
 import { processApiData } from './utils/apiUtils';
 import { mockEvaluations } from './data/mockData';
 
-type View = 'campus-overview' | 'campus-detail' | 'resolver-overview';
+type View = 'campus-overview' | 'campus-detail' | 'resolver-overview' | 'urgent-issues';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('campus-overview');
@@ -216,7 +217,8 @@ function App() {
 
   const navigation = [
     { id: 'campus-overview', name: 'Campus Overview', icon: Building2 },
-    { id: 'resolver-overview', name: 'Resolver Overview', icon: Users }
+    { id: 'resolver-overview', name: 'Resolver Overview', icon: Users },
+    { id: 'urgent-issues', name: 'Urgent Issues', icon: AlertTriangle }
   ];
 
   if (loading) {
@@ -322,7 +324,7 @@ function App() {
           </div>
         </div>
 
-        {currentView !== 'campus-detail' && (
+        {currentView !== 'campus-detail' && currentView !== 'urgent-issues' && (
           <FilterPanel
             filters={filters}
             onFilterChange={setFilters}
@@ -356,6 +358,10 @@ function App() {
             resolvers={filteredResolvers} 
             evaluations={evaluations.length > 0 ? evaluations : mockEvaluations}
           />
+        )}
+
+        {currentView === 'urgent-issues' && (
+          <UrgentIssues />
         )}
       </main>
     </div>

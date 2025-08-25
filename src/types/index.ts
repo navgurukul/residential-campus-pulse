@@ -41,6 +41,8 @@ export interface Evaluation {
   competencyFeedback?: {
     [key: string]: string;
   };
+  urgentCampusIssue?: string;
+  escalationIssue?: string;
   dateEvaluated: string;
   status: 'Completed' | 'In Progress' | 'Pending';
 }
