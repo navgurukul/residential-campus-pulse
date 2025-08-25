@@ -725,8 +725,7 @@ function setupManualTrigger() {
 
     return { success: true, message: 'Manual setup instructions provided - follow the steps above' };
 }
-/
-**
+/**
  * 🚀 QUICK START: Complete System Test
  * Run this function to test the entire Campus Pulse system
  */
@@ -734,20 +733,20 @@ function runCompleteSystemTest() {
     console.log('🚀 CAMPUS PULSE COMPLETE SYSTEM TEST');
     console.log('=====================================');
     console.log('');
-    
+
     console.log('📋 STEP 1: Checking trigger status...');
     const triggerStatus = checkTriggerStatus();
     console.log('');
-    
+
     if (triggerStatus.active) {
         console.log('📧 STEP 2: Testing email notifications...');
         testEmailNotification();
         console.log('');
-        
+
         console.log('📊 STEP 3: Syncing data to backend...');
         pushDataToBackend();
         console.log('');
-        
+
         console.log('✅ SYSTEM TEST COMPLETE!');
         console.log('');
         console.log('🎯 NEXT STEPS:');
@@ -755,7 +754,7 @@ function runCompleteSystemTest() {
         console.log('2. Submit a test form with urgent content');
         console.log('3. Check your dashboard at: https://ng-campus-pulse.vercel.app');
         console.log('4. Verify "View Issues" navigation works');
-        
+
     } else {
         console.log('⚠️ TRIGGERS NOT ACTIVE!');
         console.log('');
@@ -764,7 +763,7 @@ function runCompleteSystemTest() {
         console.log('2. Follow the step-by-step instructions');
         console.log('3. Then run this test again');
     }
-    
+
     return { success: triggerStatus.active, message: 'System test completed' };
 }
 
@@ -799,6 +798,6 @@ function showFunctionGuide() {
     console.log('📧 Email Recipients:');
     console.log('- surajsahani@navgurukul.org');
     console.log('- priyanka@navgurukul.org');
-    
+
     return { success: true, message: 'Function guide displayed' };
 }
