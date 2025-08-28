@@ -1,9 +1,9 @@
 // src/utils/localStorage.ts
-import { Campus, Resolver, Evaluation } from '../types';
+import { Campus, Revolver, Evaluation } from '../types';
 
 interface CachedData {
   campuses: Campus[];
-  resolvers: Resolver[];
+  revolvers: Revolver[];
   evaluations: Evaluation[];
   timestamp: number;
   version: string;
@@ -12,7 +12,7 @@ interface CachedData {
 interface UrgentIssue {
   id: string;
   campusName: string;
-  resolverName: string;
+  revolverName: string;
   content: string;
   timestamp: string;
   type: 'Urgent Campus Issue' | 'Escalation Required';
@@ -34,11 +34,11 @@ const DATA_VERSION = '1.0.0';
 export class LocalStorageManager {
   
   // Main data caching
-  static saveCampusData(campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[]): void {
+  static saveCampusData(campuses: Campus[], revolvers: Revolver[], evaluations: Evaluation[]): void {
     try {
       const cachedData: CachedData = {
         campuses,
-        resolvers,
+        revolvers,
         evaluations,
         timestamp: Date.now(),
         version: DATA_VERSION
@@ -49,7 +49,7 @@ export class LocalStorageManager {
       
       console.log('✅ Campus data saved to localStorage', {
         campuses: campuses.length,
-        resolvers: resolvers.length,
+        revolvers: revolvers.length,
         evaluations: evaluations.length
       });
     } catch (error) {
@@ -57,7 +57,7 @@ export class LocalStorageManager {
     }
   }
 
-  static getCachedCampusData(): { campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] } | null {
+  static getCachedCampusData(): { campuses: Campus[], revolvers: Revolver[], evaluations: Evaluation[] } | null {
     try {
       const cached = localStorage.getItem(STORAGE_KEYS.CAMPUS_DATA);
       if (!cached) return null;
@@ -81,12 +81,12 @@ export class LocalStorageManager {
       console.log('✅ Using cached campus data', {
         age: Math.round((Date.now() - cachedData.timestamp) / 1000 / 60),
         campuses: cachedData.campuses.length,
-        resolvers: cachedData.resolvers.length
+        revolvers: cachedData.revolvers.length
       });
 
       return {
         campuses: cachedData.campuses,
-        resolvers: cachedData.resolvers,
+        revolvers: cachedData.revolvers,
         evaluations: cachedData.evaluations
       };
     } catch (error) {

@@ -84,10 +84,10 @@ function pushDataToBackend() {
             });
 
             const campusName = obj['Choose the campus you are referring to '] || obj['Choose the campus you are referring to'] || '';
-            const resolverName = obj['Name '] || obj['Name'] || '';
+            const revolverName = obj['Name '] || obj['Name'] || '';
 
-            if (!campusName.trim() || !resolverName.trim()) {
-                console.log(`⚠️ Skipping row ${index + 2}: Missing campus (${campusName}) or name (${resolverName})`);
+            if (!campusName.trim() || !revolverName.trim()) {
+                console.log(`⚠️ Skipping row ${index + 2}: Missing campus (${campusName}) or name (${revolverName})`);
                 skippedRows++;
                 hasRequiredData = false;
             }
@@ -158,10 +158,10 @@ function checkAndSendUrgentEmails(headers, dataRows) {
 
             // Extract basic info
             const campusName = row[headers.findIndex(h => h.toLowerCase().includes('campus'))] || 'Unknown Campus';
-            const resolverName = row[headers.findIndex(h => h.toLowerCase().includes('name'))] || 'Unknown Resolver';
+            const revolverName = row[headers.findIndex(h => h.toLowerCase().includes('name'))] || 'Unknown Revolver';
             const timestamp = row[0] || new Date().toISOString();
 
-            console.log(`Campus: ${campusName}, Resolver: ${resolverName}`);
+            console.log(`Campus: ${campusName}, Revolver: ${revolverName}`);
 
             // Check urgent field (Column 38)
             if (urgentFieldColumn !== -1) {
@@ -172,7 +172,7 @@ function checkAndSendUrgentEmails(headers, dataRows) {
                     console.log(`🚨 Urgent content found: "${urgentContent}"`);
                     sendUrgentNotificationEmail({
                         campusName,
-                        resolverName,
+                        revolverName,
                         timestamp,
                         field: headers[urgentFieldColumn],
                         content: urgentContent.toString(),
@@ -191,7 +191,7 @@ function checkAndSendUrgentEmails(headers, dataRows) {
                     console.log(`🚨 Escalation content found: "${escalationContent}"`);
                     sendUrgentNotificationEmail({
                         campusName,
-                        resolverName,
+                        revolverName,
                         timestamp,
                         field: headers[escalationFieldColumn],
                         content: escalationContent.toString(),
@@ -277,7 +277,7 @@ function sendUrgentNotificationEmail(data) {
         </tr>
         <tr>
           <td style="padding: 8px 0; font-weight: bold;">Reported by:</td>
-          <td style="padding: 8px 0;">${data.resolverName}</td>
+          <td style="padding: 8px 0;">${data.revolverName}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; font-weight: bold;">Timestamp:</td>
@@ -311,8 +311,8 @@ function sendUrgentNotificationEmail(data) {
         <a href="${urgentIssuesUrl}" style="background: #17a2b8; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">
           📋 Track in Dashboard
         </a>
-        <a href="mailto:${data.resolverName.toLowerCase().replace(/\s+/g, '.')}@navgurukul.org" style="background: #28a745; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">
-          📧 Contact Resolver
+        <a href="mailto:${data.revolverName.toLowerCase().replace(/\s+/g, '.')}@navgurukul.org" style="background: #28a745; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">
+          📧 Contact Revolver
         </a>
         <a href="${dashboardBaseUrl}" style="background: #6f42c1; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">
           📊 View Full Report
@@ -320,7 +320,7 @@ function sendUrgentNotificationEmail(data) {
       </div>
       <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
         <li><strong>Immediate:</strong> Review the reported issue and assess severity</li>
-        <li><strong>Contact:</strong> Reach out to the campus resolver for additional context</li>
+        <li><strong>Contact:</strong> Reach out to the campus revolver for additional context</li>
         <li><strong>Coordinate:</strong> Engage with local campus management team</li>
         <li><strong>Document:</strong> Log resolution steps in the Campus Pulse system</li>
         <li><strong>Follow-up:</strong> Schedule check-in to ensure issue is resolved</li>
@@ -338,8 +338,8 @@ function sendUrgentNotificationEmail(data) {
         <a href="${dashboardBaseUrl}" style="background: rgba(255,255,255,0.2); color: white; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3);">
           📊 Campus Overview
         </a>
-        <a href="${dashboardBaseUrl}/#resolver-overview" style="background: rgba(255,255,255,0.2); color: white; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3);">
-          👥 Resolver Data
+        <a href="${dashboardBaseUrl}/#revolver-overview" style="background: rgba(255,255,255,0.2); color: white; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3);">
+          👥 Revolver Data
         </a>
       </div>
     </div>
@@ -563,9 +563,9 @@ function checkFormSubmissionForUrgentIssues(headers, submissionValues) {
         // Extract basic info from submission
         const timestamp = submissionValues[0] || new Date().toISOString();
         const campusName = submissionValues[headers.findIndex(h => h.toLowerCase().includes('campus'))] || 'Unknown Campus';
-        const resolverName = submissionValues[headers.findIndex(h => h.toLowerCase().includes('name'))] || 'Unknown Resolver';
+        const revolverName = submissionValues[headers.findIndex(h => h.toLowerCase().includes('name'))] || 'Unknown Revolver';
 
-        console.log(`📍 Submission from: ${resolverName} at ${campusName}`);
+        console.log(`📍 Submission from: ${revolverName} at ${campusName}`);
 
         // Check urgent field
         if (urgentFieldColumn !== -1) {
@@ -574,7 +574,7 @@ function checkFormSubmissionForUrgentIssues(headers, submissionValues) {
                 console.log(`🚨 URGENT ISSUE DETECTED: "${urgentContent}"`);
                 sendUrgentNotificationEmail({
                     campusName,
-                    resolverName,
+                    revolverName,
                     timestamp,
                     field: headers[urgentFieldColumn],
                     content: urgentContent.toString(),
@@ -591,7 +591,7 @@ function checkFormSubmissionForUrgentIssues(headers, submissionValues) {
                 console.log(`🔴 ESCALATION REQUIRED: "${escalationContent}"`);
                 sendUrgentNotificationEmail({
                     campusName,
-                    resolverName,
+                    revolverName,
                     timestamp,
                     field: headers[escalationFieldColumn],
                     content: escalationContent.toString(),
@@ -616,7 +616,7 @@ function testEmailNotification() {
         // Create test data
         const testData = {
             campusName: 'Test Campus',
-            resolverName: 'Test Resolver',
+            revolverName: 'Test Revolver',
             timestamp: new Date().toISOString(),
             field: 'Test Field',
             content: 'This is a test urgent issue to verify email notifications are working correctly.',

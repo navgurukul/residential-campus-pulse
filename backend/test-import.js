@@ -7,7 +7,7 @@ const sampleData = [
     "Campus Name": "Pune Campus",
     "Location": "Pune, Maharashtra",
     "Average Score": "8.5",
-    "Total Resolvers": "12",
+    "Total Revolvers": "12",
     "Ranking": "High",
     "Last Evaluated": "2024-01-15"
   },
@@ -15,7 +15,7 @@ const sampleData = [
     "Campus Name": "Dantewada Campus", 
     "Location": "Dantewada, Chhattisgarh",
     "Average Score": "7.8",
-    "Total Resolvers": "8",
+    "Total Revolvers": "8",
     "Ranking": "Medium",
     "Last Evaluated": "2024-01-14"
   },
@@ -23,7 +23,7 @@ const sampleData = [
     "Campus Name": "Himachal Campus",
     "Location": "Dharamshala, Himachal Pradesh", 
     "Average Score": "7.2",
-    "Total Resolvers": "6",
+    "Total Revolvers": "6",
     "Ranking": "Medium",
     "Last Evaluated": "2024-01-13"
   }

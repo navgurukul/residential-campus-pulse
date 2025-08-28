@@ -50,9 +50,9 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], revo
     // Apply campus name mapping
     const campus = campusNameMapping[response.campus] || response.campus;
 
-    // Process resolvers
-    if (!resolverMap.has(name)) {
-      resolverMap.set(name, {
+    // Process revolvers
+    if (!revolverMap.has(name)) {
+      revolverMap.set(name, {
         id: `${name}-${index}`, // simple unique id
         name,
         email: email || 'N/A',
@@ -64,12 +64,12 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], revo
         framework,
       });
     }
-    const resolver = resolverMap.get(name);
-    resolver.totalEvaluations += 1;
-    if (new Date(timestamp) > new Date(resolver.lastActivity)) {
-      resolver.lastActivity = timestamp;
+    const revolver = revolverMap.get(name);
+    revolver.totalEvaluations += 1;
+    if (new Date(timestamp) > new Date(revolver.lastActivity)) {
+      revolver.lastActivity = timestamp;
     }
-    resolver.campuses.add(campus);
+    revolver.campuses.add(campus);
 
     // Process campuses
     if (!campusMap.has(campus)) {
@@ -78,7 +78,7 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], revo
         name: `${campus} Campus`,
         location: campus,
         lastEvaluated: '1970-01-01T00:00:00.000Z',
-        resolvers: new Set<string>(),
+        revolvers: new Set<string>(),
         averageScore: getRandomScore(),
       });
     }
@@ -86,10 +86,10 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], revo
     if (new Date(timestamp) > new Date(campusEntry.lastEvaluated)) {
       campusEntry.lastEvaluated = timestamp;
     }
-    campusEntry.resolvers.add(name);
+    campusEntry.revolvers.add(name);
   });
 
-  const resolvers: Resolver[] = Array.from(resolverMap.values()).map(r => ({
+  const revolvers: Revolver[] = Array.from(revolverMap.values()).map(r => ({
     ...r,
     campusesEvaluated: r.campuses.size,
   }));
@@ -102,7 +102,7 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], revo
         name: `${campusName} Campus`,
         location: campusName,
         lastEvaluated: new Date().toISOString().split('T')[0],
-        resolvers: new Set<string>(),
+        revolvers: new Set<string>(),
         averageScore: getRandomScore(),
       });
     }
@@ -110,7 +110,7 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], revo
 
   const campuses: Campus[] = Array.from(campusMap.values()).map(c => ({
     ...c,
-    totalResolvers: c.resolvers.size,
+    totalRevolvers: c.revolvers.size,
     ranking: getRanking(c.averageScore),
   }));
 
@@ -121,11 +121,11 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], revo
     campusId: campusNameToIdMap.get(e.campusName) || e.campusId,
   }));
 
-  return { campuses, resolvers, evaluations };
+  return { campuses, revolvers, evaluations };
 };
 
 // Enhanced API function with local storage integration
-export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> => {
+export const fetchCampusData = async (): Promise<{ campuses: Campus[], revolvers: Revolver[], evaluations: Evaluation[] }> => {
   // First, try to get cached data
   const cachedData = LocalStorageManager.getCachedCampusData();
   if (cachedData) {
@@ -156,7 +156,7 @@ export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers
     // Save to localStorage
     LocalStorageManager.saveCampusData(
       processedData.campuses, 
-      processedData.resolvers, 
+      processedData.revolvers, 
       processedData.evaluations
     );
     
@@ -174,7 +174,7 @@ export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers
         console.log('📦 Using expired cache as fallback');
         return {
           campuses: cachedData.campuses || [],
-          resolvers: cachedData.resolvers || [],
+          revolvers: cachedData.revolvers || [],
           evaluations: cachedData.evaluations || []
         };
       } catch (parseError) {
@@ -184,12 +184,12 @@ export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers
     
     // Last resort: return empty data
     console.log('⚠️ No data available, returning empty datasets');
-    return { campuses: [], resolvers: [], evaluations: [] };
+    return { campuses: [], revolvers: [], evaluations: [] };
   }
 };
 
 // Function to force refresh data
-export const refreshCampusData = async (): Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> => {
+export const refreshCampusData = async (): Promise<{ campuses: Campus[], revolvers: Revolver[], evaluations: Evaluation[] }> => {
   console.log('🔄 Force refreshing campus data...');
   LocalStorageManager.clearCampusData();
   return await fetchCampusData();
