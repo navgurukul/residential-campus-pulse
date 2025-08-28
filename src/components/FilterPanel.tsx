@@ -7,7 +7,7 @@ interface FilterPanelProps {
   onFilterChange: (filters: FilterState) => void;
   onExport: (format: 'csv' | 'pdf') => void;
   campuses: Array<{ id: string; name: string }>;
-  revolvers: Array<{ id: string; name: string }>;
+  resolvers: Array<{ id: string; name: string }>;
   currentView: string;
 }
 
@@ -24,7 +24,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   onFilterChange, 
   onExport,
   campuses,
-  revolvers 
+  resolvers 
 }) => {
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     onFilterChange({ ...filters, [key]: value });
@@ -33,7 +33,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const clearFilters = () => {
     onFilterChange({
       campus: '',
-      revolver: '',
+      resolver: '',
       dateRange: { start: '', end: '' },
       competencyCategory: '',
       competency: ''
@@ -91,18 +91,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </select>
         </div>
 
-        {/* Revolver Filter */}
+        {/* Resolver Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Revolver</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Resolver</label>
           <select
-            value={filters.revolver}
-            onChange={(e) => handleFilterChange('revolver', e.target.value)}
+            value={filters.resolver}
+            onChange={(e) => handleFilterChange('resolver', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">All Revolvers</option>
-            {revolvers.map((revolver) => (
-              <option key={revolver.id} value={revolver.id}>
-                {toTitleCase(revolver.name)}
+            <option value="">All Resolvers</option>
+            {resolvers.map((resolver) => (
+              <option key={resolver.id} value={resolver.id}>
+                {toTitleCase(resolver.name)}
               </option>
             ))}
           </select>

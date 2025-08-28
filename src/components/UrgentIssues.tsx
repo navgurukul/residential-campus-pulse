@@ -5,7 +5,7 @@ import { AlertTriangle, Clock, MapPin, User, Mail, Calendar, RefreshCw } from 'l
 interface UrgentIssue {
   id: string;
   campusName: string;
-  revolverName: string;
+  resolverName: string;
   dateEvaluated: string;
   issue: string;
   type: 'urgent' | 'escalation';
@@ -215,7 +215,7 @@ const UrgentIssues: React.FC = () => {
                       <span className="font-medium">{issue.campusName}</span>
                       <span className="mx-2">•</span>
                       <User className="w-4 h-4 mr-1" />
-                      <span>{issue.revolverName}</span>
+                      <span>{issue.resolverName}</span>
                     </div>
                     
                     <p className="text-gray-900 line-clamp-2">
@@ -286,7 +286,7 @@ const UrgentIssues: React.FC = () => {
                     <label className="text-sm font-medium text-gray-500">Reported By</label>
                     <div className="flex items-center mt-1">
                       <User className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-gray-900">{selectedIssue.revolverName}</span>
+                      <span className="text-gray-900">{selectedIssue.resolverName}</span>
                     </div>
                   </div>
                   <div>

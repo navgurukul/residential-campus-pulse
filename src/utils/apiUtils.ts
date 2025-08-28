@@ -1,5 +1,5 @@
 // src/utils/apiUtils.ts
-import { Campus, Revolver, Evaluation } from '../types';
+import { Campus, Resolver, Evaluation } from '../types';
 import { mockEvaluations } from '../data/mockData';
 import { LocalStorageManager } from './localStorage';
 
@@ -35,14 +35,14 @@ const campusNameMapping: { [key: string]: string } = {
 // Additional campuses to include
 const additionalCampuses = ['Dharamshala', 'Raigarh'];
 
-export const processApiData = (apiData: ApiResponse): { campuses: Campus[], revolvers: Revolver[], evaluations: Evaluation[] } => {
+export const processApiData = (apiData: ApiResponse): { campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] } => {
   if (!apiData || !apiData.responses) {
-    return { campuses: [], revolvers: [], evaluations: [] };
+    return { campuses: [], resolvers: [], evaluations: [] };
   }
 
   const validResponses = apiData.responses.filter(r => r.name && r.timestamp && r.campus);
 
-  const revolverMap = new Map<string, any>();
+  const resolverMap = new Map<string, any>();
   const campusMap = new Map<string, any>();
 
   validResponses.forEach((response, index) => {
