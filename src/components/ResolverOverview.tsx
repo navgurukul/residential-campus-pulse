@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { User, MapPin, TrendingUp, Calendar, MessageSquare, X, Users, BarChart3, Award } from 'lucide-react';
-import { Revolver, Evaluation } from '../types';
+import { Resolver, Evaluation } from '../types';
 
 // Helper function to parse markdown-style formatting
 const parseMarkdown = (text: string) => {
@@ -32,32 +32,32 @@ const parseMarkdown = (text: string) => {
   });
 };
 
-interface RevolverOverviewProps {
-  revolvers: Revolver[];
+interface ResolverOverviewProps {
+  resolvers: Resolver[];
   evaluations?: Evaluation[];
 }
 
-const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluations = [] }) => {
-  const [selectedRevolver, setSelectedRevolver] = useState<Revolver | null>(null);
+const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluations = [] }) => {
+  const [selectedResolver, setSelectedResolver] = useState<Resolver | null>(null);
 
   // Safety check to prevent crashes when data is loading
-  if (!revolvers || !Array.isArray(revolvers)) {
-    return <div className="flex items-center justify-center h-64">Loading revolver data...</div>;
+  if (!resolvers || !Array.isArray(resolvers)) {
+    return <div className="flex items-center justify-center h-64">Loading resolver data...</div>;
   }
 
-  const chartData = revolvers.map(revolver => ({
-    name: revolver.name,
-    campuses: revolver.campusesEvaluated,
-    avgScore: revolver.averageScoreGiven
+  const chartData = resolvers.map(resolver => ({
+    name: resolver.name,
+    campuses: resolver.campusesEvaluated,
+    avgScore: resolver.averageScoreGiven
   }));
 
-  const totalEvaluations = revolvers.reduce((sum, revolver) => sum + revolver.totalEvaluations, 0);
-  const uniqueCampusesEvaluated = new Set(revolvers.flatMap(revolver =>
-    // This is an approximation since we don't have campus names per revolver in the current data structure
-    Array(revolver.campusesEvaluated).fill(0).map((_, i) => `campus-${revolver.id}-${i}`)
+  const totalEvaluations = resolvers.reduce((sum, resolver) => sum + resolver.totalEvaluations, 0);
+  const uniqueCampusesEvaluated = new Set(resolvers.flatMap(resolver =>
+    // This is an approximation since we don't have campus names per resolver in the current data structure
+    Array(resolver.campusesEvaluated).fill(0).map((_, i) => `campus-${resolver.id}-${i}`)
   )).size;
-  const overallAvgScore = revolvers.length > 0 ? revolvers.reduce((sum, revolver) => sum + revolver.averageScoreGiven, 0) / revolvers.length : 0;
-  const maxCampusesEvaluated = revolvers.length > 0 ? Math.max(...revolvers.map(r => r.campusesEvaluated)) : 0;
+  const overallAvgScore = resolvers.length > 0 ? resolvers.reduce((sum, resolver) => sum + resolver.averageScoreGiven, 0) / resolvers.length : 0;
+  const maxCampusesEvaluated = resolvers.length > 0 ? Math.max(...resolvers.map(r => r.campusesEvaluated)) : 0;
 
   return (
     <div className="space-y-6">
@@ -66,8 +66,8 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Revolvers</p>
-              <p className="text-3xl font-bold text-gray-900">{revolvers.length}</p>
+              <p className="text-sm font-medium text-gray-600">Total Resolvers</p>
+              <p className="text-3xl font-bold text-gray-900">{resolvers.length}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <User className="w-6 h-6 text-blue-600" />
@@ -90,7 +90,7 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Max Campuses by Revolver</p>
+              <p className="text-sm font-medium text-gray-600">Max Campuses by Resolver</p>
               <p className="text-3xl font-bold text-gray-900">{maxCampusesEvaluated}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
@@ -115,7 +115,7 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Campuses Evaluated by Revolver</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Campuses Evaluated by Resolver</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -157,17 +157,17 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
         </div>
       </div>
 
-      {/* Revolver List */}
+      {/* Resolver List */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Revolver Performance</h3>
-          <p className="text-sm text-gray-500 mt-1">Each revolver appears once, with aggregated data from all their evaluations</p>
+          <h3 className="text-lg font-semibold text-gray-900">Resolver Performance</h3>
+          <p className="text-sm text-gray-500 mt-1">Each resolver appears once, with aggregated data from all their evaluations</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revolver</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolver</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campuses Evaluated</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Average Score Given</th>
@@ -176,48 +176,48 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {revolvers.map((revolver) => (
+              {resolvers.map((resolver) => (
                 <tr
-                  key={revolver.id}
+                  key={resolver.id}
                   className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
-                  onClick={() => setSelectedRevolver(revolver)}
+                  onClick={() => setSelectedResolver(resolver)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="font-medium text-gray-900">{revolver.name}</div>
+                      <div className="font-medium text-gray-900">{resolver.name}</div>
                       <MessageSquare className="w-4 h-4 text-gray-400 ml-2" />
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {revolver.email}
+                    {resolver.email}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-900">{revolver.campusesEvaluated}</span>
+                      <span className="text-sm font-medium text-gray-900">{resolver.campusesEvaluated}</span>
                       <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${(revolver.campusesEvaluated / 9) * 100}%` }}
+                          style={{ width: `${(resolver.campusesEvaluated / 9) * 100}%` }}
                         ></div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-900">{revolver.averageScoreGiven.toFixed(1)}</span>
+                      <span className="text-sm font-medium text-gray-900">{resolver.averageScoreGiven.toFixed(1)}</span>
                       <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${(revolver.averageScoreGiven / 10) * 100}%` }}
+                          style={{ width: `${(resolver.averageScoreGiven / 10) * 100}%` }}
                         ></div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {revolver.totalEvaluations}
+                    {resolver.totalEvaluations}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(revolver.lastActivity).toLocaleDateString()}
+                    {new Date(resolver.lastActivity).toLocaleDateString()}
                   </td>
                 </tr>
               ))}
@@ -228,8 +228,8 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
 
 
 
-      {/* Revolver Feedback Modal */}
-      {selectedRevolver && (
+      {/* Resolver Feedback Modal */}
+      {selectedResolver && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
             {/* Modal Header */}
@@ -237,12 +237,12 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
               <div className="flex items-center">
                 <MessageSquare className="w-6 h-6 text-blue-600 mr-3" />
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{selectedRevolver.name}</h3>
-                  <p className="text-sm text-gray-600">{selectedRevolver.email}</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{selectedResolver.name}</h3>
+                  <p className="text-sm text-gray-600">{selectedResolver.email}</p>
                 </div>
               </div>
               <button
-                onClick={() => setSelectedRevolver(null)}
+                onClick={() => setSelectedResolver(null)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -253,15 +253,15 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
             <div className="p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{selectedRevolver.campusesEvaluated}</div>
+                  <div className="text-2xl font-bold text-blue-600">{selectedResolver.campusesEvaluated}</div>
                   <div className="text-sm text-blue-800">Campuses Evaluated</div>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{selectedRevolver.averageScoreGiven.toFixed(1)}</div>
+                  <div className="text-2xl font-bold text-green-600">{selectedResolver.averageScoreGiven.toFixed(1)}</div>
                   <div className="text-sm text-green-800">Average Score Given</div>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{selectedRevolver.totalEvaluations}</div>
+                  <div className="text-2xl font-bold text-purple-600">{selectedResolver.totalEvaluations}</div>
                   <div className="text-sm text-purple-800">Total Evaluations</div>
                 </div>
               </div>
@@ -274,7 +274,7 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
                 </h4>
 
                 {evaluations
-                  .filter(evaluation => evaluation.revolverName === selectedRevolver.name)
+                  .filter(evaluation => evaluation.resolverName === selectedResolver.name)
                   .map(evaluation => {
                     const feedbackEntries = Object.entries(evaluation.competencyFeedback || {})
                       .filter(([key, value]) => value && value.trim() !== '');
@@ -320,13 +320,13 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
                   .filter(Boolean)}
 
                 {evaluations.filter(evaluation =>
-                  evaluation.revolverName === selectedRevolver.name &&
+                  evaluation.resolverName === selectedResolver.name &&
                   (Object.values(evaluation.competencyFeedback || {}).some(feedback => feedback && feedback.trim() !== '') ||
                     (evaluation.feedback && !evaluation.feedback.includes('Comprehensive evaluation')))
                 ).length === 0 && (
                     <div className="text-center py-8">
                       <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <div className="text-gray-500">No feedback available for this revolver yet.</div>
+                      <div className="text-gray-500">No feedback available for this resolver yet.</div>
                       <div className="text-sm text-gray-400 mt-1">Feedback will appear here once evaluations with comments are submitted.</div>
                     </div>
                   )}
@@ -339,4 +339,4 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ revolvers, evaluati
   );
 };
 
-export default RevolverOverview;
+export default ResolverOverview;

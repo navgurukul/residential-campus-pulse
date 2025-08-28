@@ -2,24 +2,24 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Building2, Users, BarChart3, Settings, Lock, AlertTriangle } from 'lucide-react';
 import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
-import RevolverOverview from './components/RevolverOverview';
+import ResolverOverview from './components/ResolverOverview';
 import UrgentIssues from './components/UrgentIssues';
 import FilterPanel from './components/FilterPanel';
 import LoadingSpinner from './components/LoadingSpinner';
 
-import { FilterState, Campus, Revolver, Evaluation } from './types';
-import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareRevolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
+import { FilterState, Campus, Resolver, Evaluation } from './types';
+import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
 import { processApiData } from './utils/apiUtils';
 import { mockEvaluations } from './data/mockData';
 
-type View = 'campus-overview' | 'campus-detail' | 'revolver-overview' | 'urgent-issues';
+type View = 'campus-overview' | 'campus-detail' | 'resolver-overview' | 'urgent-issues';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('campus-overview');
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
   const [filters, setFilters] = useState<FilterState>({
     campus: '',
-    revolver: '',
+    resolver: '',
     dateRange: { start: '', end: '' },
     competencyCategory: '',
     competency: 'vipasana', // Default to 'vipasana'
@@ -29,7 +29,7 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      if (hash === 'urgent-issues' || hash === 'campus-overview' || hash === 'revolver-overview') {
+      if (hash === 'urgent-issues' || hash === 'campus-overview' || hash === 'resolver-overview') {
         setCurrentView(hash as View);
       }
     };
@@ -45,7 +45,7 @@ function App() {
     };
   }, []);
   const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [revolvers, setRevolvers] = useState<Revolver[]>([]);
+  const [resolvers, setResolvers] = useState<Resolver[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -66,15 +66,15 @@ function App() {
           const now = Date.now();
           
           // Use cached data if it has valid data (no expiry check)
-          if (data.campuses && data.revolvers && data.evaluations) {
+          if (data.campuses && data.resolvers && data.evaluations) {
             setCampuses(data.campuses);
-            setRevolvers(data.revolvers);
+            setResolvers(data.resolvers);
             setEvaluations(data.evaluations);
             setLastUpdated(data.lastUpdated);
             setLoading(false);
             console.log('Data loaded from cache:', {
               campuses: data.campuses.length,
-              revolvers: data.revolvers.length,
+              resolvers: data.resolvers.length,
               evaluations: data.evaluations.length,
               lastUpdated: data.lastUpdated,
               cacheAge: Math.round((now - timestamp) / 1000 / 60) + ' minutes ago'
@@ -91,10 +91,10 @@ function App() {
         const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data');
         const data = await response.json();
         
-        if (data.campuses && data.revolvers && data.evaluations) {
+        if (data.campuses && data.resolvers && data.evaluations) {
           // Use data directly from backend (already processed)
           setCampuses(data.campuses);
-          setRevolvers(data.revolvers);
+          setResolvers(data.resolvers);
           setEvaluations(data.evaluations);
           setLastUpdated(data.lastUpdated);
           
@@ -104,25 +104,25 @@ function App() {
           
           console.log('Data loaded from backend and cached:', {
             campuses: data.campuses.length,
-            revolvers: data.revolvers.length,
+            resolvers: data.resolvers.length,
             evaluations: data.evaluations.length,
             lastUpdated: data.lastUpdated
           });
         } else {
           // Fallback to mock data if backend has no data yet
           console.log('No data from backend, using mock data');
-          const { campuses, revolvers, evaluations } = processApiData({ responses: [] });
+          const { campuses, resolvers, evaluations } = processApiData({ responses: [] });
           setCampuses(campuses);
-          setRevolvers(revolvers);
+          setResolvers(resolvers);
           setEvaluations(mockEvaluations);
         }
       } catch (error) {
         console.error('Error fetching data from backend:', error);
         // Fallback to mock data on error
         console.log('Backend error, using mock data');
-        const { campuses, revolvers, evaluations } = processApiData({ responses: [] });
+        const { campuses, resolvers, evaluations } = processApiData({ responses: [] });
         setCampuses(campuses);
-        setRevolvers(revolvers);
+        setResolvers(resolvers);
         setEvaluations(mockEvaluations);
       } finally {
         setLoading(false);
@@ -179,19 +179,19 @@ function App() {
     });
   }, [filters, campuses, sortConfig]);
 
-  const filteredRevolvers = useMemo(() => {
-    return revolvers.filter(revolver => {
-      if (filters.revolver && revolver.id !== filters.revolver) return false;
-      if (filters.dateRange.start && revolver.lastActivity < filters.dateRange.start) return false;
-      if (filters.dateRange.end && revolver.lastActivity > filters.dateRange.end) return false;
+  const filteredResolvers = useMemo(() => {
+    return resolvers.filter(resolver => {
+      if (filters.resolver && resolver.id !== filters.resolver) return false;
+      if (filters.dateRange.start && resolver.lastActivity < filters.dateRange.start) return false;
+      if (filters.dateRange.end && resolver.lastActivity > filters.dateRange.end) return false;
       return true;
     });
-  }, [filters, revolvers]);
+  }, [filters, resolvers]);
 
   const filteredEvaluations = useMemo(() => {
     return evaluations.filter(evaluation => {
       if (filters.campus && evaluation.campusId !== filters.campus) return false;
-      if (filters.revolver && evaluation.revolverId !== filters.revolver) return false;
+      if (filters.resolver && evaluation.resolverId !== filters.resolver) return false;
       if (filters.dateRange.start && evaluation.dateEvaluated < filters.dateRange.start) return false;
       if (filters.dateRange.end && evaluation.dateEvaluated > filters.dateRange.end) return false;
       if (filters.competencyCategory) {
@@ -225,9 +225,9 @@ function App() {
       if (currentView === 'campus-overview') {
         const data = prepareCampusDataForExport(filteredCampuses);
         exportToCSV(data, 'campus-overview');
-      } else if (currentView === 'revolver-overview') {
-        const data = prepareRevolverDataForExport(filteredRevolvers);
-        exportToCSV(data, 'revolver-overview');
+      } else if (currentView === 'resolver-overview') {
+        const data = prepareResolverDataForExport(filteredResolvers);
+        exportToCSV(data, 'resolver-overview');
       }
     } else if (format === 'pdf') {
       exportToPDF('main-content', `${currentView}-report`);
@@ -238,7 +238,7 @@ function App() {
 
   const navigation = [
     { id: 'campus-overview', name: 'Campus Overview', icon: Building2 },
-    { id: 'revolver-overview', name: 'Revolver Overview', icon: Users },
+    { id: 'resolver-overview', name: 'Resolver Overview', icon: Users },
     { id: 'urgent-issues', name: 'Urgent Issues', icon: AlertTriangle }
   ];
 
@@ -354,7 +354,7 @@ function App() {
             onFilterChange={setFilters}
             onExport={handleExport}
             campuses={campuses.map(c => ({ id: c.id, name: c.name }))}
-            revolvers={revolvers.map(r => ({ id: r.id, name: r.name }))}
+            resolvers={resolvers.map(r => ({ id: r.id, name: r.name }))}
             currentView={currentView}
           />
         )}
@@ -377,9 +377,9 @@ function App() {
           />
         )}
 
-        {currentView === 'revolver-overview' && (
-          <RevolverOverview 
-            revolvers={filteredRevolvers} 
+        {currentView === 'resolver-overview' && (
+          <ResolverOverview 
+            resolvers={filteredResolvers} 
             evaluations={evaluations.length > 0 ? evaluations : mockEvaluations}
           />
         )}

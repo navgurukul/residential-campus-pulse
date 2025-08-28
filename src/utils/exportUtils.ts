@@ -78,27 +78,27 @@ export const prepareCampusDataForExport = (campuses: any[]) => {
     'Campus Name': campus.name,
     'Location': campus.location,
     'Average Score': campus.averageScore,
-    'Total Revolvers': campus.totalRevolvers,
+    'Total Resolvers': campus.totalResolvers,
     'Ranking': campus.ranking,
     'Last Evaluated': new Date(campus.lastEvaluated).toLocaleDateString()
   }));
 };
 
-export const prepareRevolverDataForExport = (revolvers: any[]) => {
-  return revolvers.map(revolver => ({
-    'Revolver Name': revolver.name,
-    'Email': revolver.email,
-    'Campuses Evaluated': revolver.campusesEvaluated,
-    'Average Score Given': revolver.averageScoreGiven,
-    'Total Evaluations': revolver.totalEvaluations,
-    'Last Activity': new Date(revolver.lastActivity).toLocaleDateString()
+export const prepareResolverDataForExport = (resolvers: any[]) => {
+  return resolvers.map(resolver => ({
+    'Resolver Name': resolver.name,
+    'Email': resolver.email,
+    'Campuses Evaluated': resolver.campusesEvaluated,
+    'Average Score Given': resolver.averageScoreGiven,
+    'Total Evaluations': resolver.totalEvaluations,
+    'Last Activity': new Date(resolver.lastActivity).toLocaleDateString()
   }));
 };
 
 export const prepareEvaluationDataForExport = (evaluations: any[]) => {
   return evaluations.map(evaluation => ({
     'Campus': evaluation.campusName,
-    'Revolver': evaluation.revolverName,
+    'Resolver': evaluation.resolverName,
     'Overall Score': evaluation.overallScore,
     'Date Evaluated': new Date(evaluation.dateEvaluated).toLocaleDateString(),
     'Status': evaluation.status,
@@ -114,12 +114,12 @@ export const prepareCampusDetailDataForExport = (campus: any, evaluations: any[]
       'Campus Name': campus.name,
       'Location': campus.location,
       'Overall Score': campus.averageScore,
-      'Total Revolvers': campus.totalRevolvers,
+      'Total Resolvers': campus.totalResolvers,
       'Ranking': campus.ranking,
       'Last Evaluated': new Date(campus.lastEvaluated).toLocaleDateString()
     },
     evaluations: campusEvaluations.map(evaluation => ({
-      'Revolver': evaluation.revolverName,
+      'Resolver': evaluation.resolverName,
       'Overall Score': evaluation.overallScore,
       'Date Evaluated': new Date(evaluation.dateEvaluated).toLocaleDateString(),
       'Competencies': evaluation.competencies.map(comp => 
