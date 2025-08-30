@@ -137,7 +137,7 @@ export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers
   
   try {
     // Try to fetch from the backend API
-    const response = await fetch('https://ng-campus-pulse.onrender.com/api/data', {
+    const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -150,7 +150,19 @@ export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const apiData: ApiResponse = await response.json();
+    const apiData = await response.json();
+    
+    // Check if we got the new format from /api/campus-data
+    if (apiData.campuses && apiData.resolvers && apiData.evaluations) {
+      console.log('✅ Received processed data from backend');
+      return {
+        campuses: apiData.campuses,
+        resolvers: apiData.resolvers,
+        evaluations: apiData.evaluations
+      };
+    }
+    
+    // Fallback to old processing if needed
     const processedData = processApiData(apiData);
     
     // Save to localStorage

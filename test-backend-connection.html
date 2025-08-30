@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Campus Pulse Backend Connection Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Check if backend is running</h3>
+        <button onclick="testBackendHealth()">Test Backend Health</button>
+        <div id="health-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Check stored data</h3>
+        <button onclick="testStoredData()">Check Stored Data</button>
+        <div id="stored-data-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Check processed campus data</h3>
+        <button onclick="testCampusData()">Get Campus Data</button>
+        <div id="campus-data-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 4: Send sample data (simulate Google Apps Script)</h3>
+        <button onclick="sendSampleData()">Send Sample Data</button>
+        <div id="sample-data-result"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://ng-campus-pulse.onrender.com';
+
+        async function testBackendHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/`);
+                const text = await response.text();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Backend is running!<br>Response: ${text}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Backend responded with error: ${response.status}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Cannot connect to backend: ${error.message}</div>`;
+            }
+        }
+
+        async function testStoredData() {
+            const resultDiv = document.getElementById('stored-data-result');
+            resultDiv.innerHTML = '<p>Checking stored data...</p>';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/debug-data`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="${data.storedDataLength > 0 ? 'success' : 'info'}">
+                            <strong>Stored Data Status:</strong><br>
+                            • Records: ${data.storedDataLength}<br>
+                            • Last Updated: ${data.lastUpdated || 'Never'}<br>
+                            • Server Time: ${data.serverTime}<br>
+                            • Message: ${data.message}<br>
+                            ${data.allColumns.length > 0 ? `• Columns: ${data.allColumns.length}` : ''}
+                        </div>
+                        ${data.sampleData ? `<pre>${JSON.stringify(data.sampleData, null, 2)}</pre>` : ''}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${response.status}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testCampusData() {
+            const resultDiv = document.getElementById('campus-data-result');
+            resultDiv.innerHTML = '<p>Getting campus data...</p>';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/campus-data`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="${data.campuses && data.campuses.length > 0 ? 'success' : 'info'}">
+                            <strong>Campus Data:</strong><br>
+                            • Campuses: ${data.campuses ? data.campuses.length : 0}<br>
+                            • Resolvers: ${data.resolvers ? data.resolvers.length : 0}<br>
+                            • Evaluations: ${data.evaluations ? data.evaluations.length : 0}<br>
+                            • Last Updated: ${data.lastUpdated || 'Never'}<br>
+                            • Record Count: ${data.recordCount || 0}
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${response.status}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function sendSampleData() {
+            const resultDiv = document.getElementById('sample-data-result');
+            resultDiv.innerHTML = '<p>Sending sample data...</p>';
+            
+            // Sample data that matches your Google Form structure
+            const sampleData = [
+                {
+                    "Timestamp": new Date().toISOString(),
+                    "Choose the campus you are referring to ": "Test Campus",
+                    "Name ": "Test Resolver",
+                    "Email Address": "test@navgurukul.org",
+                    "Meditation (Ana Pana for most and students attending Vipassana Camps) ": "Level 5",
+                    "Nutrition Supplementation + Yoga/Weight Training": "Level 4",
+                    "Houses and Reward Systems": "Level 6",
+                    "Etiocracy, Co-Creation & Ownership": "Level 3",
+                    "Campus interactions": "Level 5",
+                    "Gratitude": "Level 7",
+                    "Hackathons": "Level 4",
+                    "English Communication & Comprehension": "Level 5",
+                    "Learning Environment & Peer Support": "Level 6",
+                    "Process Principles Understanding & Implementation": "Level 4",
+                    "Life Skills Implementation \n\n(is english class + other other spaces on campus follow the framework of Activity Design and faciliation?\n\n1) Placements+AI (80%)\n2) Inner work, (10%)\n3) Ecology, Gender (10%) ": "Level 5",
+                    "Is there anything that you find pressing in the campus, that needs urgent attention?": "Test urgent issue for verification",
+                    "Is there anything that you find in the campus, that directly needs escalation? This answer would be mailed to senior most team for urgent attention.": "Test escalation issue"
+                }
+            ];
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/import-data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(sampleData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Sample data sent successfully!<br>
+                            Status: ${result.status}<br>
+                            Message: ${result.message}<br>
+                            Records: ${result.recordsReceived}
+                        </div>
+                        <p><strong>Next:</strong> Click "Check Stored Data" and "Get Campus Data" to verify it was processed.</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${response.status} - ${result.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run health check on page load
+        window.onload = function() {
+            testBackendHealth();
+        };
+    </script>
+</body>
+</html>

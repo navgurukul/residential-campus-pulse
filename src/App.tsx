@@ -91,7 +91,8 @@ function App() {
         const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data');
         const data = await response.json();
         
-        if (data.campuses && data.resolvers && data.evaluations) {
+        if (data.campuses && data.resolvers && data.evaluations && 
+            data.campuses.length > 0 && data.resolvers.length > 0) {
           // Use data directly from backend (already processed)
           setCampuses(data.campuses);
           setResolvers(data.resolvers);
@@ -102,19 +103,25 @@ function App() {
           localStorage.setItem('campus-pulse-data', JSON.stringify(data));
           localStorage.setItem('campus-pulse-timestamp', Date.now().toString());
           
-          console.log('Data loaded from backend and cached:', {
+          console.log('✅ Data loaded from backend and cached:', {
             campuses: data.campuses.length,
             resolvers: data.resolvers.length,
             evaluations: data.evaluations.length,
             lastUpdated: data.lastUpdated
           });
         } else {
-          // Fallback to mock data if backend has no data yet
-          console.log('No data from backend, using mock data');
+          // Backend has no data - show clear message and use mock data
+          console.warn('⚠️ Backend has no data. This usually means:');
+          console.warn('1. Google Apps Script hasn\'t pushed data yet');
+          console.warn('2. Backend server restarted and lost in-memory data');
+          console.warn('3. No form submissions have been processed');
+          console.warn('Using mock data as fallback...');
+          
           const { campuses, resolvers, evaluations } = processApiData({ responses: [] });
           setCampuses(campuses);
           setResolvers(resolvers);
           setEvaluations(mockEvaluations);
+          setLastUpdated('No real data - using mock data for demo');
         }
       } catch (error) {
         console.error('Error fetching data from backend:', error);
@@ -265,23 +272,30 @@ function App() {
             <div className="flex items-center space-x-2 md:space-x-4">
               <div className="text-xs md:text-sm text-gray-500 whitespace-nowrap">
                 {lastUpdated ? (
-                  <div className="flex flex-col md:flex-row md:items-center">
-                    <span className="hidden md:inline">Data cached: </span>
-                    <span className="md:hidden">Cached: </span>
-                    <span className="font-mono">
-                      {new Date(lastUpdated).toLocaleString('en-IN', {
-                        timeZone: 'Asia/Kolkata',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true
-                      })}
-                    </span>
-                    <span className="text-xs text-gray-400 ml-1">(Persistent cache - Ctrl+Shift+C to clear)</span>
-                  </div>
+                  lastUpdated.includes('mock data') ? (
+                    <div className="flex flex-col md:flex-row md:items-center">
+                      <span className="text-orange-600 font-medium">⚠️ No Real Data Available</span>
+                      <span className="text-xs text-orange-500 ml-1">(Using demo data - Admin needs to sync from Google Sheets)</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col md:flex-row md:items-center">
+                      <span className="hidden md:inline">Data cached: </span>
+                      <span className="md:hidden">Cached: </span>
+                      <span className="font-mono">
+                        {new Date(lastUpdated).toLocaleString('en-IN', {
+                          timeZone: 'Asia/Kolkata',
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: true
+                        })}
+                      </span>
+                      <span className="text-xs text-gray-400 ml-1">(Persistent cache - Ctrl+Shift+C to clear)</span>
+                    </div>
+                  )
                 ) : (
                   <>Data cleared for privacy - Admin refresh required</>
                 )}

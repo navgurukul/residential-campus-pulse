@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Pulse Data Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Campus Pulse Data Loading Test</h1>
+    <p>This page will test if your data is loading correctly from the backend API.</p>
+    
+    <button onclick="testApiConnection()">Test API Connection</button>
+    <button onclick="clearCache()">Clear Cache</button>
+    <button onclick="testDataProcessing()">Test Data Processing</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'https://ng-campus-pulse.onrender.com/api/data';
+        const results = document.getElementById('results');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+        }
+
+        async function testApiConnection() {
+            clearResults();
+            addResult('🔄 Testing API connection...', 'info');
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    signal: AbortSignal.timeout(10000)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                addResult('✅ API connection successful!', 'success');
+                addResult(`📊 Data received: ${data.responses?.length || 0} responses`, 'success');
+                
+                if (data.responses && data.responses.length > 0) {
+                    const sample = data.responses[0];
+                    addResult(`📝 Sample response fields: ${Object.keys(sample).join(', ')}`, 'info');
+                    addResult(`<pre>${JSON.stringify(sample, null, 2)}</pre>`, 'info');
+                } else {
+                    addResult('⚠️ No response data found in API', 'error');
+                }
+
+            } catch (error) {
+                addResult(`❌ API connection failed: ${error.message}`, 'error');
+                addResult('💡 Make sure your Google Apps Script is running and has pushed data to the backend', 'info');
+            }
+        }
+
+        function clearCache() {
+            localStorage.removeItem('campus_pulse_data');
+            localStorage.removeItem('campus_pulse_last_sync');
+            addResult('🗑️ Cache cleared! Refresh the main app to fetch fresh data.', 'success');
+        }
+
+        async function testDataProcessing() {
+            clearResults();
+            addResult('🔄 Testing data processing...', 'info');
+            
+            try {
+                const response = await fetch(API_URL);
+                const apiData = await response.json();
+                
+                if (!apiData || !apiData.responses) {
+                    addResult('❌ No data to process', 'error');
+                    return;
+                }
+
+                // Simulate the data processing logic
+                const validResponses = apiData.responses.filter(r => r.name && r.timestamp && r.campus);
+                addResult(`✅ Valid responses: ${validResponses.length} out of ${apiData.responses.length}`, 'success');
+
+                const revolverMap = new Map();
+                const campusMap = new Map();
+
+                validResponses.forEach((response, index) => {
+                    const { name, email, timestamp, level, framework } = response;
+                    const campus = response.campus;
+
+                    // Process revolvers
+                    if (!revolverMap.has(name)) {
+                        revolverMap.set(name, {
+                            id: `${name}-${index}`,
+                            name,
+                            email: email || 'N/A',
+                            totalEvaluations: 0,
+                            lastActivity: '1970-01-01T00:00:00.000Z',
+                            campuses: new Set(),
+                            averageScoreGiven: Math.random() * 4 + 5,
+                            level,
+                            framework,
+                        });
+                    }
+                    const revolver = revolverMap.get(name);
+                    revolver.totalEvaluations += 1;
+                    if (new Date(timestamp) > new Date(revolver.lastActivity)) {
+                        revolver.lastActivity = timestamp;
+                    }
+                    revolver.campuses.add(campus);
+
+                    // Process campuses
+                    if (!campusMap.has(campus)) {
+                        campusMap.set(campus, {
+                            id: `${campus}-${index}`,
+                            name: `${campus} Campus`,
+                            location: campus,
+                            lastEvaluated: '1970-01-01T00:00:00.000Z',
+                            revolvers: new Set(),
+                            averageScore: Math.random() * 4 + 5,
+                        });
+                    }
+                    const campusEntry = campusMap.get(campus);
+                    if (new Date(timestamp) > new Date(campusEntry.lastEvaluated)) {
+                        campusEntry.lastEvaluated = timestamp;
+                    }
+                    campusEntry.revolvers.add(name);
+                });
+
+                const revolvers = Array.from(revolverMap.values()).map(r => ({
+                    ...r,
+                    campusesEvaluated: r.campuses.size,
+                }));
+
+                const campuses = Array.from(campusMap.values()).map(c => ({
+                    ...c,
+                    totalRevolvers: c.revolvers.size,
+                    ranking: c.averageScore >= 8 ? 'High' : c.averageScore >= 6.5 ? 'Medium' : 'Low',
+                }));
+
+                addResult(`✅ Processed data successfully!`, 'success');
+                addResult(`📊 Campuses: ${campuses.length}, Revolvers: ${revolvers.length}`, 'success');
+                
+                if (campuses.length > 0) {
+                    addResult(`<pre>Sample Campus: ${JSON.stringify(campuses[0], null, 2)}</pre>`, 'info');
+                }
+                
+                if (revolvers.length > 0) {
+                    addResult(`<pre>Sample Revolver: ${JSON.stringify(revolvers[0], null, 2)}</pre>`, 'info');
+                }
+
+            } catch (error) {
+                addResult(`❌ Data processing failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run API test on page load
+        window.onload = () => {
+            addResult('🚀 Campus Pulse Data Loading Test Ready', 'info');
+            addResult('Click "Test API Connection" to check if your backend is working', 'info');
+        };
+    </script>
+</body>
+</html>

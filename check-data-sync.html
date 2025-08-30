@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Pulse Data Sync Checker</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border-left: 4px solid;
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border-left-color: #28a745;
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border-left-color: #dc3545;
+        }
+        .warning { 
+            background: #fff3cd; 
+            color: #856404; 
+            border-left-color: #ffc107;
+        }
+        .info { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            border-left-color: #17a2b8;
+        }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 5px; 
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 5px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover { background: #0056b3; }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #c82333; }
+        button.success { background: #28a745; }
+        button.success:hover { background: #218838; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .metric {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Campus Pulse Data Sync Checker</h1>
+        <p>This tool helps diagnose why users see no data on the dashboard.</p>
+        
+        <div class="grid">
+            <button onclick="checkBackendStatus()">🏥 Check Backend Health</button>
+            <button onclick="checkDataStatus()">📊 Check Data Status</button>
+            <button onclick="testDataEndpoints()">🔗 Test All Endpoints</button>
+            <button class="danger" onclick="clearAllCache()">🗑️ Clear All Cache</button>
+        </div>
+        
+        <div id="metrics" class="grid" style="display: none;">
+            <div class="metric">
+                <div class="metric-value" id="campusCount">-</div>
+                <div class="metric-label">Campuses</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="resolverCount">-</div>
+                <div class="metric-label">Resolvers</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="evaluationCount">-</div>
+                <div class="metric-label">Evaluations</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="lastSync">-</div>
+                <div class="metric-label">Last Sync</div>
+            </div>
+        </div>
+        
+        <div id="results"></div>
+        
+        <div class="status info">
+            <h3>🚨 If Users See No Data:</h3>
+            <ol>
+                <li><strong>Check Backend Status</strong> - Click "Check Backend Health" above</li>
+                <li><strong>Run Google Apps Script</strong> - Execute <code>pushDataToBackend()</code> function</li>
+                <li><strong>Verify Data Sync</strong> - Click "Check Data Status" to confirm</li>
+                <li><strong>Clear User Cache</strong> - Users can press Ctrl+Shift+C on dashboard</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://ng-campus-pulse.onrender.com/api';
+        const results = document.getElementById('results');
+        const metrics = document.getElementById('metrics');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+        }
+
+        function updateMetrics(data) {
+            if (data.campuses !== undefined) {
+                document.getElementById('campusCount').textContent = data.campuses.length || 0;
+            }
+            if (data.resolvers !== undefined) {
+                document.getElementById('resolverCount').textContent = data.resolvers.length || 0;
+            }
+            if (data.evaluations !== undefined) {
+                document.getElementById('evaluationCount').textContent = data.evaluations.length || 0;
+            }
+            if (data.lastUpdated) {
+                const date = new Date(data.lastUpdated);
+                document.getElementById('lastSync').textContent = date.toLocaleDateString();
+            }
+            metrics.style.display = 'grid';
+        }
+
+        async function checkBackendStatus() {
+            clearResults();
+            addResult('🔄 Checking backend health...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/../`, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(10000)
+                });
+
+                if (response.ok) {
+                    addResult('✅ Backend server is running and accessible', 'success');
+                    
+                    // Also check debug endpoint
+                    const debugResponse = await fetch(`${API_BASE}/debug-data`);
+                    const debugData = await debugResponse.json();
+                    
+                    addResult(`📊 Backend has ${debugData.storedDataLength} raw data records`, 
+                        debugData.storedDataLength > 0 ? 'success' : 'warning');
+                    
+                    if (debugData.lastUpdated) {
+                        addResult(`⏰ Last data update: ${new Date(debugData.lastUpdated).toLocaleString()}`, 'info');
+                    } else {
+                        addResult('⚠️ No data has been pushed from Google Apps Script yet', 'warning');
+                    }
+                    
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+            } catch (error) {
+                addResult(`❌ Backend server is not accessible: ${error.message}`, 'error');
+                addResult('💡 This means the Render.com deployment may be down or starting up', 'info');
+            }
+        }
+
+        async function checkDataStatus() {
+            clearResults();
+            addResult('🔄 Checking data availability...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/campus-data`);
+                const data = await response.json();
+                
+                updateMetrics(data);
+                
+                if (data.campuses && data.campuses.length > 0) {
+                    addResult(`✅ Data is available! Found ${data.campuses.length} campuses, ${data.resolvers.length} resolvers, ${data.evaluations.length} evaluations`, 'success');
+                    
+                    if (data.lastUpdated) {
+                        addResult(`📅 Data last updated: ${new Date(data.lastUpdated).toLocaleString()}`, 'info');
+                    }
+                    
+                    // Show sample data
+                    addResult(`<h4>Sample Campus Data:</h4><pre>${JSON.stringify(data.campuses[0], null, 2)}</pre>`, 'info');
+                    
+                } else {
+                    addResult('⚠️ Backend has no data! This is why users see empty dashboard.', 'warning');
+                    addResult('🔧 <strong>Solution:</strong> Run <code>pushDataToBackend()</code> in Google Apps Script', 'warning');
+                    addResult(`<h4>Empty Response:</h4><pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Failed to check data status: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDataEndpoints() {
+            clearResults();
+            addResult('🔄 Testing all API endpoints...', 'info');
+            
+            const endpoints = [
+                { name: 'Campus Data', url: `${API_BASE}/campus-data` },
+                { name: 'Urgent Issues', url: `${API_BASE}/urgent-issues` },
+                { name: 'Debug Data', url: `${API_BASE}/debug-data` }
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    addResult(`Testing ${endpoint.name}...`, 'info');
+                    const response = await fetch(endpoint.url);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        addResult(`✅ ${endpoint.name}: Working (${JSON.stringify(data).length} bytes)`, 'success');
+                    } else {
+                        addResult(`⚠️ ${endpoint.name}: HTTP ${response.status}`, 'warning');
+                    }
+                    
+                } catch (error) {
+                    addResult(`❌ ${endpoint.name}: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        function clearAllCache() {
+            // Clear localStorage
+            localStorage.removeItem('campus-pulse-data');
+            localStorage.removeItem('campus-pulse-timestamp');
+            localStorage.removeItem('campus_pulse_data');
+            localStorage.removeItem('campus_pulse_last_sync');
+            
+            addResult('🗑️ All cache cleared from this browser', 'success');
+            addResult('💡 Users should refresh the main dashboard to see changes', 'info');
+        }
+
+        // Auto-run basic checks on page load
+        window.onload = () => {
+            addResult('🚀 Campus Pulse Data Sync Checker Ready', 'info');
+            addResult('Click the buttons above to diagnose data sync issues', 'info');
+        };
+    </script>
+</body>
+</html>
