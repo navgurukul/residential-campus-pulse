@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Building2, Users, BarChart3, Settings, Lock, AlertTriangle } from 'lucide-react';
+import { Building2, Users, BarChart3, Settings, Lock, AlertTriangle, RefreshCw } from 'lucide-react';
 import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
 import ResolverOverview from './components/ResolverOverview';
@@ -146,6 +146,44 @@ function App() {
     console.log('Cache cleared - refresh page to fetch fresh data');
     // Optionally reload the page to fetch fresh data
     window.location.reload();
+  };
+
+  // Function to refresh data (force fetch from backend)
+  const refreshData = async () => {
+    setLoading(true);
+    
+    // Clear cache first
+    localStorage.removeItem('campus-pulse-data');
+    localStorage.removeItem('campus-pulse-timestamp');
+    
+    try {
+      console.log('🔄 Force refreshing data from backend...');
+      const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data');
+      const data = await response.json();
+      
+      if (data.campuses && data.resolvers && data.evaluations) {
+        setCampuses(data.campuses);
+        setResolvers(data.resolvers);
+        setEvaluations(data.evaluations);
+        setLastUpdated(data.lastUpdated);
+        
+        // Cache the fresh data
+        localStorage.setItem('campus-pulse-data', JSON.stringify(data));
+        localStorage.setItem('campus-pulse-timestamp', Date.now().toString());
+        
+        console.log('✅ Data refreshed successfully:', {
+          campuses: data.campuses.length,
+          resolvers: data.resolvers.length,
+          evaluations: data.evaluations.length
+        });
+      } else {
+        console.warn('⚠️ No data available from backend');
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Add keyboard shortcut for cache clearing (Ctrl+Shift+C)
@@ -300,6 +338,14 @@ function App() {
                   <>Data cleared for privacy - Admin refresh required</>
                 )}
               </div>
+              <button
+                onClick={refreshData}
+                className="p-2 text-gray-400 hover:text-blue-600 transition-colors duration-200 flex-shrink-0"
+                title="Refresh data from backend"
+                disabled={loading}
+              >
+                <RefreshCw className={`w-4 h-4 md:w-5 md:h-5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
               <div
                 className="p-2 text-gray-400 flex-shrink-0"
                 title="Data refresh restricted to admin access only"
