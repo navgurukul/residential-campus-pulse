@@ -203,7 +203,7 @@ function App() {
 
   // Filter and sort data based on current filters and sort configuration
   const filteredCampuses = useMemo(() => {
-    const sortableCampuses = [...campuses];
+    let sortableCampuses = [...campuses];
     if (sortConfig !== null) {
       sortableCampuses.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {

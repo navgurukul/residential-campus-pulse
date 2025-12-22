@@ -21,7 +21,7 @@ interface UrgentIssue {
   type: 'urgent' | 'escalation';
 }
 
-const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, onCampusSelect, onSort }) => {
+const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, onCampusSelect, onSort, sortConfig }) => {
   const [selectedCompetency, setSelectedCompetency] = useState<string>('');
   const [urgentIssues, setUrgentIssues] = useState<UrgentIssue[]>([]);
   const [loading, setLoading] = useState(false);
@@ -140,7 +140,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
         : campus.averageScore,
       resolvers: campus.totalResolvers
     }));
-  }, [campuses, selectedCompetency]); // Remove 'evaluations' from dependencies and use getCompetencyScoreForCampus
+  }, [campuses, selectedCompetency, evaluations]); // Include evaluations as getCompetencyScoreForCampus depends on it
 
   // Only include active campuses in level distribution
   const activeCampuses = campuses.filter(campus => campus.status !== 'Relocated');

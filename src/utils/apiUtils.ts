@@ -126,6 +126,10 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
 
 // Enhanced API function with local storage integration
 // PERFORMANCE: Add request deduplication to prevent redundant API calls
+// Note: This intentionally uses module-level state to share pending requests across all callers.
+// Multiple simultaneous calls will share the same promise, preventing duplicate API requests.
+// The cleanup (setting pendingRequest to null) happens in the finally block, ensuring proper cleanup
+// even if the promise rejects or is aborted.
 let pendingRequest: Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> | null = null;
 
 export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> => {
