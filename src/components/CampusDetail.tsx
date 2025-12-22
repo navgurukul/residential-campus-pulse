@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { ArrowLeft, MessageSquare, Calendar, User, Download, FileText, TrendingUp, Award, AlertCircle, Users } from 'lucide-react';
 import { Campus, Evaluation } from '../types';
@@ -34,6 +34,33 @@ const parseMarkdown = (text: string) => {
   });
 };
 
+// Convert score to level-based ranking
+const getScoreLevel = (score: number): { level: string; color: string; bgColor: string } => {
+  if (score >= 6.0) return { level: 'Level 4', color: 'text-green-700', bgColor: 'bg-green-600' };
+  if (score >= 4.0) return { level: 'Level 3', color: 'text-blue-700', bgColor: 'bg-blue-600' };
+  if (score >= 2.0) return { level: 'Level 2', color: 'text-yellow-700', bgColor: 'bg-yellow-600' };
+  if (score >= 1.0) return { level: 'Level 1', color: 'text-orange-700', bgColor: 'bg-orange-600' };
+  return { level: 'Level 0', color: 'text-red-700', bgColor: 'bg-red-600' };
+};
+
+// Helper function to shorten category names for radar chart
+const shortenCategoryName = (category: string): string => {
+  const shortNames: { [key: string]: string } = {
+    'Vipassana': 'Vipassana',
+    'Nutrition Supplementation + Yoga/Weight Training': 'Nutrition + Yoga',
+    'Houses and Reward Systems': 'Houses & Rewards',
+    'Etiocracy, Co-Creation & Ownership': 'Etiocracy & Ownership',
+    'Campus interactions': 'Campus Interactions',
+    'Gratitude': 'Gratitude',
+    'Hackathons': 'Hackathons',
+    'English Communication & Comprehension': 'English Comm.',
+    'Learning Environment & Peer Support': 'Learning Environment',
+    'Process Principles Understanding & Implementation': 'Process Principles',
+    'Life Skills Implementation': 'Life Skills'
+  };
+  return shortNames[category] || category;
+};
+
 interface CampusDetailProps {
   campus: Campus;
   evaluations: Evaluation[];
@@ -41,7 +68,54 @@ interface CampusDetailProps {
 }
 
 const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack }) => {
-  // Safety checks to prevent crashes
+  // PERFORMANCE: Memoize campus evaluations to avoid re-filtering on every render
+  const campusEvaluations = useMemo(() => {
+    if (!campus || !evaluations || !Array.isArray(evaluations)) return [];
+    return evaluations.filter(evaluation => evaluation.campusId === campus.id);
+  }, [evaluations, campus]);
+  
+  // Check if this is a new campus with no evaluations
+  const hasNoEvaluations = campusEvaluations.length === 0;
+  
+  // PERFORMANCE: Memoize campus level computation
+  const campusLevel = useMemo(() => {
+    if (!campus) return { level: 'Level 0', color: 'text-red-700', bgColor: 'bg-red-600' };
+    return getScoreLevel(campus.averageScore);
+  }, [campus]);
+  
+  // PERFORMANCE: Memoize radar chart data
+  const radarData = useMemo(() => {
+    if (campusEvaluations.length === 0) return [];
+    
+    return competencyCategories.map(category => {
+      // Get all scores for this competency across all evaluations
+      const competencyScores = campusEvaluations
+        .flatMap(evaluation => evaluation.competencies)
+        .filter(comp => comp.category === category)
+        .map(comp => comp.score);
+      
+      // Calculate average score for this competency
+      const averageScore = competencyScores.length > 0 
+        ? competencyScores.reduce((sum, score) => sum + score, 0) / competencyScores.length
+        : 0;
+      
+      return {
+        category: shortenCategoryName(category),
+        score: Number(averageScore.toFixed(1)),
+        maxScore: 7
+      };
+    });
+  }, [campusEvaluations]);
+
+  // PERFORMANCE: Memoize resolver scores
+  const resolverScores = useMemo(() => {
+    return campusEvaluations.map(evaluation => ({
+      resolver: evaluation.resolverName.split(' ').pop(), // Last name
+      score: evaluation.overallScore
+    }));
+  }, [campusEvaluations]);
+
+  // Safety checks to prevent crashes - check AFTER hooks
   if (!campus) {
     return <div className="flex items-center justify-center h-64">Campus not found</div>;
   }
@@ -49,68 +123,6 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
   if (!evaluations || !Array.isArray(evaluations)) {
     return <div className="flex items-center justify-center h-64">Loading evaluation data...</div>;
   }
-
-  const campusEvaluations = evaluations.filter(evaluation => evaluation.campusId === campus.id);
-  
-  // Check if this is a new campus with no evaluations
-  const hasNoEvaluations = campusEvaluations.length === 0;
-  
-  // Convert score to level-based ranking
-  const getScoreLevel = (score: number): { level: string; color: string; bgColor: string } => {
-    if (score >= 6.0) return { level: 'Level 4', color: 'text-green-700', bgColor: 'bg-green-600' };
-    if (score >= 4.0) return { level: 'Level 3', color: 'text-blue-700', bgColor: 'bg-blue-600' };
-    if (score >= 2.0) return { level: 'Level 2', color: 'text-yellow-700', bgColor: 'bg-yellow-600' };
-    if (score >= 1.0) return { level: 'Level 1', color: 'text-orange-700', bgColor: 'bg-orange-600' };
-    return { level: 'Level 0', color: 'text-red-700', bgColor: 'bg-red-600' };
-  };
-  
-  const campusLevel = getScoreLevel(campus.averageScore);
-  
-  // Helper function to shorten category names for radar chart
-  const shortenCategoryName = (category: string): string => {
-    const shortNames: { [key: string]: string } = {
-      'Vipassana': 'Vipassana',
-      'Nutrition Supplementation + Yoga/Weight Training': 'Nutrition + Yoga',
-      'Houses and Reward Systems': 'Houses & Rewards',
-      'Etiocracy, Co-Creation & Ownership': 'Etiocracy & Ownership',
-      'Campus interactions': 'Campus Interactions',
-      'Gratitude': 'Gratitude',
-      'Hackathons': 'Hackathons',
-      'English Communication & Comprehension': 'English Comm.',
-      'Learning Environment & Peer Support': 'Learning Environment',
-      'Process Principles Understanding & Implementation': 'Process Principles',
-      'Life Skills Implementation': 'Life Skills'
-    };
-    return shortNames[category] || category;
-  };
-
-  // Prepare radar chart data - calculate average scores across all evaluations
-  const radarData = campusEvaluations.length > 0 
-    ? competencyCategories.map(category => {
-        // Get all scores for this competency across all evaluations
-        const competencyScores = campusEvaluations
-          .flatMap(evaluation => evaluation.competencies)
-          .filter(comp => comp.category === category)
-          .map(comp => comp.score);
-        
-        // Calculate average score for this competency
-        const averageScore = competencyScores.length > 0 
-          ? competencyScores.reduce((sum, score) => sum + score, 0) / competencyScores.length
-          : 0;
-        
-        return {
-          category: shortenCategoryName(category),
-          score: Number(averageScore.toFixed(1)),
-          maxScore: 7
-        };
-      })
-    : [];
-
-  // Prepare resolver scores chart data
-  const resolverScores = campusEvaluations.map(evaluation => ({
-    resolver: evaluation.resolverName.split(' ').pop(), // Last name
-    score: evaluation.overallScore
-  }));
 
   const handleExportPDF = () => {
     exportToPDF('campus-detail-content', `${campus.name}-campus-report`);

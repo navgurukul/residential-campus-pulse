@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle, Clock, MapPin, User, Mail, Calendar, RefreshCw } from 'lucide-react';
 
 
@@ -32,7 +32,15 @@ const UrgentIssues: React.FC = () => {
       setLoading(true);
       console.log('Fetching urgent issues from API...');
       
-      const response = await fetch('https://ng-campus-pulse.onrender.com/api/urgent-issues');
+      // PERFORMANCE: Add abort controller for cleanup
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
+      const response = await fetch('https://ng-campus-pulse.onrender.com/api/urgent-issues', {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
       console.log('API Response status:', response.status);
       
       if (!response.ok) {
@@ -46,7 +54,11 @@ const UrgentIssues: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error('Error fetching urgent issues:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      if ((err as Error).name === 'AbortError') {
+        setError('Request timeout - please try again');
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -55,6 +67,14 @@ const UrgentIssues: React.FC = () => {
   useEffect(() => {
     fetchUrgentIssues();
   }, []);
+
+  // PERFORMANCE: Memoize expensive sorting operation to avoid re-computing on every render
+  const allIssues = useMemo(() => {
+    if (!data) return [];
+    return [...data.urgentIssues, ...data.escalationIssues].sort(
+      (a, b) => new Date(b.dateEvaluated).getTime() - new Date(a.dateEvaluated).getTime()
+    );
+  }, [data]);
 
   if (loading) {
     return (
@@ -90,10 +110,6 @@ const UrgentIssues: React.FC = () => {
       </div>
     );
   }
-
-  const allIssues = [...data.urgentIssues, ...data.escalationIssues].sort(
-    (a, b) => new Date(b.dateEvaluated).getTime() - new Date(a.dateEvaluated).getTime()
-  );
 
   return (
     <div className="space-y-6">

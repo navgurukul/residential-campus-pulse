@@ -161,6 +161,61 @@ function processRawDataForFrontend(rawData) {
   );
   console.log('Feedback-related columns found:', feedbackColumns);
 
+  // PERFORMANCE OPTIMIZATION: Create column index maps once to avoid repeated lookups
+  const columnIndexMap = new Map();
+  availableColumns.forEach(col => {
+    const colLower = col.toLowerCase();
+    columnIndexMap.set(col, colLower);
+  });
+
+  // Pre-compute competency mapping lookups for better performance
+  const competencyMappings = [
+    {
+      name: 'Meditation (Ana Pana for most and students attending Vipassana Camps)',
+      patterns: ['meditation', 'vipassana', 'ana pana']
+    },
+    {
+      name: 'Nutrition Supplementation + Yoga/Weight Training',
+      patterns: ['nutrition supplementation', 'yoga/weight training', 'nutrition', 'yoga']
+    },
+    {
+      name: 'Houses and Reward Systems',
+      patterns: ['houses and reward systems', 'houses', 'reward systems']
+    },
+    {
+      name: 'Etiocracy, Co-Creation & Ownership',
+      patterns: ['etiocracy', 'co-creation', 'ownership']
+    },
+    {
+      name: 'Campus interactions',
+      patterns: ['campus interactions', 'interactions']
+    },
+    {
+      name: 'Gratitude',
+      patterns: ['gratitude']
+    },
+    {
+      name: 'Hackathons',
+      patterns: ['hackathons', 'hackathon']
+    },
+    {
+      name: 'English Communication & Comprehension',
+      patterns: ['english communication', 'communication', 'comprehension']
+    },
+    {
+      name: 'Learning Environment & Peer Support',
+      patterns: ['learning environment', 'peer support']
+    },
+    {
+      name: 'Process Principles Understanding & Implementation',
+      patterns: ['process principles', 'understanding & implementation']
+    },
+    {
+      name: 'Life Skills Implementation',
+      patterns: ['life skills implementation', 'life skills']
+    }
+  ];
+
   // Group data by campus to aggregate scores and deduplicate resolvers by email
   const campusMap = new Map();
   const resolverMap = new Map(); // Use email as key to deduplicate resolvers
@@ -376,83 +431,46 @@ function processRawDataForFrontend(rawData) {
     ], `Comprehensive evaluation of ${campusName}. Good performance across most areas with opportunities for improvement.`);
 
     // Extract competency-specific feedback/comments with new form structure
-    const allColumns = Object.keys(row);
-    
-    // Map competency names to their exact form field patterns
-    const competencyMappings = [
-      {
-        name: 'Meditation (Ana Pana for most and students attending Vipassana Camps)',
-        patterns: ['meditation', 'vipassana', 'ana pana']
-      },
-      {
-        name: 'Nutrition Supplementation + Yoga/Weight Training',
-        patterns: ['nutrition supplementation', 'yoga/weight training', 'nutrition', 'yoga']
-      },
-      {
-        name: 'Houses and Reward Systems',
-        patterns: ['houses and reward systems', 'houses', 'reward systems']
-      },
-      {
-        name: 'Etiocracy, Co-Creation & Ownership',
-        patterns: ['etiocracy', 'co-creation', 'ownership']
-      },
-      {
-        name: 'Campus interactions',
-        patterns: ['campus interactions', 'interactions']
-      },
-      {
-        name: 'Gratitude',
-        patterns: ['gratitude']
-      },
-      {
-        name: 'Hackathons',
-        patterns: ['hackathons', 'hackathon']
-      },
-      {
-        name: 'English Communication & Comprehension',
-        patterns: ['english communication', 'communication', 'comprehension']
-      },
-      {
-        name: 'Learning Environment & Peer Support',
-        patterns: ['learning environment', 'peer support']
-      },
-      {
-        name: 'Process Principles Understanding & Implementation',
-        patterns: ['process principles', 'understanding & implementation']
-      },
-      {
-        name: 'Life Skills Implementation',
-        patterns: ['life skills implementation', 'life skills']
-      }
-    ];
+    // PERFORMANCE: Reuse the pre-computed allColumns from earlier
+    const allColumns = availableColumns;
     
     const competencyFeedback = {};
     
-    // Process each competency mapping
+    // PERFORMANCE: Pre-filter columns by type to avoid repeated iteration
+    const whyColumnCache = new Map();
+    const shareColumnCache = new Map();
+    
     competencyMappings.forEach(competency => {
-      // Look for "Why have you marked" questions (compulsory)
-      const whyColumns = allColumns.filter(col => {
-        const colLower = col.toLowerCase();
+      const competencyPatterns = competency.patterns;
+      
+      // Cache why and share columns for this competency
+      const whyCols = allColumns.filter(col => {
+        const colLower = columnIndexMap.get(col);
         return colLower.includes('why') && 
                colLower.includes('marked') &&
                colLower.includes('level') &&
                colLower.includes('bracket') &&
-               competency.patterns.some(pattern => 
-                 colLower.includes(pattern.toLowerCase())
-               );
+               competencyPatterns.some(pattern => colLower.includes(pattern.toLowerCase()));
       });
       
-      // Look for "Is there anything else you would like to share" questions (optional)
-      const shareColumns = allColumns.filter(col => {
-        const colLower = col.toLowerCase();
+      const shareCols = allColumns.filter(col => {
+        const colLower = columnIndexMap.get(col);
         return colLower.includes('is there anything') && 
                colLower.includes('share') &&
                colLower.includes('competency levels') &&
                colLower.includes('bracket') &&
-               competency.patterns.some(pattern => 
-                 colLower.includes(pattern.toLowerCase())
-               );
+               competencyPatterns.some(pattern => colLower.includes(pattern.toLowerCase()));
       });
+      
+      whyColumnCache.set(competency.name, whyCols);
+      shareColumnCache.set(competency.name, shareCols);
+    });
+    
+    // Process each competency mapping
+    competencyMappings.forEach(competency => {
+      // PERFORMANCE: Use cached columns instead of filtering every time
+      const whyColumns = whyColumnCache.get(competency.name) || [];
+      const shareColumns = shareColumnCache.get(competency.name) || [];
       
       let competencyComments = [];
       

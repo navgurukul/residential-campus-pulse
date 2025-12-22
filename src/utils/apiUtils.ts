@@ -125,79 +125,117 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
 };
 
 // Enhanced API function with local storage integration
+// PERFORMANCE: Add request deduplication to prevent redundant API calls
+let pendingRequest: Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> | null = null;
+
 export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> => {
-  // First, try to get cached data
-  const cachedData = LocalStorageManager.getCachedCampusData();
-  if (cachedData) {
-    console.log('📦 Using cached data, age:', LocalStorageManager.getCacheAgeMinutes(), 'minutes');
-    return cachedData;
+  // PERFORMANCE: If there's already a pending request, return it instead of making a new one
+  if (pendingRequest) {
+    console.log('🔄 Reusing pending request...');
+    return pendingRequest;
   }
 
-  console.log('🌐 Fetching fresh data from API...');
-  
-  try {
-    // Try to fetch from the backend API
-    const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // Add timeout
-      signal: AbortSignal.timeout(10000) // 10 second timeout
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const apiData = await response.json();
-    
-    // Check if we got the new format from /api/campus-data
-    if (apiData.campuses && apiData.resolvers && apiData.evaluations) {
-      console.log('✅ Received processed data from backend');
-      return {
-        campuses: apiData.campuses,
-        resolvers: apiData.resolvers,
-        evaluations: apiData.evaluations
-      };
-    }
-    
-    // Fallback to old processing if needed
-    const processedData = processApiData(apiData);
-    
-    // Save to localStorage
-    LocalStorageManager.saveCampusData(
-      processedData.campuses, 
-      processedData.resolvers, 
-      processedData.evaluations
-    );
-    
-    console.log('✅ Fresh data fetched and cached');
-    return processedData;
-    
-  } catch (error) {
-    console.error('❌ API fetch failed:', error);
-    
-    // Try to use expired cache as fallback
-    const expiredCache = localStorage.getItem('campus_pulse_data');
-    if (expiredCache) {
-      try {
-        const cachedData = JSON.parse(expiredCache);
-        console.log('📦 Using expired cache as fallback');
-        return {
-          campuses: cachedData.campuses || [],
-          resolvers: cachedData.resolvers || [],
-          evaluations: cachedData.evaluations || []
-        };
-      } catch (parseError) {
-        console.error('❌ Failed to parse expired cache:', parseError);
+  // Create the request promise
+  pendingRequest = (async () => {
+    try {
+      // First, try to get cached data
+      const cachedData = LocalStorageManager.getCachedCampusData();
+      if (cachedData) {
+        console.log('📦 Using cached data, age:', LocalStorageManager.getCacheAgeMinutes(), 'minutes');
+        return cachedData;
       }
+
+      console.log('🌐 Fetching fresh data from API...');
+      
+      // PERFORMANCE: Add abort controller with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      try {
+        // Try to fetch from the backend API
+        const response = await fetch('https://ng-campus-pulse.onrender.com/api/campus-data', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const apiData = await response.json();
+        
+        // Check if we got the new format from /api/campus-data
+        if (apiData.campuses && apiData.resolvers && apiData.evaluations) {
+          console.log('✅ Received processed data from backend');
+          
+          // Save to localStorage
+          LocalStorageManager.saveCampusData(
+            apiData.campuses, 
+            apiData.resolvers, 
+            apiData.evaluations
+          );
+          
+          return {
+            campuses: apiData.campuses,
+            resolvers: apiData.resolvers,
+            evaluations: apiData.evaluations
+          };
+        }
+        
+        // Fallback to old processing if needed
+        const processedData = processApiData(apiData);
+        
+        // Save to localStorage
+        LocalStorageManager.saveCampusData(
+          processedData.campuses, 
+          processedData.resolvers, 
+          processedData.evaluations
+        );
+        
+        console.log('✅ Fresh data fetched and cached');
+        return processedData;
+        
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError.name === 'AbortError') {
+          console.error('❌ API request timeout');
+        } else {
+          console.error('❌ API fetch failed:', fetchError);
+        }
+        
+        // Try to use expired cache as fallback
+        const expiredCache = localStorage.getItem('campus_pulse_data');
+        if (expiredCache) {
+          try {
+            const cachedData = JSON.parse(expiredCache);
+            console.log('📦 Using expired cache as fallback');
+            return {
+              campuses: cachedData.campuses || [],
+              resolvers: cachedData.resolvers || [],
+              evaluations: cachedData.evaluations || []
+            };
+          } catch (parseError) {
+            console.error('❌ Failed to parse expired cache:', parseError);
+          }
+        }
+        
+        // Last resort: return empty data
+        console.log('⚠️ No data available, returning empty datasets');
+        return { campuses: [], resolvers: [], evaluations: [] };
+      }
+    } finally {
+      // Clear the pending request after it completes (success or failure)
+      pendingRequest = null;
     }
-    
-    // Last resort: return empty data
-    console.log('⚠️ No data available, returning empty datasets');
-    return { campuses: [], resolvers: [], evaluations: [] };
-  }
+  })();
+
+  return pendingRequest;
 };
 
 // Function to force refresh data
