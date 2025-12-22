@@ -12,28 +12,59 @@ interface CampusOverviewProps {
   sortConfig: { key: keyof Campus; direction: 'ascending' | 'descending' } | null;
 }
 
+interface UrgentIssue {
+  id: string;
+  campusName: string;
+  resolverName: string;
+  dateEvaluated: string;
+  issue: string;
+  type: 'urgent' | 'escalation';
+}
+
 const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, onCampusSelect, onSort, sortConfig }) => {
   const [selectedCompetency, setSelectedCompetency] = useState<string>('');
-  const [urgentIssues, setUrgentIssues] = useState<any[]>([]);
+  const [urgentIssues, setUrgentIssues] = useState<UrgentIssue[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Safety check to prevent crashes when data is loading
-  if (!campuses || !Array.isArray(campuses)) {
-    return <div className="flex items-center justify-center h-64">Loading campus data...</div>;
-  }
+  // PERFORMANCE: Memoize getUrgentIssuesForCampus to avoid recomputing on every render
+  const urgentIssuesByCampus = useMemo(() => {
+    const map = new Map<string, UrgentIssue[]>();
+    urgentIssues.forEach(issue => {
+      const campusIssues = map.get(issue.campusName) || [];
+      campusIssues.push(issue);
+      map.set(issue.campusName, campusIssues);
+    });
+    return map;
+  }, [urgentIssues]);
+
+  // Helper function to get urgent issues for a specific campus
+  const getUrgentIssuesForCampus = (campusName: string) => {
+    return urgentIssuesByCampus.get(campusName) || [];
+  };
 
   // Fetch urgent issues for dashboard indicators
   useEffect(() => {
     const fetchUrgentIssues = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://ng-campus-pulse.onrender.com/api/urgent-issues');
+        
+        // PERFORMANCE: Add abort controller and timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+        
+        const response = await fetch('https://ng-campus-pulse.onrender.com/api/urgent-issues', {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
         if (response.ok) {
           const data = await response.json();
           setUrgentIssues([...data.urgentIssues, ...data.escalationIssues]);
         }
       } catch (error) {
-        console.error('Error fetching urgent issues:', error);
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error fetching urgent issues:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -42,10 +73,23 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
     fetchUrgentIssues();
   }, []);
 
-  // Helper function to get urgent issues for a specific campus
-  const getUrgentIssuesForCampus = (campusName: string) => {
-    return urgentIssues.filter(issue => issue.campusName === campusName);
-  };
+  // PERFORMANCE: Memoize expensive computations
+  const { totalUrgentIssues, escalationIssues, campusesWithIssues } = useMemo(() => {
+    const totalUrgent = urgentIssues.length;
+    const escalation = urgentIssues.filter(issue => issue.type === 'escalation').length;
+    const campusesAffected = new Set(urgentIssues.map(issue => issue.campusName)).size;
+    
+    return {
+      totalUrgentIssues: totalUrgent,
+      escalationIssues: escalation,
+      campusesWithIssues: campusesAffected
+    };
+  }, [urgentIssues]);
+
+  // Safety check to prevent crashes when data is loading
+  if (!campuses || !Array.isArray(campuses)) {
+    return <div className="flex items-center justify-center h-64">Loading campus data...</div>;
+  }
 
 
 
@@ -96,7 +140,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
         : campus.averageScore,
       resolvers: campus.totalResolvers
     }));
-  }, [campuses, selectedCompetency, evaluations]);
+  }, [campuses, selectedCompetency, evaluations]); // Include evaluations as getCompetencyScoreForCampus depends on it
 
   // Only include active campuses in level distribution
   const activeCampuses = campuses.filter(campus => campus.status !== 'Relocated');
@@ -113,11 +157,6 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
 
   const totalResolvers = campuses.reduce((sum, campus) => sum + campus.totalResolvers, 0);
   const averageScore = campuses.length > 0 ? campuses.reduce((sum, campus) => sum + campus.averageScore, 0) / campuses.length : 0;
-  
-  // Calculate urgent issue statistics
-  const totalUrgentIssues = urgentIssues.length;
-  const escalationIssues = urgentIssues.filter(issue => issue.type === 'escalation').length;
-  const campusesWithIssues = new Set(urgentIssues.map(issue => issue.campusName)).size;
 
   return (
     <div className="space-y-6">

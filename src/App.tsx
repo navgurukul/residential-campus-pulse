@@ -8,7 +8,7 @@ import FilterPanel from './components/FilterPanel';
 import LoadingSpinner from './components/LoadingSpinner';
 
 import { FilterState, Campus, Resolver, Evaluation } from './types';
-import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
+import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport } from './utils/exportUtils';
 import { processApiData } from './utils/apiUtils';
 import { mockEvaluations } from './data/mockData';
 
