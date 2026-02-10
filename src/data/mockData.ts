@@ -99,7 +99,6 @@ export const mockEvaluations: Evaluation[] = [
   ...generateEvaluationsForCampus('8', 'Chennai Campus', 8.0),
   ...generateEvaluationsForCampus('9', 'Kolkata Campus', 7.4),
   ...generateEvaluationsForCampus('10', 'Ahmedabad Campus', 7.7),
-  ...generateEvaluationsForCampus('11', 'Raigarh Campus', 8.2),
   ...generateEvaluationsForCampus('12', 'Dharamshala Campus', 7.9),
   
   // Generate evaluations for any campus ID that might come from API

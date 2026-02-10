@@ -395,7 +395,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                           </span>
                         </div>
                       )}
-                      {campus.status === 'Active' && campus.name === 'Raigarh' && (
+                      {campus.status === 'Active' && campus.name === 'New Campus' && (
                         <div className="ml-2">
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             New Campus

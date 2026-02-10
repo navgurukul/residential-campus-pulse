@@ -27,13 +27,11 @@ const getRanking = (score: number): 'High' | 'Medium' | 'Low' => {
 
 // Campus name mapping to handle name changes and additions
 const campusNameMapping: { [key: string]: string } = {
-  'Raipur': 'Raigarh',
-  'raipur': 'Raigarh',
-  // Add other mappings as needed
+  // Add mappings as needed
 };
 
 // Additional campuses to include
-const additionalCampuses = ['Dharamshala', 'Raigarh'];
+const additionalCampuses = ['Dharamshala'];
 
 export const processApiData = (apiData: ApiResponse): { campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] } => {
   if (!apiData || !apiData.responses) {

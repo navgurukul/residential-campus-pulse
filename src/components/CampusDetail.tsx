@@ -140,9 +140,9 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                   Campus Relocated to {campus.relocatedTo}
                 </span>
               )}
-              {hasNoEvaluations && campus.name === 'Raigarh' && (
+              {hasNoEvaluations && (
                 <span className="ml-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                  New Campus
+                  No Evaluations Yet
                 </span>
               )}
             </div>
@@ -152,9 +152,9 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                 This campus has been relocated. Historical evaluation data is preserved below.
               </p>
             )}
-            {hasNoEvaluations && campus.name === 'Raigarh' && (
-              <p className="text-sm text-green-600 mt-1">
-                This is a new campus. No evaluations have been conducted yet.
+            {hasNoEvaluations && (
+              <p className="text-sm text-gray-600 mt-1">
+                No evaluations have been conducted yet for this campus.
               </p>
             )}
           </div>
@@ -262,8 +262,8 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               <MessageSquare className="w-12 h-12 mb-3 opacity-50" />
               <div className="text-center">
                 <p className="font-medium">No evaluation data available</p>
-                {hasNoEvaluations && campus.name === 'Raigarh' && (
-                  <p className="text-sm mt-1">This new campus hasn't been evaluated yet</p>
+                {hasNoEvaluations && (
+                  <p className="text-sm mt-1">This campus hasn't been evaluated yet</p>
                 )}
               </div>
             </div>
@@ -287,7 +287,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               <User className="w-12 h-12 mb-3 opacity-50" />
               <div className="text-center">
                 <p className="font-medium">No resolver scores available</p>
-                {hasNoEvaluations && campus.name === 'Raigarh' && (
+                {hasNoEvaluations && (
                   <p className="text-sm mt-1">No resolvers have evaluated this campus yet</p>
                 )}
               </div>
@@ -500,9 +500,9 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
             <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-30" />
             <div className="space-y-2">
               <p className="text-lg font-medium">No evaluations available for this campus</p>
-              {campus.name === 'Raigarh' ? (
+              {hasNoEvaluations ? (
                 <div className="text-sm space-y-1">
-                  <p className="text-green-600">This is a new campus that hasn't been evaluated yet.</p>
+                  <p className="text-gray-600">This campus hasn't been evaluated yet.</p>
                   <p>Once resolvers conduct evaluations, the data will appear here.</p>
                 </div>
               ) : (

@@ -589,13 +589,10 @@ function processRawDataForFrontend(rawData) {
         : averageScore > 2.33 ? 'Medium' : 'Low'
       : 'Medium';
 
-    // Handle Raipur → Raigarh transition
-    let status = 'Active';
-    let relocatedTo = undefined;
-    
-    if (campusData.name === 'Raipur') {
-      status = 'Relocated';
-      relocatedTo = 'Raigarh';
+    // Filter out closed campuses
+    const closedCampuses = ['Raipur', 'Raigarh', 'Udaipur'];
+    if (closedCampuses.includes(campusData.name)) {
+      return null; // Skip closed campuses
     }
 
     return {
@@ -606,26 +603,9 @@ function processRawDataForFrontend(rawData) {
       totalResolvers: campusData.resolverEmails.size,
       ranking,
       lastEvaluated: campusData.lastEvaluated,
-      status,
-      relocatedTo
+      status: 'Active'
     };
-  });
-
-  // Add Raigarh as a new active campus if it doesn't exist
-  const hasRaigarh = campuses.some(campus => campus.name === 'Raigarh');
-  if (!hasRaigarh) {
-    campuses.push({
-      id: 'campus-raigarh',
-      name: 'Raigarh',
-      location: 'Raigarh',
-      averageScore: 0,
-      totalResolvers: 0,
-      ranking: 'Medium',
-      lastEvaluated: new Date().toISOString().split('T')[0],
-      status: 'Active',
-      relocatedTo: undefined
-    });
-  }
+  }).filter(campus => campus !== null); // Remove null entries
 
   // Convert resolver map to array and clean up temporary fields
   const resolvers = Array.from(resolverMap.values()).map(resolver => {
