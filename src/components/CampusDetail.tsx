@@ -234,48 +234,18 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
         </div>
       </div>
 
-      {/* POC Information - Only show if campus has POC config */}
-      {hasPOCConfig(campus.name) && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl shadow-sm border border-blue-100">
-          <div className="flex items-center space-x-3 mb-4">
-            <UserCheck className="w-6 h-6 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Competency Points of Contact</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {getCampusPOCs(campus.name).map((poc, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg border border-blue-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">
-                      {poc.name.split(' ').map(n => n[0]).join('')}
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-gray-900">{poc.name}</h4>
-                </div>
-                <div className="ml-10">
-                  <p className="text-xs text-gray-500 mb-1">Responsible for:</p>
-                  <ul className="space-y-1">
-                    {poc.competencies.map((comp, compIndex) => (
-                      <li key={compIndex} className="text-sm text-gray-700 flex items-start">
-                        <span className="text-blue-600 mr-2">•</span>
-                        <span>{comp}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 text-xs text-gray-600 italic">
-            💡 Contact these team members for specific competency-related queries or improvements
-          </div>
-        </div>
-      )}
-
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Competency Analysis</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Competency Analysis</h3>
+            {hasPOCConfig(campus.name) && (
+              <div className="flex items-center space-x-1 text-xs text-blue-600">
+                <UserCheck className="w-4 h-4" />
+                <span>POCs below</span>
+              </div>
+            )}
+          </div>
           {radarData.length > 0 ? (
             <ResponsiveContainer width="100%" height={400}>
               <RadarChart data={radarData} margin={{ top: 40, right: 80, bottom: 40, left: 80 }}>
@@ -305,6 +275,45 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                   <p className="text-sm mt-1">This campus hasn't been evaluated yet</p>
                 )}
               </div>
+            </div>
+          )}
+          
+          {/* POC Information - Integrated below chart */}
+          {hasPOCConfig(campus.name) && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="flex items-center space-x-2 mb-3">
+                <UserCheck className="w-5 h-5 text-blue-600" />
+                <h4 className="text-sm font-semibold text-gray-900">Competency Points of Contact</h4>
+              </div>
+              <div className="space-y-3">
+                {getCampusPOCs(campus.name).map((poc, index) => (
+                  <div key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-100">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white font-semibold text-xs">
+                          {poc.name.split(' ').map(n => n[0]).join('')}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-semibold text-gray-900 text-sm">{poc.name}</h5>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {poc.competencies.map((comp, compIndex) => (
+                            <span 
+                              key={compIndex} 
+                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white text-blue-700 border border-blue-200"
+                            >
+                              {comp}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-gray-500 italic">
+                💡 Contact these team members for competency-specific queries
+              </p>
             </div>
           )}
         </div>
