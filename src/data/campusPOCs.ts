@@ -16,6 +16,12 @@ export const CAMPUS_POC_DATA: CampusPOCConfig[] = [
     campus: 'Pune',
     pocs: [
       {
+        name: 'Priyanka Dangwal',
+        competencies: [
+          'Residential Lead - Overseeing All Competencies'
+        ]
+      },
+      {
         name: 'Divya Sonla',
         competencies: [
           'Learning Environment & Peer Support',

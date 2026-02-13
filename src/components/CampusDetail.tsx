@@ -287,8 +287,12 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               </div>
               <div className="space-y-3">
                 {getCampusPOCs(campus.name).map((poc, index) => {
+                  // Special styling for Residential Lead (first person)
+                  const isLead = index === 0 && poc.competencies.some(c => c.includes('Residential Lead'));
+                  
                   // Rainbow colors for each POC
                   const rainbowColors = [
+                    { bg: 'from-amber-50 to-yellow-50', border: 'border-amber-300', badge: 'bg-gradient-to-br from-amber-500 to-yellow-500', tag: 'bg-amber-100 text-amber-800 border-amber-300' }, // Gold for lead
                     { bg: 'from-red-50 to-pink-50', border: 'border-red-200', badge: 'bg-gradient-to-br from-red-500 to-pink-500', tag: 'bg-red-100 text-red-700 border-red-200' },
                     { bg: 'from-orange-50 to-amber-50', border: 'border-orange-200', badge: 'bg-gradient-to-br from-orange-500 to-amber-500', tag: 'bg-orange-100 text-orange-700 border-orange-200' },
                     { bg: 'from-yellow-50 to-lime-50', border: 'border-yellow-200', badge: 'bg-gradient-to-br from-yellow-500 to-lime-500', tag: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
@@ -299,20 +303,30 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                   const colors = rainbowColors[index % rainbowColors.length];
                   
                   return (
-                    <div key={index} className={`bg-gradient-to-r ${colors.bg} p-3 rounded-lg border ${colors.border}`}>
+                    <div 
+                      key={index} 
+                      className={`bg-gradient-to-r ${colors.bg} p-3 rounded-lg border ${colors.border} ${isLead ? 'ring-2 ring-amber-400 shadow-lg' : ''}`}
+                    >
                       <div className="flex items-start space-x-3">
-                        <div className={`w-8 h-8 ${colors.badge} rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-md`}>
+                        <div className={`w-8 h-8 ${colors.badge} rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-md ${isLead ? 'ring-2 ring-white' : ''}`}>
                           <span className="text-white font-semibold text-xs">
-                            {poc.name.split(' ').map(n => n[0]).join('')}
+                            {isLead ? '👑' : poc.name.split(' ').map(n => n[0]).join('')}
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h5 className="font-semibold text-gray-900 text-sm">{poc.name}</h5>
+                          <div className="flex items-center space-x-2">
+                            <h5 className="font-semibold text-gray-900 text-sm">{poc.name}</h5>
+                            {isLead && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-500 text-white shadow-sm">
+                                LEAD
+                              </span>
+                            )}
+                          </div>
                           <div className="mt-1 flex flex-wrap gap-1">
                             {poc.competencies.map((comp, compIndex) => (
                               <span 
                                 key={compIndex} 
-                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colors.tag} border`}
+                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colors.tag} border ${isLead ? 'font-semibold' : ''}`}
                               >
                                 {comp}
                               </span>
@@ -325,7 +339,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                 })}
               </div>
               <p className="mt-3 text-xs text-gray-500 italic">
-                🌈 Contact these team members for competency-specific queries
+                👑 Priyanka Dangwal leads all competencies • 🌈 Contact team members for specific queries
               </p>
             </div>
           )}
