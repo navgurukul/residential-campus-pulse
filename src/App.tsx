@@ -11,7 +11,6 @@ import { FilterState, Campus, Resolver, Evaluation } from './types';
 import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
 import { processApiData } from './utils/apiUtils';
 import { mockEvaluations } from './data/mockData';
-import { trackPageView, trackCampusInteraction, trackFilterUsage, trackDataExport, trackDataLoad } from './utils/analytics';
 
 type View = 'campus-overview' | 'campus-detail' | 'resolver-overview' | 'urgent-issues';
 
@@ -32,8 +31,6 @@ function App() {
       const hash = window.location.hash.replace('#', '');
       if (hash === 'urgent-issues' || hash === 'campus-overview' || hash === 'resolver-overview') {
         setCurrentView(hash as View);
-        // Track page view
-        trackPageView(hash);
       }
     };
 
