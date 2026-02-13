@@ -44,6 +44,18 @@ export const CAMPUS_POC_DATA: CampusPOCConfig[] = [
           'Meditation (Ana Pana for most and students attending Vipassana Camps)',
           'Process Principles Understanding & Implementation'
         ]
+      },
+      {
+        name: 'Meenakshi Gupta',
+        competencies: [
+          'English Communication & Comprehension'
+        ]
+      },
+      {
+        name: 'Rani Kharate',
+        competencies: [
+          'Nutrition Supplementation + Yoga/Weight Training'
+        ]
       }
     ]
   }

@@ -282,37 +282,50 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
           {hasPOCConfig(campus.name) && (
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="flex items-center space-x-2 mb-3">
-                <UserCheck className="w-5 h-5 text-blue-600" />
+                <UserCheck className="w-5 h-5 text-purple-600" />
                 <h4 className="text-sm font-semibold text-gray-900">Competency Points of Contact</h4>
               </div>
               <div className="space-y-3">
-                {getCampusPOCs(campus.name).map((poc, index) => (
-                  <div key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-100">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-white font-semibold text-xs">
-                          {poc.name.split(' ').map(n => n[0]).join('')}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h5 className="font-semibold text-gray-900 text-sm">{poc.name}</h5>
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {poc.competencies.map((comp, compIndex) => (
-                            <span 
-                              key={compIndex} 
-                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white text-blue-700 border border-blue-200"
-                            >
-                              {comp}
-                            </span>
-                          ))}
+                {getCampusPOCs(campus.name).map((poc, index) => {
+                  // Rainbow colors for each POC
+                  const rainbowColors = [
+                    { bg: 'from-red-50 to-pink-50', border: 'border-red-200', badge: 'bg-gradient-to-br from-red-500 to-pink-500', tag: 'bg-red-100 text-red-700 border-red-200' },
+                    { bg: 'from-orange-50 to-amber-50', border: 'border-orange-200', badge: 'bg-gradient-to-br from-orange-500 to-amber-500', tag: 'bg-orange-100 text-orange-700 border-orange-200' },
+                    { bg: 'from-yellow-50 to-lime-50', border: 'border-yellow-200', badge: 'bg-gradient-to-br from-yellow-500 to-lime-500', tag: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+                    { bg: 'from-green-50 to-emerald-50', border: 'border-green-200', badge: 'bg-gradient-to-br from-green-500 to-emerald-500', tag: 'bg-green-100 text-green-700 border-green-200' },
+                    { bg: 'from-blue-50 to-cyan-50', border: 'border-blue-200', badge: 'bg-gradient-to-br from-blue-500 to-cyan-500', tag: 'bg-blue-100 text-blue-700 border-blue-200' },
+                    { bg: 'from-purple-50 to-violet-50', border: 'border-purple-200', badge: 'bg-gradient-to-br from-purple-500 to-violet-500', tag: 'bg-purple-100 text-purple-700 border-purple-200' }
+                  ];
+                  const colors = rainbowColors[index % rainbowColors.length];
+                  
+                  return (
+                    <div key={index} className={`bg-gradient-to-r ${colors.bg} p-3 rounded-lg border ${colors.border}`}>
+                      <div className="flex items-start space-x-3">
+                        <div className={`w-8 h-8 ${colors.badge} rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-md`}>
+                          <span className="text-white font-semibold text-xs">
+                            {poc.name.split(' ').map(n => n[0]).join('')}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-semibold text-gray-900 text-sm">{poc.name}</h5>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {poc.competencies.map((comp, compIndex) => (
+                              <span 
+                                key={compIndex} 
+                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colors.tag} border`}
+                              >
+                                {comp}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <p className="mt-3 text-xs text-gray-500 italic">
-                💡 Contact these team members for competency-specific queries
+                🌈 Contact these team members for competency-specific queries
               </p>
             </div>
           )}
