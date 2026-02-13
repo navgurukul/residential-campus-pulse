@@ -1,9 +1,10 @@
 import React from 'react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import { ArrowLeft, MessageSquare, Calendar, User, Download, FileText, TrendingUp, Award, AlertCircle, Users } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Calendar, User, Download, FileText, TrendingUp, Award, AlertCircle, Users, UserCheck } from 'lucide-react';
 import { Campus, Evaluation } from '../types';
 import { competencyCategories } from '../data/mockData';
 import { exportToPDF, exportToCSV, prepareCampusDetailDataForExport } from '../utils/exportUtils';
+import { getCampusPOCs, hasPOCConfig } from '../data/campusPOCs';
 
 // Helper function to parse markdown-style formatting
 const parseMarkdown = (text: string) => {
@@ -232,6 +233,44 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
           </div>
         </div>
       </div>
+
+      {/* POC Information - Only show if campus has POC config */}
+      {hasPOCConfig(campus.name) && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl shadow-sm border border-blue-100">
+          <div className="flex items-center space-x-3 mb-4">
+            <UserCheck className="w-6 h-6 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Competency Points of Contact</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {getCampusPOCs(campus.name).map((poc, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
+                      {poc.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">{poc.name}</h4>
+                </div>
+                <div className="ml-10">
+                  <p className="text-xs text-gray-500 mb-1">Responsible for:</p>
+                  <ul className="space-y-1">
+                    {poc.competencies.map((comp, compIndex) => (
+                      <li key={compIndex} className="text-sm text-gray-700 flex items-start">
+                        <span className="text-blue-600 mr-2">•</span>
+                        <span>{comp}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 text-xs text-gray-600 italic">
+            💡 Contact these team members for specific competency-related queries or improvements
+          </div>
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
