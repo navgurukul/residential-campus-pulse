@@ -22,7 +22,20 @@ let lastUpdated = null;
 async function connectToMongoDB() {
   try {
     console.log('🔄 Connecting to MongoDB...');
-    mongoClient = new MongoClient(MONGODB_URI);
+    
+    // MongoDB connection options with SSL/TLS settings
+    const options = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      tls: true,
+      tlsAllowInvalidCertificates: false,
+      retryWrites: true,
+      w: 'majority'
+    };
+    
+    mongoClient = new MongoClient(MONGODB_URI, options);
     await mongoClient.connect();
     db = mongoClient.db(DB_NAME);
     collection = db.collection(COLLECTION_NAME);
