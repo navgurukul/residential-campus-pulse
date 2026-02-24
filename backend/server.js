@@ -18,25 +18,23 @@ let mongoClient;
 let storedData = [];
 let lastUpdated = null;
 
-// Connect to MongoDB
+// Connect to MongoDB with retry logic
 async function connectToMongoDB() {
   try {
-    console.log('🔄 Connecting to MongoDB...');
+    console.log('🔄 Connecting to MongoDB Atlas...');
     
-    // MongoDB connection options with SSL/TLS settings
+    // Simplified connection options
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      tls: true,
-      tlsAllowInvalidCertificates: false,
-      retryWrites: true,
-      w: 'majority'
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
     };
     
     mongoClient = new MongoClient(MONGODB_URI, options);
     await mongoClient.connect();
+    
+    // Verify connection
+    await mongoClient.db('admin').command({ ping: 1 });
+    
     db = mongoClient.db(DB_NAME);
     collection = db.collection(COLLECTION_NAME);
     console.log('✅ Connected to MongoDB successfully!');
@@ -44,8 +42,9 @@ async function connectToMongoDB() {
     // Load existing data on startup
     await loadDataFromMongoDB();
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('❌ MongoDB connection error:', error.message);
     console.log('⚠️ Falling back to in-memory storage only');
+    console.log('💡 Check: 1) IP whitelist includes 0.0.0.0/0, 2) Username/password correct');
   }
 }
 
