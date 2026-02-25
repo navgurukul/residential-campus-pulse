@@ -343,7 +343,11 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                     Issues
                   </div>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Evaluated</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => onSort('lastEvaluated')}>
+                  <div className="flex items-center">
+                    Last Evaluated <ArrowUpDown className="ml-1 h-4 w-4" />
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
