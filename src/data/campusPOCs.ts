@@ -64,6 +64,10 @@ export const CAMPUS_POC_DATA: CampusPOCConfig[] = [
         ]
       }
     ]
+  },
+  {
+    campus: 'Raigarh',
+    pocs: []
   }
   // Add more campuses here as needed
   // {
