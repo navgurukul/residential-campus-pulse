@@ -32,7 +32,7 @@ const UrgentIssues: React.FC = () => {
       setLoading(true);
       console.log('Fetching urgent issues from API...');
       
-      const response = await fetch('https://ng-campus-pulse.onrender.com/api/urgent-issues');
+      const response = await fetch('https://ng-campus-pulse-n5ar.onrender.com/api/urgent-issues');
       console.log('API Response status:', response.status);
       
       if (!response.ok) {

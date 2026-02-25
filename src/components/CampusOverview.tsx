@@ -27,7 +27,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
     const fetchUrgentIssues = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://ng-campus-pulse.onrender.com/api/urgent-issues');
+        const response = await fetch('https://ng-campus-pulse-n5ar.onrender.com/api/urgent-issues');
         if (response.ok) {
           const data = await response.json();
           setUrgentIssues([...data.urgentIssues, ...data.escalationIssues]);
