@@ -283,7 +283,7 @@ function App() {
 
   const navigation = [
     { id: 'campus-overview', name: 'Campus Overview', icon: Building2 },
-    { id: 'resolver-overview', name: 'Resolver Overview', icon: Users },
+    { id: 'resolver-overview', name: 'Revolver Overview', icon: Users },
     { id: 'urgent-issues', name: 'Urgent Issues', icon: AlertTriangle }
   ];
 

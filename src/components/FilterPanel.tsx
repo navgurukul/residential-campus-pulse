@@ -99,7 +99,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             onChange={(e) => handleFilterChange('resolver', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">All Resolvers</option>
+            <option value="">All Revolvers</option>
             {resolvers.map((resolver) => (
               <option key={resolver.id} value={resolver.id}>
                 {toTitleCase(resolver.name)}

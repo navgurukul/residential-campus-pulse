@@ -66,7 +66,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Resolvers</p>
+              <p className="text-sm font-medium text-gray-600">Total Revolvers</p>
               <p className="text-3xl font-bold text-gray-900">{resolvers.length}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
