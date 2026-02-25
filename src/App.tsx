@@ -331,7 +331,6 @@ function App() {
                           hour12: true
                         })}
                       </span>
-                      <span className="text-xs text-gray-400 ml-1">(Persistent cache - Ctrl+Shift+C to clear)</span>
                     </div>
                   )
                 ) : (
