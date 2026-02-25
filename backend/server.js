@@ -6,9 +6,15 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // MongoDB Configuration
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://surajPulse:mJ4C4UPqtoNO1I5y@cluster0.1jezep1.mongodb.net/campus-pulse?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = 'campus-pulse';
 const COLLECTION_NAME = 'campus_data';
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI environment variable is not set!');
+  console.error('Please set MONGODB_URI in your environment variables.');
+  process.exit(1);
+}
 
 let db;
 let collection;

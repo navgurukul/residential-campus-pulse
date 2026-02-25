@@ -33,12 +33,12 @@ This means MongoDB Atlas is rejecting the connection.
 2. Click **Connect** on your cluster
 3. Choose **Connect your application**
 4. Copy the NEW connection string
-5. Replace `<password>` with: `mJ4C4UPqtoNO1I5y`
+5. Replace `<password>` with your new MongoDB password
 6. Add `/campus-pulse` before the `?`
 
 **Should look like:**
 ```
-mongodb+srv://surajPulse:mJ4C4UPqtoNO1I5y@cluster0.1jezep1.mongodb.net/campus-pulse?retryWrites=true&w=majority
+mongodb+srv://USERNAME:NEW_PASSWORD@cluster0.1jezep1.mongodb.net/campus-pulse?retryWrites=true&w=majority
 ```
 
 ### 4. Update Render Environment Variable
