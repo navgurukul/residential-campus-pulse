@@ -362,7 +362,61 @@ function processRawDataForFrontend(rawData) {
     const feedback = getColumnValue(row, ['Additional Comments', 'Feedback'], 
       `Comprehensive evaluation of ${campusName}.`);
 
+    // Extract competency-specific feedback
+    const allColumns = Object.keys(row);
+    const competencyMappings = [
+      { name: 'Meditation (Ana Pana for most and students attending Vipassana Camps)', patterns: ['meditation', 'vipassana', 'ana pana'] },
+      { name: 'Nutrition Supplementation + Yoga/Weight Training', patterns: ['nutrition supplementation', 'yoga/weight training', 'nutrition', 'yoga'] },
+      { name: 'Houses and Reward Systems', patterns: ['houses and reward systems', 'houses', 'reward systems'] },
+      { name: 'Etiocracy, Co-Creation & Ownership', patterns: ['etiocracy', 'co-creation', 'ownership'] },
+      { name: 'Campus interactions', patterns: ['campus interactions', 'interactions'] },
+      { name: 'Gratitude', patterns: ['gratitude'] },
+      { name: 'Hackathons', patterns: ['hackathons', 'hackathon'] },
+      { name: 'English Communication & Comprehension', patterns: ['english communication', 'communication', 'comprehension'] },
+      { name: 'Learning Environment & Peer Support', patterns: ['learning environment', 'peer support'] },
+      { name: 'Process Principles Understanding & Implementation', patterns: ['process principles', 'understanding & implementation'] },
+      { name: 'Life Skills Implementation', patterns: ['life skills implementation', 'life skills'] }
+    ];
+    
     const competencyFeedback = {};
+    
+    competencyMappings.forEach(competency => {
+      const whyColumns = allColumns.filter(col => {
+        const colLower = col.toLowerCase();
+        return colLower.includes('why') && colLower.includes('marked') &&
+               competency.patterns.some(pattern => colLower.includes(pattern.toLowerCase()));
+      });
+      
+      const shareColumns = allColumns.filter(col => {
+        const colLower = col.toLowerCase();
+        return colLower.includes('anything') && colLower.includes('share') &&
+               competency.patterns.some(pattern => colLower.includes(pattern.toLowerCase()));
+      });
+      
+      let competencyComments = [];
+      
+      whyColumns.forEach(column => {
+        const feedbackValue = row[column];
+        if (feedbackValue && feedbackValue.trim() !== '' && 
+            feedbackValue.trim().toLowerCase() !== 'na' && 
+            feedbackValue.trim().length > 5) {
+          competencyComments.push(`**Why this level was selected:** ${feedbackValue.trim()}`);
+        }
+      });
+      
+      shareColumns.forEach(column => {
+        const feedbackValue = row[column];
+        if (feedbackValue && feedbackValue.trim() !== '' && 
+            feedbackValue.trim().toLowerCase() !== 'na' && 
+            feedbackValue.trim().length > 5) {
+          competencyComments.push(`**Additional observations:** ${feedbackValue.trim()}`);
+        }
+      });
+      
+      if (competencyComments.length > 0) {
+        competencyFeedback[competency.name] = competencyComments.join('\n\n');
+      }
+    });
 
     const evaluation = {
       id: `eval-${index + 1}`,
