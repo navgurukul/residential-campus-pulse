@@ -8,7 +8,7 @@ import FilterPanel from './components/FilterPanel';
 import LoadingSpinner from './components/LoadingSpinner';
 
 import { FilterState, Campus, Resolver, Evaluation } from './types';
-import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport, prepareEvaluationDataForExport } from './utils/exportUtils';
+import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport } from './utils/exportUtils';
 import { processApiData } from './utils/apiUtils';
 import { mockEvaluations } from './data/mockData';
 
@@ -117,7 +117,7 @@ function App() {
           console.warn('3. No form submissions have been processed');
           console.warn('Using mock data as fallback...');
           
-          const { campuses, resolvers, evaluations } = processApiData({ responses: [] });
+          const { campuses, resolvers, evaluations } = processApiData({ status: 'ok', responses: [] });
           setCampuses(campuses);
           setResolvers(resolvers);
           setEvaluations(mockEvaluations);
@@ -127,7 +127,7 @@ function App() {
         console.error('Error fetching data from backend:', error);
         // Fallback to mock data on error
         console.log('Backend error, using mock data');
-        const { campuses, resolvers, evaluations } = processApiData({ responses: [] });
+        const { campuses, resolvers, evaluations } = processApiData({ status: 'ok', responses: [] });
         setCampuses(campuses);
         setResolvers(resolvers);
         setEvaluations(mockEvaluations);
@@ -205,12 +205,16 @@ function App() {
   const filteredCampuses = useMemo(() => {
     let sortableCampuses = [...campuses];
     if (sortConfig !== null) {
+      const key = sortConfig.key;
+      const direction = sortConfig.direction;
       sortableCampuses.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
+        const aVal = a[key] ?? '';
+        const bVal = b[key] ?? '';
+        if (aVal < bVal) {
+          return direction === 'ascending' ? -1 : 1;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
+        if (aVal > bVal) {
+          return direction === 'ascending' ? 1 : -1;
         }
         return 0;
       });
