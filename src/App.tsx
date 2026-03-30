@@ -357,6 +357,53 @@ function App() {
         </div>
       </header>
 
+      {/* Monthly Form Reminder Banner - shows last 3 days of month */}
+      {(() => {
+        const now = new Date();
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const currentDay = now.getDate();
+        const monthName = now.toLocaleString('en-IN', { month: 'long' });
+        const isLastThreeDays = currentDay >= lastDay - 2;
+
+        if (!isLastThreeDays) return null;
+
+        return (
+          <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-3">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🔔</span>
+                <div>
+                  <p className="font-semibold text-sm sm:text-base">
+                    Reminder: Fill the Monthly Competency Form for {monthName}!
+                  </p>
+                  <p className="text-xs sm:text-sm text-orange-100">
+                    Hey team, please fill the monthly competency form for your respective campus by EOD today. Do it with your campus team.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <a
+                  href="https://docs.google.com/forms/d/e/1FAIpQLScTxmTewHXvDb9Xk5EZ7GiwGN1ZbiMKtr9kTQ6piCzESyYq7w/viewform"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white text-orange-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors whitespace-nowrap"
+                >
+                  📝 Fill Form
+                </a>
+                <a
+                  href="https://navgurukul.github.io/residential-campus-pulse/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-orange-600 text-white font-semibold text-sm px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors whitespace-nowrap border border-orange-300"
+                >
+                  📊 Dashboard
+                </a>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Navigation */}
       {currentView !== 'campus-detail' && (
         <nav className="bg-white border-b border-gray-200">
