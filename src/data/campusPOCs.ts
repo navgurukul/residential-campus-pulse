@@ -59,9 +59,7 @@ export const CAMPUS_POC_DATA: CampusPOCConfig[] = [
       },
       {
         name: 'Rani Kharate',
-        competencies: [
-          'Nutrition Supplementation + Yoga/Weight Training'
-        ]
+        competencies: []
       }
     ]
   },
