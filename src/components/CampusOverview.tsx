@@ -348,6 +348,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                     Last Evaluated <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latest Revolver</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -477,6 +478,21 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(campus.lastEvaluated).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    {(() => {
+                      const campusEvals = evaluations
+                        .filter(e => e.campusName === campus.name)
+                        .sort((a, b) => new Date(b.dateEvaluated).getTime() - new Date(a.dateEvaluated).getTime());
+                      if (campusEvals.length > 0) {
+                        return (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                            {campusEvals[0].resolverName}
+                          </span>
+                        );
+                      }
+                      return <span className="text-gray-400">-</span>;
+                    })()}
                   </td>
                 </tr>
               ))}
