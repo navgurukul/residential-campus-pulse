@@ -369,7 +369,7 @@ function processRawDataForFrontend(rawData) {
       { name: 'Nutrition Supplementation + Yoga/Weight Training', patterns: ['nutrition supplementation', 'yoga/weight training', 'nutrition', 'yoga'] },
       { name: 'Houses and Reward Systems', patterns: ['houses and reward systems', 'houses', 'reward systems'] },
       { name: 'Etiocracy, Co-Creation & Ownership', patterns: ['etiocracy', 'co-creation', 'ownership'] },
-      { name: 'Campus interactions', patterns: ['campus interactions', 'interactions'] },
+      { name: 'Campus interactions', patterns: ['campus interactions', 'campus interaction', 'interactions'] },
       { name: 'Gratitude', patterns: ['gratitude'] },
       { name: 'Hackathons', patterns: ['hackathons', 'hackathon'] },
       { name: 'English Communication & Comprehension', patterns: ['english communication', 'communication', 'comprehension'] },
@@ -381,15 +381,18 @@ function processRawDataForFrontend(rawData) {
     const competencyFeedback = {};
     
     competencyMappings.forEach(competency => {
+      // Match "Why" columns - look for any column containing "why" and a competency pattern
       const whyColumns = allColumns.filter(col => {
         const colLower = col.toLowerCase();
-        return colLower.includes('why') && colLower.includes('marked') &&
+        return colLower.includes('why') && colLower.includes('bracket') &&
                competency.patterns.some(pattern => colLower.includes(pattern.toLowerCase()));
       });
       
+      // Match "Share" columns - look for any column containing "share" and a competency pattern
       const shareColumns = allColumns.filter(col => {
         const colLower = col.toLowerCase();
-        return colLower.includes('anything') && colLower.includes('share') &&
+        return (colLower.includes('anything else') || colLower.includes('share')) &&
+               colLower.includes('bracket') &&
                competency.patterns.some(pattern => colLower.includes(pattern.toLowerCase()));
       });
       
