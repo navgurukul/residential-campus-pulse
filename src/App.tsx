@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Building2, Users, BarChart3, Settings, Lock, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Building2, Users, BarChart3, Settings, Lock, AlertTriangle, RefreshCw, ClipboardEdit } from 'lucide-react';
 import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
 import ResolverOverview from './components/ResolverOverview';
@@ -12,7 +12,7 @@ import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDa
 import { processApiData } from './utils/apiUtils';
 import { mockEvaluations } from './data/mockData';
 
-type View = 'campus-overview' | 'campus-detail' | 'resolver-overview' | 'urgent-issues';
+type View = 'campus-overview' | 'campus-detail' | 'resolver-overview' | 'urgent-issues' | 'fill-form';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('campus-overview');
@@ -29,7 +29,7 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      if (hash === 'urgent-issues' || hash === 'campus-overview' || hash === 'resolver-overview') {
+      if (hash === 'urgent-issues' || hash === 'campus-overview' || hash === 'resolver-overview' || hash === 'fill-form') {
         setCurrentView(hash as View);
       }
     };
@@ -288,7 +288,8 @@ function App() {
   const navigation = [
     { id: 'campus-overview', name: 'Campus Overview', icon: Building2 },
     { id: 'resolver-overview', name: 'Revolver Overview', icon: Users },
-    { id: 'urgent-issues', name: 'Urgent Issues', icon: AlertTriangle }
+    { id: 'urgent-issues', name: 'Urgent Issues', icon: AlertTriangle },
+    { id: 'fill-form', name: 'Fill Form', icon: ClipboardEdit }
   ];
 
   if (loading) {
@@ -386,22 +387,12 @@ function App() {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <a
-                  href="https://docs.google.com/forms/d/e/1FAIpQLScTxmTewHXvDb9Xk5EZ7GiwGN1ZbiMKtr9kTQ6piCzESyYq7w/viewform"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => { setCurrentView('fill-form'); window.location.hash = 'fill-form'; }}
                   className="bg-white text-orange-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors whitespace-nowrap"
                 >
                   📝 Fill Form
-                </a>
-                <a
-                  href="https://navgurukul.github.io/residential-campus-pulse/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-orange-600 text-white font-semibold text-sm px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors whitespace-nowrap border border-orange-300"
-                >
-                  📊 Dashboard
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -496,6 +487,25 @@ function App() {
 
         {currentView === 'urgent-issues' && (
           <UrgentIssues />
+        )}
+
+        {currentView === 'fill-form' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white">
+              <h2 className="text-lg font-semibold">📝 Campus Competency - Revolver Observation</h2>
+              <p className="text-sm text-orange-100">Fill this form monthly for your respective campus</p>
+            </div>
+            <iframe
+              src="https://docs.google.com/forms/d/e/1FAIpQLScTxmTewHXvDb9Xk5EZ7GiwGN1ZbiMKtr9kTQ6piCzESyYq7w/viewform?embedded=true"
+              width="100%"
+              height="800"
+              frameBorder={0}
+              title="Campus Competency Form"
+              className="w-full"
+            >
+              Loading form...
+            </iframe>
+          </div>
         )}
       </main>
 
