@@ -51,7 +51,9 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
     return <div className="flex items-center justify-center h-64">Loading evaluation data...</div>;
   }
 
-  const campusEvaluations = evaluations.filter(evaluation => evaluation.campusId === campus.id);
+  const campusEvaluations = evaluations
+    .filter(evaluation => evaluation.campusId === campus.id)
+    .sort((a, b) => new Date(b.dateEvaluated).getTime() - new Date(a.dateEvaluated).getTime());
   
   // Check if this is a new campus with no evaluations
   const hasNoEvaluations = campusEvaluations.length === 0;
