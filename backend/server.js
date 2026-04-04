@@ -108,6 +108,7 @@ app.use(express.json({ limit: '10mb' }));
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
+    version: '2.1.0-feedback-fix',
     message: 'Campus Pulse Backend API with MongoDB',
     mongodb: collection ? 'connected' : 'disconnected',
     dataRecords: storedData.length,
