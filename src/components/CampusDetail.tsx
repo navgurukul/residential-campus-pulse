@@ -69,6 +69,14 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
   
   const campusLevel = getScoreLevel(campus.averageScore);
   
+  // Calculate total points across all competencies (sum, not average)
+  const totalPoints = campusEvaluations.length > 0
+    ? campusEvaluations.reduce((sum, evaluation) => {
+        return sum + evaluation.competencies.reduce((compSum, comp) => compSum + comp.score, 0);
+      }, 0) / campusEvaluations.length
+    : 0;
+  const maxTotalPoints = competencyCategories.length * 7; // 11 competencies × 7 max each = 77
+  
   // Helper function to shorten category names for radar chart
   const shortenCategoryName = (category: string): string => {
     const shortNames: { [key: string]: string } = {
@@ -189,7 +197,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
       {/* Main Content for PDF Export */}
       <div id="campus-detail-content" className="space-y-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -197,6 +205,17 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
               <p className="text-2xl font-bold text-gray-900">{campus.totalRevolvers}</p>
             </div>
             <User className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Points</p>
+              <p className="text-2xl font-bold text-blue-600">{totalPoints.toFixed(1)}</p>
+              <p className="text-xs text-gray-400 mt-1">out of {maxTotalPoints}</p>
+            </div>
+            <Award className="w-8 h-8 text-blue-600" />
           </div>
         </div>
 
@@ -233,6 +252,24 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
             </div>
             <Calendar className="w-8 h-8 text-orange-600" />
           </div>
+        </div>
+      </div>
+
+      {/* Score to Level Reference */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+          <Award className="w-4 h-4 mr-2 text-blue-600" />
+          Score → Level Reference
+        </h4>
+        <div className="flex flex-wrap gap-3">
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Level 0: 0 – 0.9</span>
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">Level 1: 1.0 – 1.9</span>
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Level 2: 2.0 – 2.9</span>
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Level 3: 3.0 – 3.9</span>
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Level 4: 4.0 – 4.9</span>
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-lime-100 text-lime-800">Level 5: 5.0 – 5.9</span>
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Level 6: 6.0 – 6.9</span>
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">Level 7: 7.0</span>
         </div>
       </div>
 
