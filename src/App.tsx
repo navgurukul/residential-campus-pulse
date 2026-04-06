@@ -2,13 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Building2, Users, BarChart3, Settings, Lock, AlertTriangle, RefreshCw, ClipboardEdit } from 'lucide-react';
 import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
-import ResolverOverview from './components/ResolverOverview';
+import RevolverOverview from './components/ResolverOverview';
 import UrgentIssues from './components/UrgentIssues';
 import FilterPanel from './components/FilterPanel';
 import LoadingSpinner from './components/LoadingSpinner';
 
-import { FilterState, Campus, Resolver, Evaluation } from './types';
-import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareResolverDataForExport } from './utils/exportUtils';
+import { FilterState, Campus, Revolver, Evaluation } from './types';
+import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareRevolverDataForExport } from './utils/exportUtils';
 import { processApiData } from './utils/apiUtils';
 import { mockEvaluations } from './data/mockData';
 
@@ -45,7 +45,7 @@ function App() {
     };
   }, []);
   const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [resolvers, setResolvers] = useState<Resolver[]>([]);
+  const [resolvers, setResolvers] = useState<Revolver[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -275,7 +275,7 @@ function App() {
         const data = prepareCampusDataForExport(filteredCampuses);
         exportToCSV(data, 'campus-overview');
       } else if (currentView === 'resolver-overview') {
-        const data = prepareResolverDataForExport(filteredResolvers);
+        const data = prepareRevolverDataForExport(filteredResolvers);
         exportToCSV(data, 'resolver-overview');
       }
     } else if (format === 'pdf') {
@@ -479,7 +479,7 @@ function App() {
         )}
 
         {currentView === 'resolver-overview' && (
-          <ResolverOverview 
+          <RevolverOverview 
             resolvers={filteredResolvers} 
             evaluations={evaluations.length > 0 ? evaluations : mockEvaluations}
           />

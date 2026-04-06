@@ -193,8 +193,8 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Resolvers</p>
-              <p className="text-2xl font-bold text-gray-900">{campus.totalResolvers}</p>
+              <p className="text-sm font-medium text-gray-600">Total Revolvers</p>
+              <p className="text-2xl font-bold text-gray-900">{campus.totalRevolvers}</p>
             </div>
             <User className="w-8 h-8 text-blue-600" />
           </div>
@@ -348,7 +348,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resolver Scores</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Revolver Scores</h3>
           {resolverScores.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={resolverScores}>
@@ -363,9 +363,9 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
             <div className="flex flex-col items-center justify-center h-64 text-gray-500">
               <User className="w-12 h-12 mb-3 opacity-50" />
               <div className="text-center">
-                <p className="font-medium">No resolver scores available</p>
+                <p className="font-medium">No revolver scores available</p>
                 {hasNoEvaluations && (
-                  <p className="text-sm mt-1">No resolvers have evaluated this campus yet</p>
+                  <p className="text-sm mt-1">No revolvers have evaluated this campus yet</p>
                 )}
               </div>
             </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { User, MapPin, TrendingUp, Calendar, MessageSquare, X, Users, BarChart3, Award } from 'lucide-react';
-import { Resolver, Evaluation } from '../types';
+import { Revolver, Evaluation } from '../types';
 
 // Helper function to parse markdown-style formatting
 const parseMarkdown = (text: string) => {
@@ -32,17 +32,17 @@ const parseMarkdown = (text: string) => {
   });
 };
 
-interface ResolverOverviewProps {
-  resolvers: Resolver[];
+interface RevolverOverviewProps {
+  resolvers: Revolver[];
   evaluations?: Evaluation[];
 }
 
-const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluations = [] }) => {
-  const [selectedResolver, setSelectedResolver] = useState<Resolver | null>(null);
+const RevolverOverview: React.FC<RevolverOverviewProps> = ({ resolvers, evaluations = [] }) => {
+  const [selectedRevolver, setSelectedRevolver] = useState<Revolver | null>(null);
 
   // Safety check to prevent crashes when data is loading
   if (!resolvers || !Array.isArray(resolvers)) {
-    return <div className="flex items-center justify-center h-64">Loading resolver data...</div>;
+    return <div className="flex items-center justify-center h-64">Loading revolver data...</div>;
   }
 
   const chartData = resolvers.map(resolver => ({
@@ -90,7 +90,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Max Campuses by Resolver</p>
+              <p className="text-sm font-medium text-gray-600">Max Campuses by Revolver</p>
               <p className="text-3xl font-bold text-gray-900">{maxCampusesEvaluated}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
@@ -115,7 +115,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Campuses Evaluated by Resolver</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Campuses Evaluated by Revolver</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -157,17 +157,17 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
         </div>
       </div>
 
-      {/* Resolver List */}
+      {/* Revolver List */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Resolver Performance</h3>
-          <p className="text-sm text-gray-500 mt-1">Each resolver appears once, with aggregated data from all their evaluations</p>
+          <h3 className="text-lg font-semibold text-gray-900">Revolver Performance</h3>
+          <p className="text-sm text-gray-500 mt-1">Each revolver appears once, with aggregated data from all their evaluations</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolver</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revolver</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campuses Evaluated</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Average Score Given</th>
@@ -180,7 +180,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                 <tr
                   key={resolver.id}
                   className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
-                  onClick={() => setSelectedResolver(resolver)}
+                  onClick={() => setSelectedRevolver(resolver)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -228,8 +228,8 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
 
 
 
-      {/* Resolver Feedback Modal */}
-      {selectedResolver && (
+      {/* Revolver Feedback Modal */}
+      {selectedRevolver && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
             {/* Modal Header */}
@@ -237,12 +237,12 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
               <div className="flex items-center">
                 <MessageSquare className="w-6 h-6 text-blue-600 mr-3" />
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{selectedResolver.name}</h3>
-                  <p className="text-sm text-gray-600">{selectedResolver.email}</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{selectedRevolver.name}</h3>
+                  <p className="text-sm text-gray-600">{selectedRevolver.email}</p>
                 </div>
               </div>
               <button
-                onClick={() => setSelectedResolver(null)}
+                onClick={() => setSelectedRevolver(null)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -253,15 +253,15 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
             <div className="p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{selectedResolver.campusesEvaluated}</div>
+                  <div className="text-2xl font-bold text-blue-600">{selectedRevolver.campusesEvaluated}</div>
                   <div className="text-sm text-blue-800">Campuses Evaluated</div>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{selectedResolver.averageScoreGiven.toFixed(1)}</div>
+                  <div className="text-2xl font-bold text-green-600">{selectedRevolver.averageScoreGiven.toFixed(1)}</div>
                   <div className="text-sm text-green-800">Average Score Given</div>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{selectedResolver.totalEvaluations}</div>
+                  <div className="text-2xl font-bold text-purple-600">{selectedRevolver.totalEvaluations}</div>
                   <div className="text-sm text-purple-800">Total Evaluations</div>
                 </div>
               </div>
@@ -274,7 +274,7 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                 </h4>
 
                 {evaluations
-                  .filter(evaluation => evaluation.resolverName === selectedResolver.name)
+                  .filter(evaluation => evaluation.resolverName === selectedRevolver.name)
                   .map(evaluation => {
                     const feedbackEntries = Object.entries(evaluation.competencyFeedback || {})
                       .filter(([key, value]) => value && value.trim() !== '');
@@ -320,13 +320,13 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
                   .filter(Boolean)}
 
                 {evaluations.filter(evaluation =>
-                  evaluation.resolverName === selectedResolver.name &&
+                  evaluation.resolverName === selectedRevolver.name &&
                   (Object.values(evaluation.competencyFeedback || {}).some(feedback => feedback && feedback.trim() !== '') ||
                     (evaluation.feedback && !evaluation.feedback.includes('Comprehensive evaluation')))
                 ).length === 0 && (
                     <div className="text-center py-8">
                       <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <div className="text-gray-500">No feedback available for this resolver yet.</div>
+                      <div className="text-gray-500">No feedback available for this revolver yet.</div>
                       <div className="text-sm text-gray-400 mt-1">Feedback will appear here once evaluations with comments are submitted.</div>
                     </div>
                   )}
@@ -339,4 +339,4 @@ const ResolverOverview: React.FC<ResolverOverviewProps> = ({ resolvers, evaluati
   );
 };
 
-export default ResolverOverview;
+export default RevolverOverview;

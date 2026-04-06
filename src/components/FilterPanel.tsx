@@ -91,9 +91,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </select>
         </div>
 
-        {/* Resolver Filter */}
+        {/* Revolver Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Resolver</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Revolver</label>
           <select
             value={filters.resolver}
             onChange={(e) => handleFilterChange('resolver', e.target.value)}

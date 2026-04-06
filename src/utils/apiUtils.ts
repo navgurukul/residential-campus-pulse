@@ -1,5 +1,5 @@
 // src/utils/apiUtils.ts
-import { Campus, Resolver, Evaluation } from '../types';
+import { Campus, Revolver, Evaluation } from '../types';
 import { mockEvaluations } from '../data/mockData';
 import { LocalStorageManager } from './localStorage';
 
@@ -33,7 +33,7 @@ const campusNameMapping: { [key: string]: string } = {
 // Additional campuses to include
 const additionalCampuses = ['Dharamshala'];
 
-export const processApiData = (apiData: ApiResponse): { campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] } => {
+export const processApiData = (apiData: ApiResponse): { campuses: Campus[], resolvers: Revolver[], evaluations: Evaluation[] } => {
   if (!apiData || !apiData.responses) {
     return { campuses: [], resolvers: [], evaluations: [] };
   }
@@ -87,7 +87,7 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
     campusEntry.resolvers.add(name);
   });
 
-  const resolvers: Resolver[] = Array.from(resolverMap.values()).map(r => ({
+  const resolvers: Revolver[] = Array.from(resolverMap.values()).map(r => ({
     ...r,
     campusesEvaluated: r.campuses.size,
   }));
@@ -108,7 +108,7 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
 
   const campuses: Campus[] = Array.from(campusMap.values()).map(c => ({
     ...c,
-    totalResolvers: c.resolvers.size,
+    totalRevolvers: c.resolvers.size,
     ranking: getRanking(c.averageScore),
   }));
 
@@ -123,7 +123,7 @@ export const processApiData = (apiData: ApiResponse): { campuses: Campus[], reso
 };
 
 // Enhanced API function with local storage integration
-export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> => {
+export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers: Revolver[], evaluations: Evaluation[] }> => {
   // First, try to get cached data
   const cachedData = LocalStorageManager.getCachedCampusData();
   if (cachedData) {
@@ -199,7 +199,7 @@ export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers
 };
 
 // Function to force refresh data
-export const refreshCampusData = async (): Promise<{ campuses: Campus[], resolvers: Resolver[], evaluations: Evaluation[] }> => {
+export const refreshCampusData = async (): Promise<{ campuses: Campus[], resolvers: Revolver[], evaluations: Evaluation[] }> => {
   console.log('🔄 Force refreshing campus data...');
   LocalStorageManager.clearCampusData();
   return await fetchCampusData();

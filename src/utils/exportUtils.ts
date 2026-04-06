@@ -78,15 +78,15 @@ export const prepareCampusDataForExport = (campuses: any[]) => {
     'Campus Name': campus.name,
     'Location': campus.location,
     'Average Score': campus.averageScore,
-    'Total Resolvers': campus.totalResolvers,
+    'Total Revolvers': campus.totalRevolvers,
     'Ranking': campus.ranking,
     'Last Evaluated': new Date(campus.lastEvaluated).toLocaleDateString()
   }));
 };
 
-export const prepareResolverDataForExport = (resolvers: any[]) => {
+export const prepareRevolverDataForExport = (resolvers: any[]) => {
   return resolvers.map(resolver => ({
-    'Resolver Name': resolver.name,
+    'Revolver Name': resolver.name,
     'Email': resolver.email,
     'Campuses Evaluated': resolver.campusesEvaluated,
     'Average Score Given': resolver.averageScoreGiven,
@@ -98,7 +98,7 @@ export const prepareResolverDataForExport = (resolvers: any[]) => {
 export const prepareEvaluationDataForExport = (evaluations: any[]) => {
   return evaluations.map(evaluation => ({
     'Campus': evaluation.campusName,
-    'Resolver': evaluation.resolverName,
+    'Revolver': evaluation.resolverName,
     'Overall Score': evaluation.overallScore,
     'Date Evaluated': new Date(evaluation.dateEvaluated).toLocaleDateString(),
     'Status': evaluation.status,
@@ -114,12 +114,12 @@ export const prepareCampusDetailDataForExport = (campus: any, evaluations: any[]
       'Campus Name': campus.name,
       'Location': campus.location,
       'Overall Score': campus.averageScore,
-      'Total Resolvers': campus.totalResolvers,
+      'Total Revolvers': campus.totalRevolvers,
       'Ranking': campus.ranking,
       'Last Evaluated': new Date(campus.lastEvaluated).toLocaleDateString()
     },
     evaluations: campusEvaluations.map(evaluation => ({
-      'Resolver': evaluation.resolverName,
+      'Revolver': evaluation.resolverName,
       'Overall Score': evaluation.overallScore,
       'Date Evaluated': new Date(evaluation.dateEvaluated).toLocaleDateString(),
       'Competencies': evaluation.competencies.map(comp => 
