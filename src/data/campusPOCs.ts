@@ -56,10 +56,6 @@ export const CAMPUS_POC_DATA: CampusPOCConfig[] = [
         competencies: [
           'English Communication & Comprehension'
         ]
-      },
-      {
-        name: 'Rani Kharate',
-        competencies: []
       }
     ]
   },
