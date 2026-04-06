@@ -51,6 +51,14 @@ function App() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Campus; direction: 'ascending' | 'descending' } | null>(null);
 
+  // Normalize campus data from backend (maps totalResolvers → totalRevolvers)
+  const normalizeCampuses = (campuses: any[]): Campus[] => {
+    return campuses.map(c => ({
+      ...c,
+      totalRevolvers: c.totalRevolvers ?? c.totalResolvers ?? 0,
+    }));
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -67,7 +75,7 @@ function App() {
           
           // Use cached data if it has valid data (no expiry check)
           if (data.campuses && data.resolvers && data.evaluations) {
-            setCampuses(data.campuses);
+            setCampuses(normalizeCampuses(data.campuses));
             setResolvers(data.resolvers);
             setEvaluations(data.evaluations);
             setLastUpdated(data.lastUpdated);
@@ -94,7 +102,7 @@ function App() {
         if (data.campuses && data.resolvers && data.evaluations && 
             data.campuses.length > 0 && data.resolvers.length > 0) {
           // Use data directly from backend (already processed)
-          setCampuses(data.campuses);
+          setCampuses(normalizeCampuses(data.campuses));
           setResolvers(data.resolvers);
           setEvaluations(data.evaluations);
           setLastUpdated(data.lastUpdated);
@@ -118,7 +126,7 @@ function App() {
           console.warn('Using mock data as fallback...');
           
           const { campuses, resolvers, evaluations } = processApiData({ status: 'ok', responses: [] });
-          setCampuses(campuses);
+          setCampuses(normalizeCampuses(campuses));
           setResolvers(resolvers);
           setEvaluations(mockEvaluations);
           setLastUpdated('No real data - using mock data for demo');
@@ -128,7 +136,7 @@ function App() {
         // Fallback to mock data on error
         console.log('Backend error, using mock data');
         const { campuses, resolvers, evaluations } = processApiData({ status: 'ok', responses: [] });
-        setCampuses(campuses);
+        setCampuses(normalizeCampuses(campuses));
         setResolvers(resolvers);
         setEvaluations(mockEvaluations);
       } finally {
@@ -162,7 +170,7 @@ function App() {
       const data = await response.json();
       
       if (data.campuses && data.resolvers && data.evaluations) {
-        setCampuses(data.campuses);
+        setCampuses(normalizeCampuses(data.campuses));
         setResolvers(data.resolvers);
         setEvaluations(data.evaluations);
         setLastUpdated(data.lastUpdated);

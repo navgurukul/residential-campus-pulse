@@ -94,7 +94,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
       score: selectedCompetency
         ? getCompetencyScoreForCampus(campus.id, selectedCompetency)
         : campus.averageScore,
-      resolvers: campus.totalResolvers
+      resolvers: campus.totalRevolvers
     }));
   }, [campuses, selectedCompetency, evaluations]);
 
@@ -111,7 +111,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
     { name: 'Level 0', value: activeCampuses.filter(c => getCampusLevel(c.averageScore) === 'Level 0').length, color: '#EF4444' }
   ].filter(item => item.value > 0); // Filter out zero values to prevent overlapping labels
 
-  const totalResolvers = campuses.reduce((sum, campus) => sum + campus.totalResolvers, 0);
+  const totalResolvers = campuses.reduce((sum, campus) => sum + (campus.totalRevolvers || 0), 0);
   const averageScore = campuses.length > 0 ? campuses.reduce((sum, campus) => sum + campus.averageScore, 0) / campuses.length : 0;
   
   // Calculate urgent issue statistics
