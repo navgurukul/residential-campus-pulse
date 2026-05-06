@@ -49,14 +49,11 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
 
 
 
-  // Helper function to calculate level based on 0-7 score scale mapping to 0-4 levels
+  // Helper function to calculate level based on 0-7 score scale
+  // Score directly maps to level: 3.x = Level 3, 4.x = Level 4, etc.
   const getCampusLevel = (score: number): string => {
-    // Convert score to level (0-7 score maps to Level 0-4)
-    if (score >= 6.5) return 'Level 4';
-    if (score >= 4.5) return 'Level 3';
-    if (score >= 2.5) return 'Level 2';
-    if (score >= 1) return 'Level 1';
-    return 'Level 0';
+    const level = Math.floor(score);
+    return `Level ${Math.min(7, Math.max(0, level))}`;
   };
 
   // Helper function for level colors
