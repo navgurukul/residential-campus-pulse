@@ -49,6 +49,36 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
 
 
 
+  // Helper to get this month's and last month's average score for a campus
+  const getMonthlyProgress = (campusName: string) => {
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+    const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+    const campusEvals = evaluations.filter(e => e.campusName === campusName);
+
+    const thisMonthEvals = campusEvals.filter(e => {
+      const d = new Date(e.dateEvaluated);
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    });
+
+    const lastMonthEvals = campusEvals.filter(e => {
+      const d = new Date(e.dateEvaluated);
+      return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+    });
+
+    if (thisMonthEvals.length === 0 || lastMonthEvals.length === 0) return null;
+
+    const thisAvg = thisMonthEvals.reduce((s, e) => s + e.overallScore, 0) / thisMonthEvals.length;
+    const lastAvg = lastMonthEvals.reduce((s, e) => s + e.overallScore, 0) / lastMonthEvals.length;
+    const diff = thisAvg - lastAvg;
+    const pct = lastAvg > 0 ? (diff / lastAvg) * 100 : 0;
+
+    return { diff: Math.round(diff * 10) / 10, pct: Math.round(pct), lastAvg: Math.round(lastAvg * 10) / 10 };
+  };
+
   // Helper function to calculate level based on 0-7 score scale
   // Score directly maps to level: 3.x = Level 3, 4.x = Level 4, etc.
   const getCampusLevel = (score: number): string => {
@@ -419,6 +449,18 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                         ></div>
                       </div>
                     </div>
+                    {(() => {
+                      const progress = getMonthlyProgress(campus.name);
+                      if (!progress) return null;
+                      const isUp = progress.diff >= 0;
+                      return (
+                        <div className={`flex items-center mt-1 text-xs font-medium ${isUp ? 'text-green-600' : 'text-red-500'}`}>
+                          <span>{isUp ? '↑' : '↓'}</span>
+                          <span className="ml-0.5">{isUp ? '+' : ''}{progress.diff} ({isUp ? '+' : ''}{progress.pct}%)</span>
+                          <span className="ml-1 text-gray-400 font-normal">vs {progress.lastAvg} last mo.</span>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {campus.totalRevolvers}
