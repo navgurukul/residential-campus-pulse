@@ -32,7 +32,7 @@ const UrgentIssues: React.FC = () => {
       setLoading(true);
       console.log('Fetching urgent issues from API...');
       
-      const response = await fetch('http://65.0.18.100/api/campus-pulse/urgent-issues');
+      const response = await fetch('http://backend.navgurukul.org/api/campus-pulse/urgent-issues');
       console.log('API Response status:', response.status);
       
       if (!response.ok) {
