@@ -96,7 +96,7 @@ function App() {
       
       // If no valid cache, fetch from backend
       try {
-        const response = await fetch('https://ng-campus-pulse-n5ar.onrender.com/api/campus-data');
+        const response = await fetch('http://65.0.18.100/api/campus-pulse/campus-data');
         const data = await response.json();
         
         if (data.campuses && data.resolvers && data.evaluations && 
@@ -166,7 +166,7 @@ function App() {
     
     try {
       console.log('🔄 Force refreshing data from backend...');
-      const response = await fetch('https://ng-campus-pulse-n5ar.onrender.com/api/campus-data');
+      const response = await fetch('http://65.0.18.100/api/campus-pulse/campus-data');
       const data = await response.json();
       
       if (data.campuses && data.resolvers && data.evaluations) {
