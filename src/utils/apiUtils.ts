@@ -135,7 +135,7 @@ export const fetchCampusData = async (): Promise<{ campuses: Campus[], resolvers
   
   try {
     // Try to fetch from the backend API
-    const response = await fetch('http://backend.navgurukul.org/api/campus-pulse/campus-data', {
+    const response = await fetch('http://65.0.18.100/api/campus-pulse/campus-data', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
