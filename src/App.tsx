@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Building2, Users, BarChart3, Settings, Lock, AlertTriangle, RefreshCw, ClipboardEdit } from 'lucide-react';
+import { Building2, Users, BarChart3, AlertTriangle, ClipboardEdit } from 'lucide-react';
 import CampusOverview from './components/CampusOverview';
 import CampusDetail from './components/CampusDetail';
 import RevolverOverview from './components/ResolverOverview';
@@ -322,50 +322,6 @@ function App() {
               </div>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
-              <div className="text-xs md:text-sm text-gray-500 whitespace-nowrap">
-                {lastUpdated ? (
-                  lastUpdated.includes('mock data') ? (
-                    <div className="flex flex-col md:flex-row md:items-center">
-                      <span className="text-orange-600 font-medium">⚠️ No Real Data Available</span>
-                      <span className="text-xs text-orange-500 ml-1">(Using demo data - Admin needs to sync from Google Sheets)</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col md:flex-row md:items-center">
-                      <span className="hidden md:inline">Data cached: </span>
-                      <span className="md:hidden">Cached: </span>
-                      <span className="font-mono">
-                        {new Date(lastUpdated).toLocaleString('en-IN', {
-                          timeZone: 'Asia/Kolkata',
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                          hour12: true
-                        })}
-                      </span>
-                    </div>
-                  )
-                ) : (
-                  <>Data cleared for privacy - Admin refresh required</>
-                )}
-              </div>
-              <button
-                onClick={refreshData}
-                className="p-2 text-gray-400 hover:text-blue-600 transition-colors duration-200 flex-shrink-0"
-                title="Refresh data from backend"
-                disabled={loading}
-              >
-                <RefreshCw className={`w-4 h-4 md:w-5 md:h-5 ${loading ? 'animate-spin' : ''}`} />
-              </button>
-              <div
-                className="p-2 text-gray-400 flex-shrink-0"
-                title="Data refresh restricted to admin access only"
-              >
-                <Lock className="w-4 h-4 md:w-5 md:h-5" />
-              </div>
-              <Settings className="w-4 h-4 md:w-5 md:h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors duration-200 flex-shrink-0" />
             </div>
           </div>
         </div>
