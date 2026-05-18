@@ -27,6 +27,31 @@ const UrgentIssues: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedIssue, setSelectedIssue] = useState<UrgentIssue | null>(null);
 
+  // Filter out non-urgent responses (people saying "No", "Everything is fine", etc.)
+  const isGenuineIssue = (text: string): boolean => {
+    if (!text || text.trim().length < 10) return false;
+    const t = text.trim().toLowerCase();
+    const negativePatterns = [
+      /^no[.,!]?\s*$/,
+      /^nope[.,!]?\s*$/,
+      /^na[.,!]?\s*$/,
+      /^none[.,!]?\s*$/,
+      /^nil[.,!]?\s*$/,
+      /^nothing[.,!]?\s*$/,
+      /everything is (fine|good|ok|okay|going well|in control|lifting)/,
+      /things are in control/,
+      /no critical/,
+      /not (that )?urgent/,
+      /nothing is (that )?urgent/,
+      /nothing (pressing|critical)/,
+      /no (pressing|urgent|critical)/,
+      /all (is |are )?(good|fine|well|okay|ok)/,
+      /going well/,
+      /^not (applicable|available)[.,!]?\s*$/,
+    ];
+    return !negativePatterns.some(pattern => pattern.test(t));
+  };
+
   const fetchUrgentIssues = async () => {
     try {
       setLoading(true);
@@ -42,7 +67,16 @@ const UrgentIssues: React.FC = () => {
       const result = await response.json();
       console.log('Urgent issues API response:', result);
       
-      setData(result);
+      // Filter out non-genuine responses
+      const filtered = {
+        ...result,
+        urgentIssues: (result.urgentIssues || []).filter((i: UrgentIssue) => isGenuineIssue(i.issue)),
+        escalationIssues: (result.escalationIssues || []).filter((i: UrgentIssue) => isGenuineIssue(i.issue)),
+      };
+      filtered.totalUrgent = filtered.urgentIssues.length;
+      filtered.totalEscalation = filtered.escalationIssues.length;
+      
+      setData(filtered);
       setError(null);
     } catch (err) {
       console.error('Error fetching urgent issues:', err);
