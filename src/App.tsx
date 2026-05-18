@@ -6,6 +6,7 @@ import RevolverOverview from './components/ResolverOverview';
 import UrgentIssues from './components/UrgentIssues';
 import FilterPanel from './components/FilterPanel';
 import LoadingSpinner from './components/LoadingSpinner';
+import EvaluationForm from './components/EvaluationForm';
 
 import { FilterState, Campus, Revolver, Evaluation } from './types';
 import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareRevolverDataForExport } from './utils/exportUtils';
@@ -498,22 +499,7 @@ function App() {
         )}
 
         {currentView === 'fill-form' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white">
-              <h2 className="text-lg font-semibold">📝 Campus Competency - Revolver Observation</h2>
-              <p className="text-sm text-orange-100">Fill this form monthly for your respective campus</p>
-            </div>
-            <iframe
-              src="https://docs.google.com/forms/d/e/1FAIpQLScTxmTewHXvDb9Xk5EZ7GiwGN1ZbiMKtr9kTQ6piCzESyYq7w/viewform?embedded=true"
-              width="100%"
-              height="800"
-              frameBorder={0}
-              title="Campus Competency Form"
-              className="w-full"
-            >
-              Loading form...
-            </iframe>
-          </div>
+          <EvaluationForm />
         )}
       </main>
 
