@@ -439,7 +439,7 @@ export default function EvaluationForm() {
       return `Level ${lvl} - ${desc}`;
     };
 
-    const payload = [{
+    const payload = {
       'Email Address': formData.email,
       'Name ': formData.name,
       'Choose the campus you are referring to ': formData.campus,
