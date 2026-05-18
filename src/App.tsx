@@ -10,8 +10,6 @@ import EvaluationForm from './components/EvaluationForm';
 
 import { FilterState, Campus, Revolver, Evaluation } from './types';
 import { exportToCSV, exportToPDF, prepareCampusDataForExport, prepareRevolverDataForExport } from './utils/exportUtils';
-import { processApiData } from './utils/apiUtils';
-import { mockEvaluations } from './data/mockData';
 
 type View = 'campus-overview' | 'campus-detail' | 'resolver-overview' | 'urgent-issues' | 'fill-form';
 
@@ -23,7 +21,7 @@ function App() {
     resolver: '',
     dateRange: { start: '', end: '' },
     competencyCategory: '',
-    competency: 'vipasana', // Default to 'vipasana'
+    competency: 'vipasana',
   });
 
   // Handle hash-based navigation
@@ -34,25 +32,18 @@ function App() {
         setCurrentView(hash as View);
       }
     };
-
-    // Set initial view based on hash
     handleHashChange();
-
-    // Listen for hash changes
     window.addEventListener('hashchange', handleHashChange);
-    
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [resolvers, setResolvers] = useState<Revolver[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Campus; direction: 'ascending' | 'descending' } | null>(null);
 
-  // Normalize campus data from backend (maps totalResolvers → totalRevolvers)
+  // Normalize campus data from backend
   const normalizeCampuses = (campuses: any[]): Campus[] => {
     return campuses.map(c => ({
       ...c,
@@ -60,154 +51,25 @@ function App() {
     }));
   };
 
+  // Fetch fresh data from backend on every load
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      
-      // First, try to load from localStorage
-      try {
-        const cachedData = localStorage.getItem('campus-pulse-data');
-        const cachedTimestamp = localStorage.getItem('campus-pulse-timestamp');
-        
-        if (cachedData && cachedTimestamp) {
-          const data = JSON.parse(cachedData);
-          const timestamp = parseInt(cachedTimestamp);
-          const now = Date.now();
-          
-          // Use cached data if it has valid data (no expiry check)
-          if (data.campuses && data.resolvers && data.evaluations) {
-            setCampuses(normalizeCampuses(data.campuses));
-            setResolvers(data.resolvers);
-            setEvaluations(data.evaluations);
-            setLastUpdated(data.lastUpdated);
-            setLoading(false);
-            console.log('Data loaded from cache:', {
-              campuses: data.campuses.length,
-              resolvers: data.resolvers.length,
-              evaluations: data.evaluations.length,
-              lastUpdated: data.lastUpdated,
-              cacheAge: Math.round((now - timestamp) / 1000 / 60) + ' minutes ago'
-            });
-            return;
-          }
-        }
-      } catch (error) {
-        console.log('Cache read error, fetching fresh data:', error);
-      }
-      
-      // If no valid cache, fetch from backend
       try {
         const response = await fetch('https://backend.navgurukul.org/api/campus-pulse/campus-data');
         const data = await response.json();
-        
-        if (data.campuses && data.resolvers && data.evaluations && 
-            data.campuses.length > 0 && data.resolvers.length > 0) {
-          // Use data directly from backend (already processed)
+        if (data.campuses && data.resolvers && data.evaluations) {
           setCampuses(normalizeCampuses(data.campuses));
           setResolvers(data.resolvers);
           setEvaluations(data.evaluations);
-          setLastUpdated(data.lastUpdated);
-          
-          // Cache the successful response
-          localStorage.setItem('campus-pulse-data', JSON.stringify(data));
-          localStorage.setItem('campus-pulse-timestamp', Date.now().toString());
-          
-          console.log('✅ Data loaded from backend and cached:', {
-            campuses: data.campuses.length,
-            resolvers: data.resolvers.length,
-            evaluations: data.evaluations.length,
-            lastUpdated: data.lastUpdated
-          });
-        } else {
-          // Backend has no data - show clear message and use mock data
-          console.warn('⚠️ Backend has no data. This usually means:');
-          console.warn('1. Google Apps Script hasn\'t pushed data yet');
-          console.warn('2. Backend server restarted and lost in-memory data');
-          console.warn('3. No form submissions have been processed');
-          console.warn('Using mock data as fallback...');
-          
-          const { campuses, resolvers, evaluations } = processApiData({ status: 'ok', responses: [] });
-          setCampuses(normalizeCampuses(campuses));
-          setResolvers(resolvers);
-          setEvaluations(mockEvaluations);
-          setLastUpdated('No real data - using mock data for demo');
         }
       } catch (error) {
         console.error('Error fetching data from backend:', error);
-        // Fallback to mock data on error
-        console.log('Backend error, using mock data');
-        const { campuses, resolvers, evaluations } = processApiData({ status: 'ok', responses: [] });
-        setCampuses(normalizeCampuses(campuses));
-        setResolvers(resolvers);
-        setEvaluations(mockEvaluations);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, [filters.competency]);
-
-  // Function to clear cache (for admin use)
-  const clearCache = () => {
-    localStorage.removeItem('campus-pulse-data');
-    localStorage.removeItem('campus-pulse-timestamp');
-    console.log('Cache cleared - refresh page to fetch fresh data');
-    // Optionally reload the page to fetch fresh data
-    window.location.reload();
-  };
-
-  // Function to refresh data (force fetch from backend)
-  const refreshData = async () => {
-    setLoading(true);
-    
-    // Clear cache first
-    localStorage.removeItem('campus-pulse-data');
-    localStorage.removeItem('campus-pulse-timestamp');
-    
-    try {
-      console.log('🔄 Force refreshing data from backend...');
-      const response = await fetch('https://backend.navgurukul.org/api/campus-pulse/campus-data');
-      const data = await response.json();
-      
-      if (data.campuses && data.resolvers && data.evaluations) {
-        setCampuses(normalizeCampuses(data.campuses));
-        setResolvers(data.resolvers);
-        setEvaluations(data.evaluations);
-        setLastUpdated(data.lastUpdated);
-        
-        // Cache the fresh data
-        localStorage.setItem('campus-pulse-data', JSON.stringify(data));
-        localStorage.setItem('campus-pulse-timestamp', Date.now().toString());
-        
-        console.log('✅ Data refreshed successfully:', {
-          campuses: data.campuses.length,
-          resolvers: data.resolvers.length,
-          evaluations: data.evaluations.length
-        });
-      } else {
-        console.warn('⚠️ No data available from backend');
-      }
-    } catch (error) {
-      console.error('❌ Error refreshing data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Add keyboard shortcut for cache clearing (Ctrl+Shift+C)
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.shiftKey && event.key === 'C') {
-        event.preventDefault();
-        if (confirm('Clear cached data and reload fresh data from backend?')) {
-          clearCache();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
 
   // Filter and sort data based on current filters and sort configuration
@@ -428,7 +290,7 @@ function App() {
         {currentView === 'campus-overview' && (
           <CampusOverview
             campuses={filteredCampuses}
-            evaluations={evaluations.length > 0 ? evaluations : mockEvaluations}
+            evaluations={evaluations}
             onCampusSelect={handleCampusSelect}
             onSort={handleSort}
             sortConfig={sortConfig}
@@ -438,7 +300,7 @@ function App() {
         {currentView === 'campus-detail' && selectedCampus && (
           <CampusDetail
             campus={selectedCampus}
-            evaluations={evaluations.length > 0 ? evaluations : mockEvaluations}
+            evaluations={evaluations}
             onBack={handleBackToCampusOverview}
           />
         )}
@@ -446,7 +308,7 @@ function App() {
         {currentView === 'resolver-overview' && (
           <RevolverOverview 
             resolvers={filteredResolvers} 
-            evaluations={evaluations.length > 0 ? evaluations : mockEvaluations}
+            evaluations={evaluations}
           />
         )}
 
