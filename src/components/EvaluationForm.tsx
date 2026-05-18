@@ -386,8 +386,7 @@ export default function EvaluationForm() {
       if (ans.level === null) errors.push('Please select a level (0–7).');
       if (!ans.why.trim()) errors.push('"Why have you marked this level?" is required.');
     } else if (step === LAST_STEP) {
-      if (!formData.urgentAttention.trim()) errors.push('"Urgent attention" field is required.');
-      if (!formData.escalation.trim()) errors.push('"Escalation" field is required.');
+      // urgent fields are optional — no validation needed
     }
     return errors;
   };
@@ -403,8 +402,7 @@ export default function EvaluationForm() {
       if (ans.level === null) errors.push(`Level selection required for "${comp.shortName}" (Step ${idx + 1}).`);
       if (!ans.why.trim()) errors.push(`"Why" field required for "${comp.shortName}" (Step ${idx + 1}).`);
     });
-    if (!formData.urgentAttention.trim()) errors.push('Urgent attention field is required (Final step).');
-    if (!formData.escalation.trim()) errors.push('Escalation field is required (Final step).');
+    // urgent fields are optional — no validation needed
     return errors;
   };
 
@@ -484,7 +482,7 @@ export default function EvaluationForm() {
     }];
 
     try {
-      const res = await fetch('https://backend.navgurukul.org/api/campus-pulse/import-data', {
+      const res = await fetch('https://backend.navgurukul.org/api/campus-pulse/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -781,8 +779,8 @@ export default function EvaluationForm() {
 
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Is there anything that you find pressing in the campus, that needs urgent attention?{' '}
-                  <span className="text-red-500">*</span>
+                  Is there anything that you find pressing in the campus, that needs urgent attention?
+                  <span className="text-gray-400 text-xs font-normal ml-1">(optional)</span>
                 </label>
                 <textarea
                   value={formData.urgentAttention}
@@ -795,8 +793,8 @@ export default function EvaluationForm() {
 
               <div className="mb-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Is there anything that you find in the campus, that directly needs escalation?{' '}
-                  <span className="text-red-500">*</span>
+                  Is there anything that you find in the campus, that directly needs escalation?
+                  <span className="text-gray-400 text-xs font-normal ml-1">(optional)</span>
                 </label>
                 <div className="flex gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg mb-2">
                   <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
