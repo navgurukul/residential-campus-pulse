@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Kiro specs and bolt config
+.kiro/
+.bolt/
