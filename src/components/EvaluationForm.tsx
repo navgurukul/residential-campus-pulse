@@ -479,7 +479,7 @@ export default function EvaluationForm() {
       'Is there anything else you would like to share that is not covered in the Life Skills Implementation  competency levels for this bracket?': formData.competencies.lifeSkills.additional,
       'Is there anything that you find pressing in the campus, that needs urgent attention?': formData.urgentAttention,
       'Is there anything that you find in the campus, that directly needs escalation? This answer would be mailed to senior most team for urgent attention.': formData.escalation,
-    }];
+    };
 
     try {
       const res = await fetch('https://backend.navgurukul.org/api/campus-pulse/submit', {
