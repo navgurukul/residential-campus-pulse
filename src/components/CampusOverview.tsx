@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, Users, Award, MapPin, ArrowUpDown, Filter, BarChart3, AlertTriangle, Clock } from 'lucide-react';
 import { Campus, Evaluation } from '../types';
 import { competencyCategories } from '../data/mockData';
+import { formatDate } from '../utils/dateUtils';
 
 interface CampusOverviewProps {
   campuses: Campus[];
@@ -49,34 +50,53 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
 
 
 
-  // Helper to get this month's and last month's average score for a campus
+  // Helper to get average score comparison based on the latest available data periods
   const getMonthlyProgress = (campusName: string) => {
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
-    const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-
     const campusEvals = evaluations.filter(e => e.campusName === campusName);
+    if (campusEvals.length === 0) return null;
 
-    const thisMonthEvals = campusEvals.filter(e => {
-      const d = new Date(e.dateEvaluated);
-      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    // Group evaluations by YYYY-MM
+    const monthlyGroups: { [key: string]: number[] } = {};
+    campusEvals.forEach(e => {
+      const date = new Date(e.dateEvaluated);
+      if (isNaN(date.getTime())) return;
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!monthlyGroups[key]) monthlyGroups[key] = [];
+      monthlyGroups[key].push(e.overallScore);
     });
 
-    const lastMonthEvals = campusEvals.filter(e => {
-      const d = new Date(e.dateEvaluated);
-      return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
-    });
+    const sortedMonthKeys = Object.keys(monthlyGroups).sort();
+    if (sortedMonthKeys.length < 2) return null;
 
-    if (thisMonthEvals.length === 0 || lastMonthEvals.length === 0) return null;
+    const latestMonthKey = sortedMonthKeys[sortedMonthKeys.length - 1];
+    const prevMonthKey = sortedMonthKeys[sortedMonthKeys.length - 2];
 
-    const thisAvg = thisMonthEvals.reduce((s, e) => s + e.overallScore, 0) / thisMonthEvals.length;
-    const lastAvg = lastMonthEvals.reduce((s, e) => s + e.overallScore, 0) / lastMonthEvals.length;
-    const diff = thisAvg - lastAvg;
-    const pct = lastAvg > 0 ? (diff / lastAvg) * 100 : 0;
+    const latestScores = monthlyGroups[latestMonthKey];
+    const prevScores = monthlyGroups[prevMonthKey];
 
-    return { diff: Math.round(diff * 10) / 10, pct: Math.round(pct), lastAvg: Math.round(lastAvg * 10) / 10 };
+    const latestAvg = latestScores.reduce((sum, s) => sum + s, 0) / latestScores.length;
+    const prevAvg = prevScores.reduce((sum, s) => sum + s, 0) / prevScores.length;
+
+    const diff = latestAvg - prevAvg;
+    const pct = prevAvg > 0 ? (diff / prevAvg) * 100 : 0;
+
+    const [latestYear, latestMonthNum] = latestMonthKey.split('-').map(Number);
+    const [prevYear, prevMonthNum] = prevMonthKey.split('-').map(Number);
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Check if consecutive months
+    const isConsecutive = (latestYear === prevYear && latestMonthNum === prevMonthNum + 1) ||
+                          (latestYear === prevYear + 1 && latestMonthNum === 1 && prevMonthNum === 12);
+
+    const label = isConsecutive ? 'last mo.' : `in ${monthNames[prevMonthNum - 1]}`;
+
+    return {
+      diff: Math.round(diff * 10) / 10,
+      pct: Math.round(pct),
+      lastAvg: Math.round(prevAvg * 10) / 10,
+      label
+    };
   };
 
   // Helper function to calculate level based on 0-7 score scale
@@ -457,7 +477,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                         <div className={`flex items-center mt-1 text-xs font-medium ${isUp ? 'text-green-600' : 'text-red-500'}`}>
                           <span>{isUp ? '↑' : '↓'}</span>
                           <span className="ml-0.5">{isUp ? '+' : ''}{progress.diff} ({isUp ? '+' : ''}{progress.pct}%)</span>
-                          <span className="ml-1 text-gray-400 font-normal">vs {progress.lastAvg} last mo.</span>
+                          <span className="ml-1 text-gray-400 font-normal">vs {progress.lastAvg} {progress.label}</span>
                         </div>
                       );
                     })()}
@@ -516,7 +536,7 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                     })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(campus.lastEvaluated).toLocaleDateString()}
+                    {formatDate(campus.lastEvaluated)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {(() => {

@@ -3,6 +3,7 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Responsi
 import { ArrowLeft, MessageSquare, Calendar, User, Download, FileText, TrendingUp, Award, AlertCircle, Users, UserCheck } from 'lucide-react';
 import { Campus, Evaluation } from '../types';
 import { competencyCategories } from '../data/mockData';
+import { formatDate } from '../utils/dateUtils';
 import { exportToPDF, exportToCSV, prepareCampusDetailDataForExport } from '../utils/exportUtils';
 import { getCampusPOCs, hasPOCConfig } from '../data/campusPOCs';
 
@@ -248,7 +249,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Last Evaluated</p>
-              <p className="text-2xl font-bold text-gray-900">{new Date(campus.lastEvaluated).toLocaleDateString()}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatDate(campus.lastEvaluated)}</p>
             </div>
             <Calendar className="w-8 h-8 text-orange-600" />
           </div>
@@ -423,7 +424,7 @@ const CampusDetail: React.FC<CampusDetailProps> = ({ campus, evaluations, onBack
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h4 className="font-medium text-gray-900">{evaluation.resolverName}</h4>
-                    <p className="text-sm text-gray-500">Evaluated on {new Date(evaluation.dateEvaluated).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500">Evaluated on {formatDate(evaluation.dateEvaluated)}</p>
                   </div>
                   <div className="text-right">
                     <div className="text-xl font-bold text-blue-600">{evaluation.overallScore}</div>

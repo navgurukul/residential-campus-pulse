@@ -1,3 +1,5 @@
+import { formatDate } from './dateUtils';
+
 export const exportToCSV = (data: any[], filename: string) => {
   if (data.length === 0) return;
 
@@ -80,7 +82,7 @@ export const prepareCampusDataForExport = (campuses: any[]) => {
     'Average Score': campus.averageScore,
     'Total Revolvers': campus.totalRevolvers,
     'Ranking': campus.ranking,
-    'Last Evaluated': new Date(campus.lastEvaluated).toLocaleDateString()
+    'Last Evaluated': formatDate(campus.lastEvaluated)
   }));
 };
 
@@ -91,7 +93,7 @@ export const prepareRevolverDataForExport = (resolvers: any[]) => {
     'Campuses Evaluated': resolver.campusesEvaluated,
     'Average Score Given': resolver.averageScoreGiven,
     'Total Evaluations': resolver.totalEvaluations,
-    'Last Activity': new Date(resolver.lastActivity).toLocaleDateString()
+    'Last Activity': formatDate(resolver.lastActivity)
   }));
 };
 
@@ -100,7 +102,7 @@ export const prepareEvaluationDataForExport = (evaluations: any[]) => {
     'Campus': evaluation.campusName,
     'Revolver': evaluation.resolverName,
     'Overall Score': evaluation.overallScore,
-    'Date Evaluated': new Date(evaluation.dateEvaluated).toLocaleDateString(),
+    'Date Evaluated': formatDate(evaluation.dateEvaluated),
     'Status': evaluation.status,
     'Feedback': evaluation.feedback
   }));
@@ -116,12 +118,12 @@ export const prepareCampusDetailDataForExport = (campus: any, evaluations: any[]
       'Overall Score': campus.averageScore,
       'Total Revolvers': campus.totalRevolvers,
       'Ranking': campus.ranking,
-      'Last Evaluated': new Date(campus.lastEvaluated).toLocaleDateString()
+      'Last Evaluated': formatDate(campus.lastEvaluated)
     },
     evaluations: campusEvaluations.map(evaluation => ({
       'Revolver': evaluation.resolverName,
       'Overall Score': evaluation.overallScore,
-      'Date Evaluated': new Date(evaluation.dateEvaluated).toLocaleDateString(),
+      'Date Evaluated': formatDate(evaluation.dateEvaluated),
       'Competencies': evaluation.competencies.map(comp => 
         `${comp.category}: ${comp.score}/${comp.maxScore}`
       ).join('; '),

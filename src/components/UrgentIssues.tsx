@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Clock, MapPin, User, Mail, Calendar, RefreshCw } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 
 
 interface UrgentIssue {
@@ -240,7 +241,7 @@ const UrgentIssues: React.FC = () => {
                         )}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {new Date(issue.dateEvaluated).toLocaleDateString()}
+                        {formatDate(issue.dateEvaluated)}
                       </div>
                     </div>
                     
@@ -328,7 +329,7 @@ const UrgentIssues: React.FC = () => {
                     <div className="flex items-center mt-1">
                       <Calendar className="w-4 h-4 text-gray-400 mr-2" />
                       <span className="text-gray-900">
-                        {new Date(selectedIssue.dateEvaluated).toLocaleDateString()}
+                        {formatDate(selectedIssue.dateEvaluated)}
                       </span>
                     </div>
                   </div>

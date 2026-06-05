@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { User, MapPin, TrendingUp, Calendar, MessageSquare, X, Users, BarChart3, Award } from 'lucide-react';
 import { Revolver, Evaluation } from '../types';
+import { formatDate } from '../utils/dateUtils';
 
 // Helper function to parse markdown-style formatting
 const parseMarkdown = (text: string) => {
@@ -217,7 +218,7 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ resolvers, evaluati
                     {resolver.totalEvaluations}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(resolver.lastActivity).toLocaleDateString()}
+                    {formatDate(resolver.lastActivity)}
                   </td>
                 </tr>
               ))}
@@ -287,7 +288,7 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ resolvers, evaluati
                       <div key={evaluation.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <div className="flex items-center justify-between mb-3">
                           <div className="font-medium text-gray-900">{evaluation.campusName}</div>
-                          <div className="text-sm text-gray-500">{evaluation.dateEvaluated}</div>
+                          <div className="text-sm text-gray-500">{formatDate(evaluation.dateEvaluated)}</div>
                         </div>
 
                         {/* General Feedback */}
