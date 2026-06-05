@@ -472,11 +472,28 @@ const CampusOverview: React.FC<CampusOverviewProps> = ({ campuses, evaluations, 
                     {(() => {
                       const progress = getMonthlyProgress(campus.name);
                       if (!progress) return null;
-                      const isUp = progress.diff >= 0;
+                      
+                      let colorClass = 'text-gray-500';
+                      let arrow = '';
+                      let diffText = '0';
+                      let pctText = '0%';
+                      
+                      if (progress.diff > 0) {
+                        colorClass = 'text-green-600';
+                        arrow = '↑ ';
+                        diffText = `+${progress.diff}`;
+                        pctText = `+${progress.pct}%`;
+                      } else if (progress.diff < 0) {
+                        colorClass = 'text-red-500';
+                        arrow = '↓ ';
+                        diffText = `${progress.diff}`;
+                        pctText = `${progress.pct}%`;
+                      }
+                      
                       return (
-                        <div className={`flex items-center mt-1 text-xs font-medium ${isUp ? 'text-green-600' : 'text-red-500'}`}>
-                          <span>{isUp ? '↑' : '↓'}</span>
-                          <span className="ml-0.5">{isUp ? '+' : ''}{progress.diff} ({isUp ? '+' : ''}{progress.pct}%)</span>
+                        <div className={`flex items-center mt-1 text-xs font-medium ${colorClass}`}>
+                          <span>{arrow}</span>
+                          <span className="ml-0.5">{diffText} ({pctText})</span>
                           <span className="ml-1 text-gray-400 font-normal">vs {progress.lastAvg} {progress.label}</span>
                         </div>
                       );
