@@ -60,7 +60,15 @@ function App() {
         const data = await response.json();
         if (data.campuses && data.resolvers && data.evaluations) {
           setCampuses(normalizeCampuses(data.campuses));
-          setResolvers(data.resolvers);
+          
+          // Filter resolvers to show only active ones
+          const activeKeywords = ['bilqees', 'bilques', 'suraj', 'priyanka', 'mubin', 'bhawna', 'devangana', 'dewangana', 'shweta', 'akriti', 'aakriti', 'seema', 'themshingla', 'hungyo', 'nilam'];
+          const filteredResolvers = data.resolvers.filter((r: any) => {
+            const lowerName = r.name.toLowerCase();
+            return activeKeywords.some(keyword => lowerName.includes(keyword));
+          });
+          
+          setResolvers(filteredResolvers);
           setEvaluations(data.evaluations);
         }
       } catch (error) {
