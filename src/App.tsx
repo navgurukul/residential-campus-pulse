@@ -61,14 +61,18 @@ function App() {
         if (data.campuses && data.resolvers && data.evaluations) {
           setCampuses(normalizeCampuses(data.campuses));
           
-          // Filter resolvers to show only active ones
+          // Map active status to each resolver
           const activeKeywords = ['bilqees', 'bilques', 'suraj', 'priyanka', 'mubin', 'bhawna', 'devangana', 'dewangana', 'shweta', 'akriti', 'aakriti', 'seema', 'themshingla', 'hungyo', 'nilam'];
-          const filteredResolvers = data.resolvers.filter((r: any) => {
+          const processedResolvers = data.resolvers.map((r: any) => {
             const lowerName = r.name.toLowerCase();
-            return activeKeywords.some(keyword => lowerName.includes(keyword));
+            const isActive = activeKeywords.some(keyword => lowerName.includes(keyword));
+            return {
+              ...r,
+              isActive
+            };
           });
           
-          setResolvers(filteredResolvers);
+          setResolvers(processedResolvers);
           setEvaluations(data.evaluations);
         }
       } catch (error) {
@@ -290,7 +294,7 @@ function App() {
             onFilterChange={setFilters}
             onExport={handleExport}
             campuses={campuses.map(c => ({ id: c.id, name: c.name }))}
-            resolvers={resolvers.map(r => ({ id: r.id, name: r.name }))}
+            resolvers={resolvers.map(r => ({ id: r.id, name: r.name, isActive: r.isActive }))}
             currentView={currentView}
           />
         )}

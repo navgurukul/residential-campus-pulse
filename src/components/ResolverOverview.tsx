@@ -40,25 +40,31 @@ interface RevolverOverviewProps {
 
 const RevolverOverview: React.FC<RevolverOverviewProps> = ({ resolvers, evaluations = [] }) => {
   const [selectedRevolver, setSelectedRevolver] = useState<Revolver | null>(null);
+  const [showActiveOnly, setShowActiveOnly] = useState(true);
 
   // Safety check to prevent crashes when data is loading
   if (!resolvers || !Array.isArray(resolvers)) {
     return <div className="flex items-center justify-center h-64">Loading revolver data...</div>;
   }
 
-  const chartData = resolvers.map(resolver => ({
+  // Filter resolvers based on the toggle switch
+  const displayedResolvers = showActiveOnly
+    ? resolvers.filter(r => r.isActive)
+    : resolvers;
+
+  const chartData = displayedResolvers.map(resolver => ({
     name: resolver.name,
     campuses: resolver.campusesEvaluated,
     avgScore: resolver.averageScoreGiven
   }));
 
-  const totalEvaluations = resolvers.reduce((sum, resolver) => sum + resolver.totalEvaluations, 0);
-  const uniqueCampusesEvaluated = new Set(resolvers.flatMap(resolver =>
+  const totalEvaluations = displayedResolvers.reduce((sum, resolver) => sum + resolver.totalEvaluations, 0);
+  const uniqueCampusesEvaluated = new Set(displayedResolvers.flatMap(resolver =>
     // This is an approximation since we don't have campus names per resolver in the current data structure
     Array(resolver.campusesEvaluated).fill(0).map((_, i) => `campus-${resolver.id}-${i}`)
   )).size;
-  const overallAvgScore = resolvers.length > 0 ? resolvers.reduce((sum, resolver) => sum + resolver.averageScoreGiven, 0) / resolvers.length : 0;
-  const maxCampusesEvaluated = resolvers.length > 0 ? Math.max(...resolvers.map(r => r.campusesEvaluated)) : 0;
+  const overallAvgScore = displayedResolvers.length > 0 ? displayedResolvers.reduce((sum, resolver) => sum + resolver.averageScoreGiven, 0) / displayedResolvers.length : 0;
+  const maxCampusesEvaluated = displayedResolvers.length > 0 ? Math.max(...displayedResolvers.map(r => r.campusesEvaluated)) : 0;
 
   return (
     <div className="space-y-6">
@@ -68,7 +74,7 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ resolvers, evaluati
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Revolvers</p>
-              <p className="text-3xl font-bold text-gray-900">{resolvers.length}</p>
+              <p className="text-3xl font-bold text-gray-900">{displayedResolvers.length}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <User className="w-6 h-6 text-blue-600" />
@@ -160,15 +166,33 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ resolvers, evaluati
 
       {/* Revolver List */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Revolver Performance</h3>
-          <p className="text-sm text-gray-500 mt-1">Each revolver appears once, with aggregated data from all their evaluations</p>
+        <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Revolver Performance</h3>
+            <p className="text-sm text-gray-500 mt-1">Each revolver appears once, with aggregated data from all their evaluations</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 font-medium">Show Active Only</span>
+            <button
+              onClick={() => setShowActiveOnly(!showActiveOnly)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                showActiveOnly ? 'bg-blue-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  showActiveOnly ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revolver</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campuses Evaluated</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Average Score Given</th>
@@ -177,7 +201,7 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ resolvers, evaluati
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {resolvers.map((resolver) => (
+              {displayedResolvers.map((resolver) => (
                 <tr
                   key={resolver.id}
                   className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
@@ -188,6 +212,15 @@ const RevolverOverview: React.FC<RevolverOverviewProps> = ({ resolvers, evaluati
                       <div className="font-medium text-gray-900">{resolver.name}</div>
                       <MessageSquare className="w-4 h-4 text-gray-400 ml-2" />
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      resolver.isActive 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {resolver.isActive ? 'Active' : 'Inactive'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {resolver.email}

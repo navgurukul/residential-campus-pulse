@@ -7,7 +7,7 @@ interface FilterPanelProps {
   onFilterChange: (filters: FilterState) => void;
   onExport: (format: 'csv' | 'pdf') => void;
   campuses: Array<{ id: string; name: string }>;
-  resolvers: Array<{ id: string; name: string }>;
+  resolvers: Array<{ id: string; name: string; isActive?: boolean }>;
   currentView: string;
 }
 
@@ -102,7 +102,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             <option value="">All Revolvers</option>
             {resolvers.map((resolver) => (
               <option key={resolver.id} value={resolver.id}>
-                {toTitleCase(resolver.name)}
+                {toTitleCase(resolver.name)}{resolver.isActive === false ? ' (Inactive)' : ''}
               </option>
             ))}
           </select>

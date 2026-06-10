@@ -20,6 +20,7 @@ export interface Revolver {
   lastActivity: string;
   level: string;
   framework: string;
+  isActive?: boolean;
 }
 
 export interface Competency {
